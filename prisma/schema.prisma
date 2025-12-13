@@ -1,0 +1,123 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Campaign {
+  id          String   @id @default(cuid())
+  brandId     String
+  brandName   String
+  title       String
+  description String?
+  
+  // Requirements stored as JSON
+  requirements Json
+  
+  status    String   @default("draft") // draft, active, paused, completed, archived
+  startDate DateTime
+  endDate   DateTime
+  
+  // Relations
+  submissions Submission[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([brandId])
+  @@index([status])
+}
+
+model Creator {
+  id              String   @id @default(cuid())
+  instagramHandle String   @unique
+  instagramId     String   @unique
+  displayName     String
+  followerCount   Int      @default(0)
+  followingCount  Int      @default(0)
+  postCount       Int      @default(0)
+  
+  // Stored as JSON array
+  niche Json // Array of niche strings
+  
+  gender            String? // male, female, other, prefer_not_to_say
+  age               Int?
+  location          String?
+  language          Json    @default("[]") // Array of language codes
+  profilePictureUrl String?
+  bio               String?
+  isVerified        Boolean @default(false)
+  
+  // Relations
+  submissions Submission[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([instagramHandle])
+  @@index([followerCount])
+}
+
+model Submission {
+  id         String   @id @default(cuid())
+  campaignId String
+  creatorId  String
+  reelUrl    String
+  reelId     String?
+  caption    String?
+  
+  status      String   @default("pending") // pending, processing, verified, rejected, needs_revision, failed
+  submittedAt DateTime @default(now())
+  verifiedAt  DateTime?
+  
+  // Relations
+  campaign           Campaign           @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  creator            Creator            @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  verificationResult VerificationResult?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([campaignId])
+  @@index([creatorId])
+  @@index([status])
+  @@index([reelUrl])
+}
+
+model VerificationResult {
+  id        String   @id @default(cuid())
+  submissionId String @unique
+  
+  status       String @default("pending") // approved, needs_revision, rejected
+  overallScore Int    @default(0) // 0-100
+  
+  // Detection results stored as JSON
+  detectionResults Json
+  
+  // Verification checks stored as JSON
+  creatorEligibility  Json
+  contentAuthenticity  Json
+  brandIntegration    Json
+  campaignRules        Json
+  
+  // Metadata
+  processingTimeMs Int
+  errorMessage      String?
+  
+  // Relations
+  submission Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([submissionId])
+  @@index([status])
+  @@index([overallScore])
+}
+
