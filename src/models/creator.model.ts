@@ -26,7 +26,7 @@ export const CreatorModel = {
       if (error.code === 'P2002') {
         throw new DatabaseError('Creator with this Instagram handle or ID already exists');
       }
-      logger.error('Error creating creator:', error);
+      logger.error({ error }, 'Error creating creator:', error);
       throw new DatabaseError('Failed to create creator', error);
     }
   },
@@ -42,7 +42,7 @@ export const CreatorModel = {
       
       return creator ? this.mapToCreator(creator) : null;
     } catch (error) {
-      logger.error('Error finding creator:', error);
+      logger.error({ error }, 'Error finding creator:', error);
       throw new DatabaseError('Failed to find creator', error);
     }
   },
@@ -58,7 +58,7 @@ export const CreatorModel = {
       
       return creator ? this.mapToCreator(creator) : null;
     } catch (error) {
-      logger.error('Error finding creator by handle:', error);
+      logger.error({ error }, 'Error finding creator by handle:', error);
       throw new DatabaseError('Failed to find creator', error);
     }
   },
@@ -74,7 +74,7 @@ export const CreatorModel = {
       
       return creator ? this.mapToCreator(creator) : null;
     } catch (error) {
-      logger.error('Error finding creator by Instagram ID:', error);
+      logger.error({ error }, 'Error finding creator by Instagram ID:', error);
       throw new DatabaseError('Failed to find creator', error);
     }
   },
@@ -126,7 +126,7 @@ export const CreatorModel = {
         total,
       };
     } catch (error) {
-      logger.error('Error finding creators:', error);
+      logger.error({ error }, 'Error finding creators:', error);
       throw new DatabaseError('Failed to find creators', error);
     }
   },
@@ -157,7 +157,7 @@ export const CreatorModel = {
       if (error.code === 'P2025') {
         throw new NotFoundError('Creator', id);
       }
-      logger.error('Error updating creator:', error);
+      logger.error({ error }, 'Error updating creator:', error);
       throw new DatabaseError('Failed to update creator', error);
     }
   },
@@ -175,7 +175,7 @@ export const CreatorModel = {
       if (error.code === 'P2025') {
         throw new NotFoundError('Creator', id);
       }
-      logger.error('Error deleting creator:', error);
+      logger.error({ error }, 'Error deleting creator:', error);
       throw new DatabaseError('Failed to delete creator', error);
     }
   },

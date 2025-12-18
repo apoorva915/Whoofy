@@ -121,3 +121,9 @@ model VerificationResult {
   @@index([overallScore])
 }
 
+
+
+
+
+
+

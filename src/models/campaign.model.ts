@@ -24,7 +24,7 @@ export const CampaignModel = {
       logger.info(`Campaign created: ${campaign.id}`);
       return this.mapToCampaign(campaign);
     } catch (error) {
-      logger.error('Error creating campaign:', error);
+      logger.error({ error }, 'Error creating campaign');
       throw new DatabaseError('Failed to create campaign', error);
     }
   },
@@ -40,7 +40,7 @@ export const CampaignModel = {
       
       return campaign ? this.mapToCampaign(campaign) : null;
     } catch (error) {
-      logger.error('Error finding campaign:', error);
+      logger.error({ error }, 'Error finding campaign');
       throw new DatabaseError('Failed to find campaign', error);
     }
   },
@@ -88,7 +88,7 @@ export const CampaignModel = {
         total,
       };
     } catch (error) {
-      logger.error('Error finding campaigns:', error);
+      logger.error({ error }, 'Error finding campaigns');
       throw new DatabaseError('Failed to find campaigns', error);
     }
   },
@@ -127,7 +127,7 @@ export const CampaignModel = {
       if (error.code === 'P2025') {
         throw new NotFoundError('Campaign', id);
       }
-      logger.error('Error updating campaign:', error);
+      logger.error({ error }, 'Error updating campaign');
       throw new DatabaseError('Failed to update campaign', error);
     }
   },
@@ -145,7 +145,7 @@ export const CampaignModel = {
       if (error.code === 'P2025') {
         throw new NotFoundError('Campaign', id);
       }
-      logger.error('Error deleting campaign:', error);
+      logger.error({ error }, 'Error deleting campaign');
       throw new DatabaseError('Failed to delete campaign', error);
     }
   },

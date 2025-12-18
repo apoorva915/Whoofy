@@ -35,7 +35,7 @@ export const VerificationResultModel = {
       if (error.code === 'P2002') {
         throw new DatabaseError('Verification result already exists for this submission');
       }
-      logger.error('Error creating verification result:', error);
+      logger.error({ error }, 'Error creating verification result:', error);
       throw new DatabaseError('Failed to create verification result', error);
     }
   },
@@ -59,7 +59,7 @@ export const VerificationResultModel = {
       
       return result ? this.mapToVerificationResult(result) : null;
     } catch (error) {
-      logger.error('Error finding verification result:', error);
+      logger.error({ error }, 'Error finding verification result:', error);
       throw new DatabaseError('Failed to find verification result', error);
     }
   },
@@ -83,7 +83,7 @@ export const VerificationResultModel = {
       
       return result ? this.mapToVerificationResult(result) : null;
     } catch (error) {
-      logger.error('Error finding verification result by submission:', error);
+      logger.error({ error }, 'Error finding verification result by submission:', error);
       throw new DatabaseError('Failed to find verification result', error);
     }
   },
@@ -136,7 +136,7 @@ export const VerificationResultModel = {
       if (error.code === 'P2025') {
         throw new NotFoundError('VerificationResult', id);
       }
-      logger.error('Error updating verification result:', error);
+      logger.error({ error }, 'Error updating verification result:', error);
       throw new DatabaseError('Failed to update verification result', error);
     }
   },
@@ -154,7 +154,7 @@ export const VerificationResultModel = {
       if (error.code === 'P2025') {
         throw new NotFoundError('VerificationResult', id);
       }
-      logger.error('Error deleting verification result:', error);
+      logger.error({ error }, 'Error deleting verification result:', error);
       throw new DatabaseError('Failed to delete verification result', error);
     }
   },

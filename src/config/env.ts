@@ -19,10 +19,9 @@ const EnvSchema = z.object({
   REDIS_PORT: z.string().transform(Number).default('6379'),
   REDIS_PASSWORD: z.string().optional(),
   
-  // External APIs - Instagram
-  INSTAGRAM_APP_ID: z.string().optional(),
-  INSTAGRAM_APP_SECRET: z.string().optional(),
-  INSTAGRAM_ACCESS_TOKEN: z.string().optional(),
+  // External APIs - Instagram (via RapidAPI - simpler alternative)
+  INSTAGRAM_RAPIDAPI_KEY: z.string().optional(),
+  INSTAGRAM_RAPIDAPI_HOST: z.string().default('instagram-scraper-api2.p.rapidapi.com'),
   
   // External APIs - Apify
   APIFY_API_TOKEN: z.string().optional(),
@@ -37,6 +36,9 @@ const EnvSchema = z.object({
   
   // AI Services - OpenAI
   OPENAI_API_KEY: z.string().optional(),
+  
+  // AI Services - Google Gemini
+  GEMINI_API_KEY: z.string().optional(),
   
   // AI Services - Google Cloud (alternative)
   GOOGLE_CLOUD_PROJECT_ID: z.string().optional(),

@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { SubmissionStatus, VerificationStatus } from './verification';
+import { SubmissionStatus } from './submission';
+import { VerificationStatus } from './verification';
 
 /**
  * API Response Wrapper
@@ -42,8 +43,8 @@ export interface PaginatedResponse<T> {
 export const VerifyReelRequestSchema = z.object({
   submissionId: z.string().optional(),
   reelUrl: z.string().url(),
-  campaignId: z.string(),
-  creatorId: z.string(),
+  campaignId: z.string().optional(),
+  creatorId: z.string().optional(),
 });
 
 export type VerifyReelRequest = z.infer<typeof VerifyReelRequestSchema>;

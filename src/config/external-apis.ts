@@ -5,12 +5,11 @@ import env from './env';
  */
 export const externalApiConfig = {
   instagram: {
-    appId: env.INSTAGRAM_APP_ID,
-    appSecret: env.INSTAGRAM_APP_SECRET,
-    accessToken: env.INSTAGRAM_ACCESS_TOKEN,
-    baseUrl: 'https://graph.instagram.com',
+    apiKey: env.INSTAGRAM_RAPIDAPI_KEY,
+    apiHost: env.INSTAGRAM_RAPIDAPI_HOST,
+    baseUrl: `https://${env.INSTAGRAM_RAPIDAPI_HOST}`,
     rateLimit: {
-      requestsPerHour: 200, // Instagram Graph API limit
+      requestsPerMinute: 10, // RapidAPI free tier limit
     },
   },
   
@@ -59,21 +58,19 @@ export const externalApiConfig = {
  * Check if external API is configured
  */
 export function isApiConfigured(apiName: keyof typeof externalApiConfig): boolean {
-  const config = externalApiConfig[apiName];
-  
   switch (apiName) {
     case 'instagram':
-      return !!(config.appId && config.appSecret);
+      return !!externalApiConfig.instagram.apiKey;
     case 'apify':
-      return !!config.apiToken;
+      return !!externalApiConfig.apify.apiToken;
     case 'shazam':
-      return !!config.apiKey;
+      return !!externalApiConfig.shazam.apiKey;
     case 'notegpt':
-      return !!config.apiKey;
+      return !!externalApiConfig.notegpt.apiKey;
     case 'openai':
-      return !!config.apiKey;
+      return !!externalApiConfig.openai.apiKey;
     case 'googleCloud':
-      return !!(config.projectId && config.visionApiKey);
+      return !!(externalApiConfig.googleCloud.projectId && externalApiConfig.googleCloud.visionApiKey);
     default:
       return false;
   }

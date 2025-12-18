@@ -15,10 +15,10 @@ export const SubmissionModel = {
       const submission = await prisma.submission.create({
         data: {
           ...data,
-          include: {
-            campaign: true,
-            creator: true,
-          },
+        },
+        include: {
+          campaign: true,
+          creator: true,
         },
       });
       
@@ -28,7 +28,7 @@ export const SubmissionModel = {
       if (error.code === 'P2003') {
         throw new DatabaseError('Campaign or Creator not found');
       }
-      logger.error('Error creating submission:', error);
+      logger.error({ error }, 'Error creating submission');
       throw new DatabaseError('Failed to create submission', error);
     }
   },
@@ -49,7 +49,7 @@ export const SubmissionModel = {
       
       return submission ? this.mapToSubmission(submission) : null;
     } catch (error) {
-      logger.error('Error finding submission:', error);
+      logger.error({ error }, 'Error finding submission:', error);
       throw new DatabaseError('Failed to find submission', error);
     }
   },
@@ -103,7 +103,7 @@ export const SubmissionModel = {
         total,
       };
     } catch (error) {
-      logger.error('Error finding submissions:', error);
+      logger.error({ error }, 'Error finding submissions:', error);
       throw new DatabaseError('Failed to find submissions', error);
     }
   },
@@ -124,7 +124,7 @@ export const SubmissionModel = {
       if (error.code === 'P2025') {
         throw new NotFoundError('Submission', id);
       }
-      logger.error('Error updating submission:', error);
+      logger.error({ error }, 'Error updating submission:', error);
       throw new DatabaseError('Failed to update submission', error);
     }
   },
@@ -142,7 +142,7 @@ export const SubmissionModel = {
       if (error.code === 'P2025') {
         throw new NotFoundError('Submission', id);
       }
-      logger.error('Error deleting submission:', error);
+      logger.error({ error }, 'Error deleting submission:', error);
       throw new DatabaseError('Failed to delete submission', error);
     }
   },
