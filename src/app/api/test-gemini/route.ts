@@ -9,11 +9,8 @@ import env from '@/config/env';
  */
 export async function GET(request: NextRequest) {
   try {
-    // TEMPORARY: Hardcoded API key for testing (same as frame-analyzer)
-    const hardcodedKey = 'AIzaSyC5jlHZjdymFIJfJdId-DaeqfHvQ8AVPQk';
-    
-    // Get API key from multiple sources
-    const apiKey = hardcodedKey || (env.GEMINI_API_KEY || process.env.GEMINI_API_KEY || '').trim();
+    // Get API key from environment variables
+    const apiKey = (env.GEMINI_API_KEY || process.env.GEMINI_API_KEY || '').trim();
     
     if (!apiKey || apiKey.length === 0) {
       return NextResponse.json({

@@ -9,16 +9,12 @@ import env from '@/config/env';
  */
 export async function GET(request: NextRequest) {
   try {
-    // TEMPORARY: Hardcoded API key for testing (same as frame-analyzer)
-    const hardcodedKey = 'AIzaSyC5jlHZjdymFIJfJdId-DaeqfHvQ8AVPQk';
-    
     // Check API key availability
     const envKey = env.GEMINI_API_KEY?.trim() || '';
     const processKey = process.env.GEMINI_API_KEY?.trim() || '';
-    const apiKey = hardcodedKey || envKey || processKey;
+    const apiKey = envKey || processKey;
 
     const diagnostics = {
-      hardcodedKeyExists: !!hardcodedKey,
       envKeyExists: !!envKey,
       envKeyLength: envKey.length,
       processKeyExists: !!processKey,

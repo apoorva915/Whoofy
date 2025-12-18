@@ -17,18 +17,13 @@ class FrameAnalyzer {
     // Log diagnostics on first initialization
     logGeminiDiagnostics();
     
-    // TEMPORARY: Hardcoded API key for testing
-    // TODO: Remove this and use environment variable after debugging
-    const hardcodedKey = 'AIzaSyC5jlHZjdymFIJfJdId-DaeqfHvQ8AVPQk';
-    
-    // Try to get API key from multiple sources (env config and process.env directly)
+    // Get API key from environment variables
     const envKey = env.GEMINI_API_KEY?.trim() || '';
     const processKey = process.env.GEMINI_API_KEY?.trim() || '';
-    const apiKey = hardcodedKey || envKey || processKey;
+    const apiKey = envKey || processKey;
     
     // Log what we found
     logger.info('🔍 Gemini API Key Check in Constructor', {
-      hardcodedKeyExists: !!hardcodedKey,
       envKeyExists: !!envKey,
       envKeyLength: envKey.length,
       processKeyExists: !!processKey,
@@ -59,7 +54,7 @@ class FrameAnalyzer {
         logger.info('✅✅✅ Gemini Vision API initialized successfully with gemini-1.5-flash', { 
           keyLength: apiKey.length,
           keyPrefix: apiKey.substring(0, 4) + '...',
-          source: hardcodedKey ? 'hardcoded' : (envKey ? 'env' : 'process.env'),
+          source: envKey ? 'env' : 'process.env',
           genAIExists: !!this.genAI,
         });
       } catch (error: any) {
@@ -73,7 +68,6 @@ class FrameAnalyzer {
       }
     } else {
       logger.error('❌ GEMINI_API_KEY not set - vision analysis will use mock data', {
-        hardcodedKeyExists: !!hardcodedKey,
         envKeyExists: !!envKey,
         processKeyExists: !!processKey,
       });
@@ -95,13 +89,10 @@ class FrameAnalyzer {
 
     // Check if API is available
     if (!this.genAI) {
-      // TEMPORARY: Hardcoded API key for testing
-      const hardcodedKey = 'AIzaSyC5jlHZjdymFIJfJdId-DaeqfHvQ8AVPQk';
-      
       // Double-check if API key is available now (might have been set after constructor)
       const envKey = env.GEMINI_API_KEY?.trim() || '';
       const processKey = process.env.GEMINI_API_KEY?.trim() || '';
-      const apiKey = hardcodedKey || envKey || processKey;
+      const apiKey = envKey || processKey;
       
       logger.warn('Gemini API not initialized, attempting late initialization', {
         apiKeyExists: !!apiKey,
@@ -164,12 +155,8 @@ Return ONLY a valid JSON object with this exact structure:
 
 Do not include any markdown formatting, code blocks, or additional text. Only return the JSON object.`;
 
-      // Call Gemini Vision API
-      // TEMPORARY: Hardcoded API key for testing
-      const hardcodedKey = 'AIzaSyC5jlHZjdymFIJfJdId-DaeqfHvQ8AVPQk';
-      
-      // Get fresh API key to ensure we're using the latest value
-      const apiKey = hardcodedKey || (env.GEMINI_API_KEY || process.env.GEMINI_API_KEY || '').trim();
+      // Get API key from environment variables
+      const apiKey = (env.GEMINI_API_KEY || process.env.GEMINI_API_KEY || '').trim();
       if (!apiKey || apiKey.length === 0) {
         logger.warn('API key not available during frame analysis, using mock');
         return this.getMockFrameAnalysis(timestamp);
