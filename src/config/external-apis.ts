@@ -47,6 +47,12 @@ export const externalApiConfig = {
     },
   },
   
+  gemini: {
+    apiKey: env.GEMINI_API_KEY,
+    model: 'gemini-1.5-flash-latest',
+    baseUrl: 'https://generativelanguage.googleapis.com',
+  },
+  
   googleCloud: {
     projectId: env.GOOGLE_CLOUD_PROJECT_ID,
     visionApiKey: env.GOOGLE_CLOUD_VISION_API_KEY,
@@ -69,6 +75,8 @@ export function isApiConfigured(apiName: keyof typeof externalApiConfig): boolea
       return !!externalApiConfig.notegpt.apiKey;
     case 'openai':
       return !!externalApiConfig.openai.apiKey;
+    case 'gemini':
+      return !!externalApiConfig.gemini.apiKey;
     case 'googleCloud':
       return !!(externalApiConfig.googleCloud.projectId && externalApiConfig.googleCloud.visionApiKey);
     default:

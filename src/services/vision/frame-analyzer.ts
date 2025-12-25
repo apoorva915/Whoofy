@@ -1,386 +1,434 @@
-import { GoogleGenAI } from '@google/genai';
 import fs from 'fs-extra';
 import path from 'path';
 import logger from '@/utils/logger';
-import env from '@/config/env';
-import { FrameAnalysis, VisualSummary } from '@/types/vision';
-import { logGeminiDiagnostics } from '@/utils/gemini-diagnostics';
+import { FrameAnalysis, VisualSummary, VisionAnalysisResult } from '@/types/vision';
+import { visionModel } from '@/lib/ai/vision-model';
 
-/**
- * Frame Analyzer Service
- * Analyzes video frames using Gemini Vision API to detect objects and brands
- */
-class FrameAnalyzer {
-  private genAI: GoogleGenAI | null = null;
-
-  constructor() {
-    // Log diagnostics on first initialization
-    logGeminiDiagnostics();
-    
-    // Get API key from environment variables
-    const envKey = env.GEMINI_API_KEY?.trim() || '';
-    const processKey = process.env.GEMINI_API_KEY?.trim() || '';
-    const apiKey = envKey || processKey;
-    
-    // Log what we found
-    logger.info('🔍 Gemini API Key Check in Constructor', {
-      envKeyExists: !!envKey,
-      envKeyLength: envKey.length,
-      processKeyExists: !!processKey,
-      processKeyLength: processKey.length,
-      finalApiKeyExists: !!apiKey,
-      finalApiKeyLength: apiKey.length,
-      finalApiKeyPrefix: apiKey ? apiKey.substring(0, 8) + '...' : 'NONE',
-    });
-    
-    if (apiKey && apiKey.length > 0) {
-      try {
-        // Validate API key format (Gemini keys typically start with AIza)
-        if (!apiKey.startsWith('AIza') && apiKey.length < 20) {
-          logger.warn('GEMINI_API_KEY format looks invalid, but attempting to use it');
-        }
-        
-        logger.info('🚀 Initializing GoogleGenerativeAI with API key', { 
-          keyLength: apiKey.length,
-          keyPrefix: apiKey.substring(0, 8) + '...',
-        });
-        
-        // Use @google/genai SDK with gemini-1.5-flash (only vision model available in 2025)
-        this.genAI = new GoogleGenAI({ apiKey });
-        logger.info('✅ GoogleGenAI instance created successfully', {
-          genAIExists: !!this.genAI,
-        });
-        
-        logger.info('✅✅✅ Gemini Vision API initialized successfully with gemini-1.5-flash', { 
-          keyLength: apiKey.length,
-          keyPrefix: apiKey.substring(0, 4) + '...',
-          source: envKey ? 'env' : 'process.env',
-          genAIExists: !!this.genAI,
-        });
-      } catch (error: any) {
-        logger.error({ 
-          error: error.message,
-          stack: error.stack,
-          errorName: error.name,
-        }, '❌ Failed to initialize Gemini API - will use mock data');
-        // Reset to null so we know initialization failed
-        this.genAI = null;
-      }
-    } else {
-      logger.error('❌ GEMINI_API_KEY not set - vision analysis will use mock data', {
-        envKeyExists: !!envKey,
-        processKeyExists: !!processKey,
-      });
-    }
-  }
-
-  /**
-   * Analyze a single frame
-   */
-  async analyzeFrame(
-    framePath: string,
-    timestamp: number,
-    videoDuration: number
-  ): Promise<FrameAnalysis> {
-    // Handle mock frames
-    if (framePath.startsWith('mock://')) {
-      return this.getMockFrameAnalysis(timestamp);
-    }
-
-    // Check if API is available
-    if (!this.genAI) {
-      // Double-check if API key is available now (might have been set after constructor)
-      const envKey = env.GEMINI_API_KEY?.trim() || '';
-      const processKey = process.env.GEMINI_API_KEY?.trim() || '';
-      const apiKey = envKey || processKey;
-      
-      logger.warn('Gemini API not initialized, attempting late initialization', {
-        apiKeyExists: !!apiKey,
-        apiKeyLength: apiKey?.length || 0,
-        genAIExists: !!this.genAI,
-      });
-      
-      if (apiKey && apiKey.length > 0 && !this.genAI) {
-        try {
-          logger.info('Attempting to initialize Gemini API with late-loaded key', {
-            keyLength: apiKey.length,
-            keyPrefix: apiKey.substring(0, 8) + '...',
-          });
-          this.genAI = new GoogleGenAI({ apiKey });
-          logger.info('GoogleGenAI instance created in late-load', {
-            genAIExists: !!this.genAI,
-          });
-        } catch (error: any) {
-          logger.error({ 
-            error: error.message,
-            stack: error.stack,
-            errorName: error.name,
-          }, 'Failed to initialize Gemini API on retry');
-        }
-      }
-      
-      if (!this.genAI) {
-        logger.error('Gemini API not available after all attempts - returning mock analysis', {
-          genAIExists: !!this.genAI,
-          apiKeyExists: !!apiKey,
-          apiKeyLength: apiKey?.length || 0,
-        });
-        // TODO: Consider throwing error instead of silently returning mock data
-        return this.getMockFrameAnalysis(timestamp);
-      }
-    }
-
-    try {
-      // Read image file
-      if (!(await fs.pathExists(framePath))) {
-        logger.warn(`Frame file not found: ${framePath}`);
-        return this.getMockFrameAnalysis(timestamp);
-      }
-
-      const imageData = await fs.readFile(framePath);
-      const base64Image = imageData.toString('base64');
-
-      // Prepare the prompt
-      const prompt = `Analyze this image frame from a video. List all objects and brands you see. 
-
-If you see chocolate, specify if it is Cadbury Dairy Milk or some other brand. Be specific about brand names when visible.
-
-Return ONLY a valid JSON object with this exact structure:
-{
-  "objects": ["object1", "object2", ...],
-  "brands": [
-    {"name": "brand name", "confidence": 0.0-1.0}
-  ]
+interface AnalyzeOptions {
+  frameInterval?: number;
+  targetBrandName?: string;
+  productNames?: string[]; // Optional array of product names to detect
+  videoDuration?: number;
+  videoId?: string;
 }
 
-Do not include any markdown formatting, code blocks, or additional text. Only return the JSON object.`;
-
-      // Get API key from environment variables
-      const apiKey = (env.GEMINI_API_KEY || process.env.GEMINI_API_KEY || '').trim();
-      if (!apiKey || apiKey.length === 0) {
-        logger.warn('API key not available during frame analysis, using mock');
-        return this.getMockFrameAnalysis(timestamp);
-      }
-
-      // Call Gemini Vision API using @google/genai SDK with gemini-1.5-flash
-      const result = await this.genAI.models.generateContent({
-        model: 'gemini-1.5-flash',
-        contents: [
-          {
-            role: 'user',
-            parts: [
-              {
-                inlineData: {
-                  mimeType: 'image/jpeg',
-                  data: base64Image,
-                },
-              },
-              { text: prompt },
-            ],
-          },
-        ],
-      });
-
-      // Extract text from response
-      const text = result.text || '';
-
-      // Parse JSON response
-      let parsed: { objects: string[]; brands: Array<{ name: string; confidence: number }> };
-      
-      try {
-        // Try to extract JSON from markdown code blocks if present
-        const jsonMatch = text.match(/```(?:json)?\s*(\{[\s\S]*\})\s*```/) || text.match(/(\{[\s\S]*\})/);
-        const jsonText = jsonMatch ? jsonMatch[1] : text;
-        parsed = JSON.parse(jsonText.trim());
-      } catch (parseError: any) {
-        logger.error(
-          {
-            error: parseError.message,
-            response: text.substring(0, 200),
-            framePath,
-          },
-          'Failed to parse Gemini response as JSON'
-        );
-        // Fallback: try to extract objects and brands from text
-        return this.extractFromText(text, timestamp);
-      }
-
-      // Validate and normalize response
-      const objects = Array.isArray(parsed.objects) ? parsed.objects : [];
-      const brands = Array.isArray(parsed.brands)
-        ? parsed.brands.map((b) => ({
-            name: String(b.name || ''),
-            confidence: Math.max(0, Math.min(1, Number(b.confidence) || 0.5)),
-          }))
-        : [];
-
-      return {
-        timestamp,
-        objects,
-        brands,
-      };
-    } catch (error: any) {
-      // Check if it's an API key error
-      const errorMessage = error.message || '';
-      const isApiKeyError = errorMessage.includes('API key not valid') || 
-                           errorMessage.includes('API_KEY_INVALID') ||
-                           errorMessage.includes('401') ||
-                           errorMessage.includes('403');
-      
-      if (isApiKeyError) {
-        logger.error(
-          {
-            error: error.message,
-            framePath,
-            timestamp,
-            hint: 'Check that GEMINI_API_KEY is set correctly in your .env file. Get a key from https://makersuite.google.com/app/apikey',
-          },
-          'Gemini API key error - check your API key configuration'
-        );
-        // Log detailed diagnostic info
-        const apiKey = (env.GEMINI_API_KEY || process.env.GEMINI_API_KEY || '').trim();
-        logger.error({
-          apiKeyLength: apiKey.length,
-          apiKeyPrefix: apiKey.substring(0, 8) + '...',
-          apiKeyEndsWith: '...' + apiKey.substring(Math.max(0, apiKey.length - 4)),
-          hasWhitespace: apiKey !== apiKey.trim(),
-          envKeyExists: !!env.GEMINI_API_KEY,
-          processEnvKeyExists: !!process.env.GEMINI_API_KEY,
-          hint: 'Test your API key at GET /api/test-gemini to get detailed error information',
-        }, 'API key diagnostic info');
-        
-        // Return mock data instead of throwing - allows process to continue
-        logger.warn('Using mock data due to API key error. Test your API key at GET /api/test-gemini');
-        return this.getMockFrameAnalysis(timestamp);
-      }
-      
-      logger.error(
-        {
-          error: error.message,
-          stack: error.stack,
-          framePath,
-          timestamp,
-        },
-        'Error analyzing frame with Gemini'
-      );
-      return this.getMockFrameAnalysis(timestamp);
-    }
-  }
-
+/**
+ * Frame Analyzer
+ * Sends extracted frames to Gemini, aggregates results, and persists JSON
+ */
+class FrameAnalyzer {
   /**
-   * Extract objects and brands from text response (fallback)
-   */
-  private extractFromText(text: string, timestamp: number): FrameAnalysis {
-    const objects: string[] = [];
-    const brands: Array<{ name: string; confidence: number }> = [];
-
-    // Try to find objects mentioned
-    const objectKeywords = ['chocolate', 'bar', 'product', 'person', 'hand', 'table', 'background'];
-    objectKeywords.forEach((keyword) => {
-      if (text.toLowerCase().includes(keyword)) {
-        objects.push(keyword);
-      }
-    });
-
-    // Try to find brands mentioned
-    const brandKeywords = ['cadbury', 'dairy milk', 'pepsi', 'coca cola', 'coke'];
-    brandKeywords.forEach((brand) => {
-      if (text.toLowerCase().includes(brand.toLowerCase())) {
-        brands.push({ name: brand, confidence: 0.6 });
-      }
-    });
-
-    return {
-      timestamp,
-      objects,
-      brands,
-    };
-  }
-
-  /**
-   * Analyze all frames and create visual summary
+   * Analyze a list of frames and build a visual summary
    */
   async analyzeFrames(
-    framePaths: string[],
-    videoDuration: number,
-    frameInterval: number = 2
-  ): Promise<VisualSummary> {
-    logger.info(`Analyzing ${framePaths.length} frames`);
+    frames: string[],
+    options: AnalyzeOptions = {}
+  ): Promise<VisionAnalysisResult> {
+    const {
+      frameInterval = 1,
+      targetBrandName = 'Cadbury Dairy Milk',
+      productNames = [],
+      videoDuration,
+      videoId,
+    } = options;
 
     const frameAnalyses: FrameAnalysis[] = [];
-    const uniqueObjectsSet = new Set<string>();
-    const brandMap = new Map<string, { confidence: number; frames: number[] }>();
 
-    // Analyze each frame
-    for (let i = 0; i < framePaths.length; i++) {
-      const framePath = framePaths[i];
-      // Calculate timestamp based on frame index and interval
-      const timestamp = Math.min(i * frameInterval, videoDuration);
+    for (let i = 0; i < frames.length; i++) {
+      const framePath = frames[i];
+      const timestamp = Number((i * frameInterval).toFixed(2));
 
-      logger.debug(`Analyzing frame ${i + 1}/${framePaths.length} at ${timestamp}s`);
+      // Skip mock frames
+      if (framePath.startsWith('mock://')) {
+        frameAnalyses.push({
+          timestamp,
+          objects: [],
+          brands: [],
+        });
+        continue;
+      }
 
-      const analysis = await this.analyzeFrame(framePath, timestamp, videoDuration);
-      frameAnalyses.push(analysis);
-
-      // Collect unique objects
-      analysis.objects.forEach((obj) => uniqueObjectsSet.add(obj.toLowerCase()));
-
-      // Aggregate brands
-      analysis.brands.forEach((brand) => {
-        const existing = brandMap.get(brand.name.toLowerCase());
-        if (existing) {
-          existing.frames.push(i);
-          // Update confidence to average (or max, depending on preference)
-          existing.confidence = Math.max(existing.confidence, brand.confidence);
-        } else {
-          brandMap.set(brand.name.toLowerCase(), {
-            confidence: brand.confidence,
-            frames: [i],
-          });
-        }
-      });
-
-      // Add small delay to avoid rate limiting
-      if (i < framePaths.length - 1) {
-        await new Promise((resolve) => setTimeout(resolve, 100));
+      try {
+        const analysis = await visionModel.analyzeFrame(
+          framePath,
+          timestamp,
+          targetBrandName,
+          productNames
+        );
+        frameAnalyses.push(analysis);
+      } catch (error: any) {
+        logger.error(
+          {
+            error: error?.message,
+            framePath,
+            timestamp,
+          },
+          'Frame analysis failed'
+        );
+        frameAnalyses.push({
+          timestamp,
+          objects: [],
+          brands: [],
+        });
       }
     }
 
-    // Build brands detected array
-    const brandsDetected = Array.from(brandMap.entries()).map(([name, data]) => ({
-      name,
-      confidence: data.confidence,
-      totalFrames: data.frames.length,
-      totalVisibleSeconds: data.frames.length * frameInterval,
-    }));
-
-    const visualSummary: VisualSummary = {
-      uniqueObjects: Array.from(uniqueObjectsSet),
-      brandsDetected,
+    const visualSummary = this.buildVisualSummary(
       frameAnalyses,
-    };
-
-    logger.info(
-      `Frame analysis complete: ${uniqueObjectsSet.size} unique objects, ${brandsDetected.length} brands detected`
+      frameInterval,
+      videoDuration,
+      targetBrandName,
+      productNames
     );
 
-    return visualSummary;
+    const storagePath = await this.persistAnalysis(videoId, {
+      frameAnalyses,
+      visualSummary,
+    });
+
+    return {
+      frameAnalyses,
+      visualSummary: {
+        ...visualSummary,
+        frameAnalyses,
+      },
+      storagePath,
+    };
   }
 
   /**
-   * Get mock frame analysis (for development/testing)
+   * Build aggregated summary across frames with brand confirmation and visual sentiment
    */
-  private getMockFrameAnalysis(timestamp: number): FrameAnalysis {
+  private buildVisualSummary(
+    analyses: FrameAnalysis[],
+    frameInterval: number,
+    videoDuration: number | undefined,
+    targetBrandName: string,
+    productNames: string[] = []
+  ): VisualSummary {
+    const objectSet = new Set<string>();
+    const brandMap = new Map<
+      string,
+      { confidenceSum: number; count: number; totalFrames: number }
+    >();
+
+    // Collect all objects and brands
+    analyses.forEach((analysis) => {
+      analysis.objects.forEach((obj) => objectSet.add(obj));
+
+      analysis.brands.forEach((brand) => {
+        const key = brand.name.trim();
+        if (!key) return;
+        const existing = brandMap.get(key) || {
+          confidenceSum: 0,
+          count: 0,
+          totalFrames: 0,
+        };
+        existing.confidenceSum += brand.confidence || 0;
+        existing.count += 1;
+        existing.totalFrames += 1;
+        brandMap.set(key, existing);
+      });
+    });
+
+    const brandsDetected = Array.from(brandMap.entries()).map(([name, data]) => {
+      const avgConfidence = data.count ? data.confidenceSum / data.count : 0;
+      const visibleSeconds = data.totalFrames * frameInterval;
+      const clampedSeconds =
+        videoDuration != null
+          ? Math.min(videoDuration, visibleSeconds)
+          : visibleSeconds;
+
+      return {
+        name,
+        confidence: Number(avgConfidence.toFixed(3)),
+        totalFrames: data.totalFrames,
+        totalVisibleSeconds: Number(clampedSeconds.toFixed(2)),
+      };
+    });
+
+    // Brand Confirmation: Check if target brand/product was detected
+    const targetBrandConfirmation = this.buildBrandConfirmation(
+      brandsDetected,
+      analyses,
+      targetBrandName,
+      productNames,
+      frameInterval,
+      videoDuration
+    );
+
+    // Visual Sentiment: Analyze if the reel gives positive/negative publicity
+    const visualSentiment = this.analyzeVisualSentiment(
+      analyses,
+      targetBrandName,
+      productNames,
+      Array.from(objectSet)
+    );
+
     return {
-      timestamp,
-      objects: ['chocolate bar', 'hand', 'background'],
-      brands: [
-        { name: 'Cadbury Dairy Milk', confidence: 0.85 },
-        { name: 'Cadbury', confidence: 0.9 },
-      ],
+      uniqueObjects: Array.from(objectSet),
+      brandsDetected,
+      targetBrandConfirmation,
+      visualSentiment,
+      frameAnalyses: analyses,
     };
+  }
+
+  /**
+   * Build brand confirmation - explicitly states if target brand/product was detected
+   */
+  private buildBrandConfirmation(
+    brandsDetected: Array<{ name: string; confidence: number; totalFrames: number; totalVisibleSeconds?: number }>,
+    analyses: FrameAnalysis[],
+    targetBrandName: string,
+    productNames: string[],
+    frameInterval: number,
+    videoDuration?: number
+  ): VisualSummary['targetBrandConfirmation'] {
+    // Parse brand and products from target brand name
+    const brandParts = targetBrandName.trim().split(/\s+/);
+    const brandName = brandParts[0] || targetBrandName;
+    const allTargetTerms = [
+      brandName.toLowerCase(),
+      targetBrandName.toLowerCase(),
+      ...productNames.map(p => p.toLowerCase()),
+    ];
+
+    // Check if any target brand/product was detected
+    let detectedBrand: { name: string; confidence: number; totalFrames: number; totalVisibleSeconds?: number } | null = null;
+    let detectedInFrames = 0;
+    let maxConfidence = 0;
+
+    // Check exact matches first
+    for (const term of allTargetTerms) {
+      const match = brandsDetected.find(
+        b => b.name.toLowerCase() === term
+      );
+      if (match && match.confidence > maxConfidence) {
+        detectedBrand = match;
+        maxConfidence = match.confidence;
+        detectedInFrames = match.totalFrames;
+      }
+    }
+
+    // Check partial matches (e.g., "Dairy Milk" matches "Cadbury Dairy Milk")
+    if (!detectedBrand) {
+      for (const term of allTargetTerms) {
+        const match = brandsDetected.find(
+          b => b.name.toLowerCase().includes(term) || term.includes(b.name.toLowerCase())
+        );
+        if (match && match.confidence > maxConfidence) {
+          detectedBrand = match;
+          maxConfidence = match.confidence;
+          detectedInFrames = match.totalFrames;
+        }
+      }
+    }
+
+    // Count frames where target brand was detected
+    if (!detectedBrand) {
+      analyses.forEach((analysis) => {
+        const hasTargetBrand = analysis.brands.some((brand) => {
+          const brandLower = brand.name.toLowerCase();
+          return allTargetTerms.some(
+            term => brandLower === term || brandLower.includes(term) || term.includes(brandLower)
+          );
+        });
+        if (hasTargetBrand) {
+          detectedInFrames++;
+        }
+      });
+    }
+
+    const detected = detectedBrand !== null || detectedInFrames > 0;
+    const visibleSeconds = detectedInFrames * frameInterval;
+    const clampedSeconds = videoDuration != null
+      ? Math.min(videoDuration, visibleSeconds)
+      : visibleSeconds;
+
+    // Build confirmation message - clear and direct
+    let message: string;
+    if (detected) {
+      const brandDisplayName = detectedBrand?.name || targetBrandName;
+      // Use simple, direct confirmation: "Yes, it shows [Brand/Product]"
+      if (detectedInFrames === 1) {
+        message = `Yes, it shows ${brandDisplayName} (detected in 1 frame).`;
+      } else {
+        message = `Yes, it shows ${brandDisplayName} (detected in ${detectedInFrames} frames, visible for ${clampedSeconds.toFixed(1)}s).`;
+      }
+    } else {
+      message = `No, ${targetBrandName} was not detected in the video frames.`;
+    }
+
+    return {
+      detected,
+      message,
+      confidence: detectedBrand ? detectedBrand.confidence : (detectedInFrames > 0 ? 0.6 : 0),
+      detectedInFrames,
+      totalVisibleSeconds: detected ? Number(clampedSeconds.toFixed(2)) : 0,
+    };
+  }
+
+  /**
+   * Analyze visual sentiment - determines if reel gives positive/negative publicity
+   */
+  private analyzeVisualSentiment(
+    analyses: FrameAnalysis[],
+    targetBrandName: string,
+    productNames: string[],
+    allObjects: string[]
+  ): VisualSummary['visualSentiment'] {
+    let positiveScore = 0;
+    let negativeScore = 0;
+    const reasoningParts: string[] = [];
+
+    // Positive indicators
+    const positiveObjects = ['person', 'smile', 'happy', 'food', 'chocolate', 'candy', 'snack'];
+    const positiveKeywords = ['love', 'amazing', 'best', 'great', 'delicious', 'yummy', 'tasty', 'recommend'];
+
+    // Negative indicators
+    const negativeObjects = ['trash', 'garbage', 'waste', 'broken', 'damaged'];
+    const negativeKeywords = ['hate', 'bad', 'worst', 'disgusting', 'awful', 'terrible', 'don\'t buy', 'avoid'];
+
+    // Check if target brand is present
+    const targetBrandParts = targetBrandName.toLowerCase().split(/\s+/);
+    const brandName = targetBrandParts[0];
+    let brandPresent = false;
+    let brandFrames = 0;
+
+    analyses.forEach((analysis) => {
+      // Check if target brand is in this frame
+      const hasTargetBrand = analysis.brands.some((brand) => {
+        const brandLower = brand.name.toLowerCase();
+        return brandLower === brandName || 
+               brandLower.includes(brandName) || 
+               brandName.includes(brandLower) ||
+               productNames.some(p => brandLower.includes(p.toLowerCase()));
+      });
+
+      if (hasTargetBrand) {
+        brandPresent = true;
+        brandFrames++;
+      }
+
+      // Analyze objects in frame
+      analysis.objects.forEach((obj) => {
+        const objLower = obj.toLowerCase();
+        if (positiveObjects.some(p => objLower.includes(p))) {
+          positiveScore += 0.1;
+        }
+        if (negativeObjects.some(n => objLower.includes(n))) {
+          negativeScore += 0.2;
+        }
+      });
+    });
+
+    // Brand presence is positive (showing the product)
+    if (brandPresent) {
+      positiveScore += 0.4; // Strong positive indicator
+      reasoningParts.push(`Target brand "${targetBrandName}" is prominently shown in ${brandFrames} frames`);
+    } else {
+      negativeScore += 0.1; // Less negative - brand might be there but not detected
+      reasoningParts.push(`Target brand "${targetBrandName}" is not clearly visible in frames`);
+    }
+
+    // Object analysis
+    const hasPositiveObjects = allObjects.some(obj => 
+      positiveObjects.some(p => obj.toLowerCase().includes(p))
+    );
+    const hasNegativeObjects = allObjects.some(obj => 
+      negativeObjects.some(n => obj.toLowerCase().includes(n))
+    );
+
+    if (hasPositiveObjects) {
+      positiveScore += 0.2;
+      reasoningParts.push('Positive visual elements detected (person, food, product)');
+    }
+    if (hasNegativeObjects) {
+      negativeScore += 0.3;
+      reasoningParts.push('Negative visual elements detected (trash, damage)');
+    }
+
+    // Calculate final sentiment
+    const totalScore = positiveScore - negativeScore;
+    const normalizedScore = Math.max(-1, Math.min(1, totalScore / Math.max(1, analyses.length * 0.1)));
+
+    let sentiment: 'positive' | 'negative' | 'neutral';
+    if (normalizedScore > 0.2) {
+      sentiment = 'positive';
+    } else if (normalizedScore < -0.2) {
+      sentiment = 'negative';
+    } else {
+      sentiment = 'neutral';
+    }
+
+    // Build reasoning
+    let reasoning = reasoningParts.join('. ');
+    if (reasoningParts.length === 0) {
+      reasoning = 'Limited visual indicators found.';
+    }
+
+    // Add sentiment conclusion with clear statement
+    if (sentiment === 'positive') {
+      reasoning += ` Overall, this reel provides POSITIVE publicity for ${targetBrandName} - the brand/product is shown favorably with positive visual elements.`;
+    } else if (sentiment === 'negative') {
+      reasoning += ` Overall, this reel provides NEGATIVE publicity for ${targetBrandName} - negative visual elements or poor brand presentation detected.`;
+    } else {
+      reasoning += ` Overall, this reel provides NEUTRAL publicity for ${targetBrandName} - neither strongly positive nor negative visual indicators.`;
+    }
+
+    // Calculate confidence based on how clear the indicators are
+    const confidence = Math.min(0.95, Math.max(0.5, Math.abs(normalizedScore) * 0.8 + 0.2));
+
+    return {
+      sentiment,
+      score: Number(normalizedScore.toFixed(3)),
+      reasoning,
+      confidence: Number(confidence.toFixed(3)),
+    };
+  }
+
+  /**
+   * Persist analysis to storage/analyses for debugging
+   */
+  private async persistAnalysis(
+    videoId: string | undefined,
+    payload: { frameAnalyses: FrameAnalysis[]; visualSummary: VisualSummary }
+  ): Promise<string | undefined> {
+    if (!videoId) return undefined;
+
+    try {
+      const analysesDir = path.join(process.cwd(), 'storage', 'analyses');
+      await fs.ensureDir(analysesDir);
+      const filePath = path.join(analysesDir, `${videoId}-vision.json`);
+      await fs.writeJson(
+        filePath,
+        {
+          videoId,
+          generatedAt: new Date().toISOString(),
+          frameCount: payload.frameAnalyses.length,
+          payload,
+        },
+        { spaces: 2 }
+      );
+      return filePath;
+    } catch (error: any) {
+      logger.warn(
+        {
+          error: error?.message,
+          videoId,
+        },
+        'Failed to persist vision analysis'
+      );
+      return undefined;
+    }
   }
 }
 
 export const frameAnalyzer = new FrameAnalyzer();
+
+
+
+
+
 

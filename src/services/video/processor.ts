@@ -2,8 +2,11 @@ import { videoDownloader } from './downloader';
 import { frameExtractor } from './frame-extractor';
 import { externalApiService } from '@/services/external';
 import { frameAnalyzer } from '@/services/vision/frame-analyzer';
-import { VisualSummary } from '@/types/vision';
+import { audioExtractor } from './audio-extractor';
+import { localWhisperTranscriber, LocalWhisperTranscriptionResult } from '@/services/transcription/local-whisper';
+import type { SentimentAnalysisResult } from '@/services/detection/sentiment-analysis';
 import logger from '@/utils/logger';
+import { VisionAnalysisResult } from '@/types/vision';
 
 /**
  * Video Processing Result
@@ -13,20 +16,12 @@ export interface VideoProcessingResult {
   videoPath: string;
   duration: number;
   frames: string[];
+  frameInterval: number;
   metadata: {
     url: string;
     size: number;
     downloadedAt: Date;
   };
-  transcription: {
-    transcript: string;
-    language: string;
-    segments: Array<{
-      text: string;
-      start: number;
-      end: number;
-    }>;
-  } | null;
   audio: {
     track: {
       title: string;
@@ -34,7 +29,9 @@ export interface VideoProcessingResult {
     } | null;
     confidence: number;
   } | null;
-  visualAnalysis: VisualSummary | null;
+  visionAnalysis?: VisionAnalysisResult | null;
+  transcription?: LocalWhisperTranscriptionResult | null;
+  sentimentAnalysis?: SentimentAnalysisResult | null;
 }
 
 /**
@@ -47,22 +44,28 @@ class VideoProcessor {
    */
   async processVideo(
     url: string,
-      options: {
+    options: {
       extractFrames?: boolean;
       frameInterval?: number;
       frameCount?: number;
-      transcribe?: boolean;
+      extractAudio?: boolean;
       recognizeAudio?: boolean;
-      analyzeVision?: boolean;
+      analyzeFrames?: boolean;
+      targetBrandName?: string;
+      productNames?: string[]; // Optional array of product names to detect
+      analyzeSentiment?: boolean;
     } = {}
   ): Promise<VideoProcessingResult> {
     const {
       extractFrames = true,
       frameInterval = 2,
       frameCount,
-      transcribe = true,
+      extractAudio = true,
       recognizeAudio = true,
-      analyzeVision = true,
+      analyzeFrames = true,
+      targetBrandName = 'Cadbury Dairy Milk',
+      productNames = [],
+      analyzeSentiment = true,
     } = options;
 
     logger.info(`Processing video: ${url}`);
@@ -83,31 +86,52 @@ class VideoProcessor {
       });
     }
 
-    // Step 4: Transcribe (if requested)
-    let transcription = null;
-    if (transcribe && !filePath.startsWith('mock://')) {
+    // Step 3b: Vision analysis (if requested)
+    let visionAnalysis: VisionAnalysisResult | null = null;
+    if (analyzeFrames && frames.length > 0) {
+      visionAnalysis = await frameAnalyzer.analyzeFrames(frames, {
+        frameInterval,
+        targetBrandName,
+        productNames,
+        videoDuration: duration,
+        videoId,
+      });
+    }
+
+    // Step 4: Extract audio (if requested) - audio files are saved but not transcribed
+    let extractedAudioPath: string | null = null;
+    if (extractAudio && !filePath.startsWith('mock://')) {
       try {
-        // Use the downloaded file path for transcription
-        const transcriptResult = await externalApiService.transcribeVideo(filePath);
-        transcription = {
-          transcript: transcriptResult.transcript,
-          language: transcriptResult.language,
-          segments: transcriptResult.segments.map(seg => ({
-            text: seg.text,
-            start: seg.start,
-            end: seg.end,
-          })),
-        };
-        logger.info('Transcription completed successfully');
+        extractedAudioPath = await audioExtractor.extractAudio(filePath, {
+          format: 'mp3',
+          sampleRate: 16000,
+          channels: 1,
+          bitrate: '128k',
+        });
+        logger.info(`Audio extraction completed successfully: ${extractedAudioPath}`);
       } catch (error: any) {
         logger.error({
           error: error.message,
           filePath,
           stack: error.stack,
-        }, 'Transcription failed');
+        }, 'Audio extraction failed');
       }
-    } else if (transcribe && filePath.startsWith('mock://')) {
-      logger.warn('Skipping transcription for mock video');
+    } else if (extractAudio && filePath.startsWith('mock://')) {
+      logger.warn('Skipping audio extraction for mock video');
+    }
+
+    let transcription: LocalWhisperTranscriptionResult | null = null;
+    if (extractedAudioPath) {
+      try {
+        transcription = await localWhisperTranscriber.transcribe(extractedAudioPath);
+        logger.info('Local Whisper transcription completed');
+      } catch (error: any) {
+        logger.error({
+          error: error.message,
+          stack: error.stack,
+          audioPath: extractedAudioPath,
+        }, 'Local Whisper transcription failed');
+      }
     }
 
     // Step 5: Recognize audio (if requested)
@@ -134,22 +158,25 @@ class VideoProcessor {
       logger.warn('Skipping audio recognition for mock video');
     }
 
-    // Step 6: Analyze vision (if requested and frames are available)
-    let visualAnalysis: VisualSummary | null = null;
-    if (analyzeVision && frames.length > 0) {
+    // Step 6: Analyze sentiment (if requested)
+    let sentimentAnalysis: SentimentAnalysisResult | null = null;
+    if (analyzeSentiment) {
       try {
-        logger.info('Starting vision analysis of frames');
-        visualAnalysis = await frameAnalyzer.analyzeFrames(frames, duration, frameInterval);
-        logger.info('Vision analysis completed successfully');
+        // Dynamic import to avoid module resolution issues
+        const { analyzeSentiment: analyzeSentimentFn } = await import('@/services/detection/sentiment-analysis');
+        if (typeof analyzeSentimentFn !== 'function') {
+          throw new Error('analyzeSentiment is not a function');
+        }
+        const transcriptText = transcription?.transcript || null;
+        // Note: Caption will be added from reel metadata in the API route
+        sentimentAnalysis = analyzeSentimentFn(transcriptText, null);
+        logger.info('Sentiment analysis completed');
       } catch (error: any) {
         logger.error({
           error: error.message,
-          filePath,
           stack: error.stack,
-        }, 'Vision analysis failed');
+        }, 'Sentiment analysis failed');
       }
-    } else if (analyzeVision && frames.length === 0) {
-      logger.warn('Skipping vision analysis - no frames available');
     }
 
     return {
@@ -157,10 +184,12 @@ class VideoProcessor {
       videoPath: filePath,
       duration,
       frames,
+      frameInterval,
       metadata,
-      transcription,
       audio,
-      visualAnalysis,
+      visionAnalysis,
+      transcription,
+      sentimentAnalysis,
     };
   }
 }

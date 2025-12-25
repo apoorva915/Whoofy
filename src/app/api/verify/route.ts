@@ -74,13 +74,19 @@ export async function POST(request: NextRequest) {
     }
 
     // Process video
+    const targetBrandName = body.targetBrandName || 'Cadbury Dairy Milk';
+    const productNames = Array.isArray(body.productNames) ? body.productNames : [];
+    
     const processingResult = await videoProcessor.processVideo(reelUrl, {
       extractFrames: true,
       frameInterval: 2, // Extract frame every 2 seconds (for full video)
       // frameCount not set - extracts frames for entire video duration
-      transcribe: true,
+      extractAudio: true,
       recognizeAudio: true,
-      analyzeVision: true, // Enable vision analysis
+      analyzeFrames: true,
+      targetBrandName,
+      productNames,
+      analyzeSentiment: true,
     });
 
     // Get reel metadata
@@ -91,6 +97,17 @@ export async function POST(request: NextRequest) {
       }
     } catch (error) {
       logger.warn({ error }, 'Could not fetch reel metadata');
+    }
+
+    // Update sentiment analysis with caption if available
+    let finalSentimentAnalysis = processingResult.sentimentAnalysis;
+    if (finalSentimentAnalysis && reelMetadata?.caption) {
+      const { analyzeSentiment } = await import('@/services/detection/sentiment-analysis');
+      finalSentimentAnalysis = analyzeSentiment(
+        processingResult.transcription?.transcript || null,
+        reelMetadata.caption
+      );
+      logger.info('Sentiment analysis updated with caption');
     }
 
     // Get creator profile (if Instagram URL)
@@ -123,6 +140,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Build response
+    const visionStoragePath = processingResult.visionAnalysis?.storagePath
+      ? processingResult.visionAnalysis.storagePath
+          .replace(process.cwd(), '')
+          .replace(/\\/g, '/')
+      : null;
+
     const response = {
       success: true,
       data: {
@@ -141,6 +164,10 @@ export async function POST(request: NextRequest) {
               : `/storage/frames/${path.basename(f)}`;
           }).filter(Boolean),
         },
+        vision: processingResult.visionAnalysis ? {
+          storagePath: visionStoragePath,
+          visualSummary: processingResult.visionAnalysis.visualSummary,
+        } : null,
         metadata: reelMetadata ? {
           caption: reelMetadata.caption,
           likes: reelMetadata.likeCount,
@@ -154,27 +181,40 @@ export async function POST(request: NextRequest) {
           verified: creatorProfile.isVerified,
           bio: creatorProfile.bio,
         } : null,
-        transcription: processingResult.transcription ? {
-          text: processingResult.transcription.transcript,
-          language: processingResult.transcription.language,
-          segmentCount: processingResult.transcription.segments.length,
-        } : null,
         audio: processingResult.audio ? {
           track: processingResult.audio.track,
           confidence: processingResult.audio.confidence,
         } : null,
-        visualAnalysis: processingResult.visualAnalysis ? {
-          uniqueObjects: processingResult.visualAnalysis.uniqueObjects,
-          brandsDetected: processingResult.visualAnalysis.brandsDetected,
-          frameCount: processingResult.visualAnalysis.frameAnalyses.length,
-          // Include summary of frame analyses (first few for preview)
-          frameAnalyses: processingResult.visualAnalysis.frameAnalyses.slice(0, 5).map(fa => ({
-            timestamp: fa.timestamp,
-            objectCount: fa.objects.length,
-            brandCount: fa.brands.length,
-            objects: fa.objects,
-            brands: fa.brands,
-          })),
+        transcription: processingResult.transcription ? {
+          transcript: processingResult.transcription.transcript,
+          language: processingResult.transcription.language,
+          processingTime: processingResult.transcription.processingTimeMs,
+          segments: processingResult.transcription.segments,
+        } : null,
+        sentiment: finalSentimentAnalysis ? {
+          transcript: {
+            sentiment: finalSentimentAnalysis.transcript.sentiment,
+            score: finalSentimentAnalysis.transcript.score,
+            positiveCount: finalSentimentAnalysis.transcript.positiveCount,
+            negativeCount: finalSentimentAnalysis.transcript.negativeCount,
+            wordCount: finalSentimentAnalysis.transcript.wordCount,
+          },
+          caption: {
+            sentiment: finalSentimentAnalysis.caption.sentiment,
+            score: finalSentimentAnalysis.caption.score,
+            positiveCount: finalSentimentAnalysis.caption.positiveCount,
+            negativeCount: finalSentimentAnalysis.caption.negativeCount,
+            wordCount: finalSentimentAnalysis.caption.wordCount,
+          },
+          combined: {
+            sentiment: finalSentimentAnalysis.combined.sentiment,
+            score: finalSentimentAnalysis.combined.score,
+            positiveCount: finalSentimentAnalysis.combined.positiveCount,
+            negativeCount: finalSentimentAnalysis.combined.negativeCount,
+            wordCount: finalSentimentAnalysis.combined.wordCount,
+            confidence: finalSentimentAnalysis.combined.confidence,
+          },
+          processingTime: finalSentimentAnalysis.processingTimeMs,
         } : null,
         processingTime: Date.now() - new Date(processingResult.metadata.downloadedAt).getTime(),
       },
