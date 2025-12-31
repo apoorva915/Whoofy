@@ -1,0 +1,9 @@
+# CLIP Dependencies for Visual Similarity Matching
+# Install with: pip install -r requirements_clip.txt
+
+torch>=2.0.0
+torchvision>=0.15.0
+pillow>=9.0.0
+ftfy>=6.0.0
+git+https://github.com/openai/CLIP.git
+

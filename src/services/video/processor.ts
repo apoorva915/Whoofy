@@ -54,6 +54,7 @@ class VideoProcessor {
       targetBrandName?: string;
       productNames?: string[]; // Optional array of product names to detect
       analyzeSentiment?: boolean;
+      referenceImagePath?: string; // Optional path to reference product image for CLIP similarity
     } = {}
   ): Promise<VideoProcessingResult> {
     const {
@@ -84,6 +85,18 @@ class VideoProcessor {
         interval: frameInterval,
         count: frameCount,
       });
+    }
+
+    // Step 3a: Set reference image for CLIP similarity (if provided)
+    if (options.referenceImagePath) {
+      const { visionModel } = await import('@/lib/ai/vision-model');
+      const embeddingPath = await visionModel.setReferenceImage(options.referenceImagePath);
+      if (embeddingPath) {
+        logger.info({ embeddingPath }, 'Reference image set for CLIP similarity matching - visual similarity enabled');
+      } else {
+        logger.warn('CLIP visual similarity is not available - dependencies may not be installed');
+        logger.info('To enable CLIP, install dependencies: pip install -r yolo/requirements_clip.txt');
+      }
     }
 
     // Step 3b: Vision analysis (if requested)

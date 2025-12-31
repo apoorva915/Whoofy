@@ -89,6 +89,13 @@ interface VerificationResult {
         reasoning: string;
         confidence: number;
       };
+      visualSimilaritySummary?: {
+        averageSimilarity: number;
+        maxSimilarity: number;
+        matchedFrames: number;
+        totalFrames: number;
+        visibleSeconds?: number;
+      };
       frameAnalyses: Array<{
         timestamp: number;
         objects: string[];
@@ -96,6 +103,11 @@ interface VerificationResult {
           name: string;
           confidence: number;
         }>;
+        visualSimilarity?: {
+          similarity: number;
+          match: boolean;
+          confidence: 'high' | 'medium' | 'low' | 'none';
+        };
       }>;
     };
   } | null;
@@ -106,9 +118,24 @@ export default function Home() {
   const [reelUrl, setReelUrl] = useState('');
   const [targetBrandName, setTargetBrandName] = useState('Cadbury');
   const [productNames, setProductNames] = useState('Dairy Milk, Silk Brownie');
+  const [productImage, setProductImage] = useState<File | null>(null);
+  const [productImagePreview, setProductImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<VerificationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setProductImage(file);
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProductImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -123,6 +150,17 @@ export default function Home() {
         .map(name => name.trim())
         .filter(name => name.length > 0);
 
+      // Convert image to base64 if provided
+      let productImageBase64: string | undefined = undefined;
+      if (productImage) {
+        productImageBase64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(productImage);
+        });
+      }
+
       const response = await fetch('/api/verify', {
         method: 'POST',
         headers: {
@@ -132,6 +170,7 @@ export default function Home() {
           reelUrl,
           targetBrandName: targetBrandName.trim() || undefined,
           productNames: productNamesArray.length > 0 ? productNamesArray : undefined,
+          productImage: productImageBase64,
         }),
       });
 
@@ -225,6 +264,47 @@ export default function Home() {
             </div>
           </div>
 
+          <div style={{ marginBottom: '20px' }}>
+            <label htmlFor="productImage" style={{ display: 'block', marginBottom: '5px', fontWeight: '600' }}>
+              Product Image (Optional - for CLIP visual similarity)
+            </label>
+            <input
+              id="productImage"
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              disabled={loading}
+              style={{
+                width: '100%',
+                padding: '10px',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                fontSize: '14px',
+              }}
+            />
+            {productImagePreview && (
+              <div style={{ marginTop: '10px' }}>
+                <img 
+                  src={productImagePreview} 
+                  alt="Product preview" 
+                  style={{ 
+                    maxWidth: '200px', 
+                    maxHeight: '200px', 
+                    borderRadius: '4px',
+                    border: '1px solid #ddd'
+                  }} 
+                />
+                <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                  {productImage?.name}
+                </div>
+              </div>
+            )}
+            <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+              Upload a reference image of the product to enable visual similarity matching using CLIP. 
+              This helps detect products even when OCR fails or text is not visible.
+            </div>
+          </div>
+
           <button
             type="submit"
             disabled={loading}
@@ -251,7 +331,35 @@ export default function Home() {
 
         {result && (
           <div style={{ background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-            <h2 style={{ marginTop: 0, marginBottom: '20px', color: '#333' }}>Verification Results</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2 style={{ marginTop: 0, marginBottom: 0, color: '#333' }}>Verification Results</h2>
+              <button
+                onClick={() => {
+                  const jsonStr = JSON.stringify(result, null, 2);
+                  const blob = new Blob([jsonStr], { type: 'application/json' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `verification_results_${Date.now()}.json`;
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  URL.revokeObjectURL(url);
+                }}
+                style={{
+                  padding: '8px 16px',
+                  background: '#4caf50',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                }}
+              >
+                📥 Download JSON
+              </button>
+            </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
               {/* Video Info */}
@@ -435,7 +543,9 @@ export default function Home() {
               {/* Vision Analysis */}
               {result.vision && (
                 <div style={{ border: '1px solid #ddd', padding: '15px', borderRadius: '4px', gridColumn: '1 / -1' }}>
-                  <h3 style={{ marginTop: 0, fontSize: '16px' }}>Vision Analysis (YOLO + OCR)</h3>
+                  <h3 style={{ marginTop: 0, fontSize: '16px' }}>
+                    Vision Analysis (YOLO + OCR{result.vision.visualSummary.visualSimilaritySummary ? ' + CLIP' : ''})
+                  </h3>
                   
                   {/* Brand Confirmation - Most Important */}
                   {result.vision.visualSummary.targetBrandConfirmation && (
@@ -516,6 +626,72 @@ export default function Home() {
                       <div style={{ marginTop: '8px', fontSize: '12px', color: '#666' }}>
                         Score: {result.vision.visualSummary.visualSentiment.score.toFixed(2)} | 
                         Confidence: {(result.vision.visualSummary.visualSentiment.confidence * 100).toFixed(0)}%
+                      </div>
+                    </div>
+                  )}
+
+                  {/* CLIP Visual Similarity Summary */}
+                  {result.vision.visualSummary.visualSimilaritySummary && (
+                    <div style={{ 
+                      marginBottom: '20px', 
+                      padding: '15px', 
+                      borderRadius: '4px',
+                      backgroundColor: '#fff3e0',
+                      border: '2px solid #ff9800'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                        <strong style={{ fontSize: '15px', color: '#333' }}>
+                          CLIP Visual Similarity (Product Match):
+                        </strong>
+                        <span style={{
+                          padding: '4px 12px',
+                          borderRadius: '12px',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          backgroundColor: '#ff9800',
+                          color: 'white'
+                        }}>
+                          {result.vision.visualSummary.visualSimilaritySummary.matchedFrames}/{result.vision.visualSummary.visualSimilaritySummary.totalFrames} frames matched
+                        </span>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px', marginTop: '10px' }}>
+                        <div>
+                          <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>Average Similarity</div>
+                          <div style={{ fontSize: '18px', fontWeight: '600', color: '#e65100' }}>
+                            {(result.vision.visualSummary.visualSimilaritySummary.averageSimilarity * 100).toFixed(1)}%
+                          </div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>Max Similarity</div>
+                          <div style={{ fontSize: '18px', fontWeight: '600', color: '#e65100' }}>
+                            {(result.vision.visualSummary.visualSimilaritySummary.maxSimilarity * 100).toFixed(1)}%
+                          </div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>Matched Frames</div>
+                          <div style={{ fontSize: '18px', fontWeight: '600', color: '#e65100' }}>
+                            {result.vision.visualSummary.visualSimilaritySummary.matchedFrames}
+                          </div>
+                        </div>
+                        {result.vision.visualSummary.visualSimilaritySummary.visibleSeconds !== undefined && (
+                          <div>
+                            <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>Visible Duration</div>
+                            <div style={{ fontSize: '18px', fontWeight: '600', color: '#e65100' }}>
+                              {result.vision.visualSummary.visualSimilaritySummary.visibleSeconds.toFixed(1)}s
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      <div style={{ marginTop: '10px', fontSize: '12px', color: '#666', padding: '8px', backgroundColor: '#fff', borderRadius: '4px' }}>
+                        <strong>Interpretation:</strong> {
+                          result.vision.visualSummary.visualSimilaritySummary.averageSimilarity >= 0.45 ? 
+                            'Very confident product match - product is clearly visible' :
+                          result.vision.visualSummary.visualSimilaritySummary.averageSimilarity >= 0.35 ?
+                            'Likely product match - product appears to be present' :
+                          result.vision.visualSummary.visualSimilaritySummary.averageSimilarity >= 0.30 ?
+                            'Weak visual match - product may be present' :
+                            'Low similarity - product not clearly visible'
+                        }
                       </div>
                     </div>
                   )}
@@ -624,7 +800,7 @@ export default function Home() {
                               </div>
                             )}
                             {frame.brands.length > 0 && (
-                              <div style={{ fontSize: '11px', color: '#666' }}>
+                              <div style={{ fontSize: '11px', color: '#666', marginBottom: '4px' }}>
                                 <strong>Brands:</strong>{' '}
                                 {frame.brands.map((b, i) => (
                                   <span key={i}>
@@ -634,7 +810,24 @@ export default function Home() {
                                 ))}
                               </div>
                             )}
-                            {frame.objects.length === 0 && frame.brands.length === 0 && (
+                            {frame.visualSimilarity && (
+                              <div style={{ 
+                                fontSize: '11px', 
+                                padding: '4px 8px',
+                                borderRadius: '4px',
+                                backgroundColor: frame.visualSimilarity.match ? 
+                                  (frame.visualSimilarity.confidence === 'high' ? '#c8e6c9' : 
+                                   frame.visualSimilarity.confidence === 'medium' ? '#fff9c4' : '#ffe0b2') : '#f5f5f5',
+                                color: frame.visualSimilarity.match ? '#2e7d32' : '#666',
+                                display: 'inline-block',
+                                marginTop: '4px'
+                              }}>
+                                <strong>CLIP Similarity:</strong> {(frame.visualSimilarity.similarity * 100).toFixed(1)}% 
+                                {' '}({frame.visualSimilarity.confidence})
+                                {frame.visualSimilarity.match && ' ✓'}
+                              </div>
+                            )}
+                            {frame.objects.length === 0 && frame.brands.length === 0 && !frame.visualSimilarity && (
                               <div style={{ fontSize: '11px', color: '#999', fontStyle: 'italic' }}>
                                 No objects or brands detected
                               </div>

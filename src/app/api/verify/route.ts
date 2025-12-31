@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import path from 'path';
+import * as fs from 'fs-extra';
 import { videoProcessor } from '@/services/video/processor';
 import { externalApiService } from '@/services/external';
 import { validateInstagramReelUrl } from '@/utils/validation';
@@ -77,6 +78,54 @@ export async function POST(request: NextRequest) {
     const targetBrandName = body.targetBrandName || 'Cadbury Dairy Milk';
     const productNames = Array.isArray(body.productNames) ? body.productNames : [];
     
+    // Handle product image upload (base64 or file path)
+    let referenceImagePath: string | undefined = undefined;
+    if (body.productImage) {
+      try {
+        // Check if it's base64 data
+        if (typeof body.productImage === 'string' && body.productImage.startsWith('data:image/')) {
+          // Extract base64 data
+          const base64Data = body.productImage.replace(/^data:image\/\w+;base64,/, '');
+          const buffer = Buffer.from(base64Data, 'base64');
+          
+          // Determine image extension from data URL
+          const mimeMatch = body.productImage.match(/data:image\/(\w+);base64/);
+          const extension = mimeMatch ? mimeMatch[1] : 'jpg';
+          
+          // Save to temp directory
+          const tempDir = path.join(process.cwd(), 'storage', 'temp');
+          await fs.ensureDir(tempDir);
+          referenceImagePath = path.join(tempDir, `product_image_${Date.now()}.${extension}`);
+          await fs.writeFile(referenceImagePath, buffer);
+          
+          logger.info('Product image saved from base64 data');
+        } else if (typeof body.productImage === 'string' && body.productImage.startsWith('http')) {
+          // It's a URL - download it
+          const response = await fetch(body.productImage);
+          if (response.ok) {
+            const buffer = Buffer.from(await response.arrayBuffer());
+            const contentType = response.headers.get('content-type') || 'image/jpeg';
+            const extension = contentType.split('/')[1] || 'jpg';
+            
+            const tempDir = path.join(process.cwd(), 'storage', 'temp');
+            await fs.ensureDir(tempDir);
+            referenceImagePath = path.join(tempDir, `product_image_${Date.now()}.${extension}`);
+            await fs.writeFile(referenceImagePath, buffer);
+            
+            logger.info('Product image downloaded from URL');
+          }
+        } else if (typeof body.productImage === 'string') {
+          // Assume it's a file path
+          if (await fs.pathExists(body.productImage)) {
+            referenceImagePath = body.productImage;
+            logger.info('Using provided product image path');
+          }
+        }
+      } catch (error: any) {
+        logger.warn({ error: error?.message }, 'Failed to process product image, continuing without CLIP similarity');
+      }
+    }
+    
     const processingResult = await videoProcessor.processVideo(reelUrl, {
       extractFrames: true,
       frameInterval: 2, // Extract frame every 2 seconds (for full video)
@@ -87,6 +136,7 @@ export async function POST(request: NextRequest) {
       targetBrandName,
       productNames,
       analyzeSentiment: true,
+      referenceImagePath,
     });
 
     // Get reel metadata

@@ -61,10 +61,30 @@ const POSITIVE_WORDS = [
   // Beauty & aesthetics
   'beautiful', 'gorgeous', 'stunning', 'striking', 'attractive', 'appealing', 'charming',
   'elegant', 'graceful', 'stylish', 'fashionable', 'trendy', 'modern', 'contemporary',
+  'bright', 'brightening', 'brightened', 'brightness', 'glowing', 'glow', 'radiant', 'radiance',
+  'awake', 'awaken', 'awakening', 'refreshed', 'refreshing', 'revitalized', 'revitalizing',
+  
+  // Transformation & improvement
+  'transform', 'transformation', 'transforming', 'transformed', 'change', 'changed', 'changing',
+  'improve', 'improved', 'improving', 'enhance', 'enhanced', 'enhancing', 'upgrade', 'upgraded',
+  'boost', 'boosted', 'boosting', 'lift', 'lifted', 'lifting',
+  
+  // Tips & recommendations
+  'hack', 'hacks', 'tip', 'tips', 'trick', 'tricks', 'secret', 'secrets', 'must-have', 'must have',
+  'game-changer', 'game changer', 'life-saver', 'life saver', 'essential', 'essentials',
+  
+  // Value & deals
+  'discounted', 'discount', 'sale', 'deal', 'deals', 'bargain', 'bargains', 'affordable',
+  'worth', 'worthwhile', 'valuable', 'value', 'priceless', 'treasure', 'gem', 'find',
+  
+  // Immediate results
+  'immediately', 'immediate', 'instant', 'instantly', 'quick', 'quickly', 'fast', 'fast-acting',
+  'rapid', 'rapidly', 'right away', 'straight away',
   
   // Comfort & ease
   'comfortable', 'comfort', 'cozy', 'cosy', 'relaxing', 'relaxed', 'peaceful', 'calm',
   'easy', 'easier', 'easiest', 'simple', 'simpler', 'simplest', 'convenient', 'handy',
+  'effortless', 'effortlessly', 'no makeup', 'no-makeup', 'makeup-free', 'makeup free',
   
   // Health & wellness
   'healthy', 'healthier', 'nutritious', 'nutritive', 'wholesome', 'beneficial', 'good for',
@@ -227,6 +247,24 @@ export function detectSentiment(text: string): {
   let positiveCount = 0;
   let negativeCount = 0;
 
+  // Check for positive phrases first (multi-word expressions)
+  const positivePhrases = [
+    'no makeup', 'no-makeup', 'makeup-free', 'makeup free', 'no makeup needed',
+    'best hack', 'game changer', 'game-changer', 'life saver', 'life-saver',
+    'must have', 'must-have', 'right away', 'straight away', 'fast acting', 'fast-acting',
+    'good value', 'value for money', 'worth it', 'worth the', 'good for',
+  ];
+  
+  positivePhrases.forEach((phrase) => {
+    const regex = new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+    const matches = normalizedText.match(regex);
+    if (matches) {
+      const count = matches.length;
+      positiveCount += count * 1.5; // Phrases are more significant
+      score += count * 1.5;
+    }
+  });
+
   // Check for positive words
   POSITIVE_WORDS.forEach((word) => {
     // Use word boundaries to avoid partial matches
@@ -277,17 +315,54 @@ export function detectSentiment(text: string): {
     });
   }
 
-  // Normalize score by word count (to avoid bias towards longer texts)
-  const normalizedScore = wordCount > 0 ? score / Math.sqrt(wordCount) : score;
+  // Handle intensifiers that amplify sentiment
+  // Check for intensifiers near positive/negative words
+  const intensifierRegex = new RegExp(
+    `\\b(${POSITIVE_INTENSIFIERS.join('|').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})\\s+\\w+`,
+    'gi'
+  );
+  const intensifierMatches = normalizedText.match(intensifierRegex);
+  if (intensifierMatches) {
+    intensifierMatches.forEach((match) => {
+      // Check if intensifier is followed by positive word (amplifies positive)
+      POSITIVE_WORDS.forEach((posWord) => {
+        if (match.toLowerCase().includes(posWord)) {
+          score += 0.5; // Boost for intensifiers
+          positiveCount += 0.5;
+        }
+      });
+      // Check if intensifier is followed by negative word (amplifies negative)
+      NEGATIVE_WORDS.forEach((negWord) => {
+        if (match.toLowerCase().includes(negWord)) {
+          score -= 0.5; // Boost for intensifiers
+          negativeCount += 0.5;
+        }
+      });
+    });
+  }
 
-  // Determine sentiment
+  // Normalize score by word count (to avoid bias towards longer texts)
+  // Use a less aggressive normalization for shorter texts
+  const normalizedScore = wordCount > 0 
+    ? (wordCount < 50 ? score / Math.sqrt(wordCount * 0.8) : score / Math.sqrt(wordCount))
+    : score;
+
+  // Determine sentiment with adjusted thresholds
+  // Lower threshold to catch more positive reviews
   let sentiment: Sentiment;
-  if (normalizedScore > 0.1) {
+  if (normalizedScore > 0.08) { // Lowered from 0.1
     sentiment = 'positive';
-  } else if (normalizedScore < -0.1) {
+  } else if (normalizedScore < -0.08) { // Lowered from -0.1
     sentiment = 'negative';
   } else {
-    sentiment = 'neutral';
+    // If score is close to neutral but has positive words, lean positive
+    if (positiveCount > negativeCount && positiveCount >= 2) {
+      sentiment = 'positive';
+    } else if (negativeCount > positiveCount && negativeCount >= 2) {
+      sentiment = 'negative';
+    } else {
+      sentiment = 'neutral';
+    }
   }
 
   return {

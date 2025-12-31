@@ -81,6 +81,23 @@ class FrameAnalyzer {
       productNames
     );
 
+    // Log visual similarity summary if available
+    if (visualSummary.visualSimilaritySummary) {
+      const vs = visualSummary.visualSimilaritySummary;
+      logger.info({
+        averageSimilarity: vs.averageSimilarity,
+        maxSimilarity: vs.maxSimilarity,
+        matchedFrames: vs.matchedFrames,
+        totalFrames: vs.totalFrames,
+        visibleSeconds: vs.visibleSeconds,
+      }, `CLIP Visual Similarity Summary: ${vs.matchedFrames}/${vs.totalFrames} frames matched (avg: ${vs.averageSimilarity.toFixed(3)}, max: ${vs.maxSimilarity.toFixed(3)})`);
+    } else {
+      const framesWithSimilarity = frameAnalyses.filter(f => f.visualSimilarity).length;
+      if (framesWithSimilarity === 0) {
+        logger.info('CLIP visual similarity not available - no reference image provided or CLIP dependencies not installed');
+      }
+    }
+
     const storagePath = await this.persistAnalysis(videoId, {
       frameAnalyses,
       visualSummary,
@@ -165,12 +182,55 @@ class FrameAnalyzer {
       Array.from(objectSet)
     );
 
+    // Visual Similarity Summary: Aggregate CLIP similarity results
+    const visualSimilaritySummary = this.buildVisualSimilaritySummary(
+      analyses,
+      frameInterval,
+      videoDuration
+    );
+
     return {
       uniqueObjects: Array.from(objectSet),
       brandsDetected,
       targetBrandConfirmation,
       visualSentiment,
+      visualSimilaritySummary,
       frameAnalyses: analyses,
+    };
+  }
+
+  /**
+   * Build visual similarity summary from CLIP results
+   */
+  private buildVisualSimilaritySummary(
+    analyses: FrameAnalysis[],
+    frameInterval: number,
+    videoDuration: number | undefined
+  ): VisualSummary['visualSimilaritySummary'] {
+    const similarities = analyses
+      .map(a => a.visualSimilarity)
+      .filter((vs): vs is NonNullable<typeof vs> => vs !== undefined);
+
+    if (similarities.length === 0) {
+      return undefined;
+    }
+
+    const similarityScores = similarities.map(vs => vs.similarity);
+    const averageSimilarity = similarityScores.reduce((a, b) => a + b, 0) / similarityScores.length;
+    const maxSimilarity = Math.max(...similarityScores);
+    const matchedFrames = similarities.filter(vs => vs.match).length;
+    const totalFrames = similarities.length;
+    const visibleSeconds = matchedFrames * frameInterval;
+    const clampedSeconds = videoDuration != null
+      ? Math.min(videoDuration, visibleSeconds)
+      : visibleSeconds;
+
+    return {
+      averageSimilarity: Number(averageSimilarity.toFixed(3)),
+      maxSimilarity: Number(maxSimilarity.toFixed(3)),
+      matchedFrames,
+      totalFrames,
+      visibleSeconds: Number(clampedSeconds.toFixed(2)),
     };
   }
 
@@ -186,9 +246,23 @@ class FrameAnalyzer {
     videoDuration?: number
   ): VisualSummary['targetBrandConfirmation'] {
     // Parse brand and products from target brand name
-    const brandParts = targetBrandName.trim().split(/\s+/);
-    const brandName = brandParts[0] || targetBrandName;
+    // Handle comma-separated brand names (e.g., "garnier, garnieruk")
+    const brandString = targetBrandName.trim();
+    const allBrandNames: string[] = [];
+    
+    if (brandString.includes(',')) {
+      // Split by comma and treat each as a separate brand
+      const brandParts = brandString.split(',').map(b => b.trim()).filter(b => b.length > 0);
+      allBrandNames.push(...brandParts);
+    } else {
+      // Single brand name - extract brand name (typically the first word)
+      const brandParts = brandString.split(/\s+/);
+      allBrandNames.push(brandParts[0] || brandString);
+    }
+    
+    const brandName = allBrandNames[0] || targetBrandName;
     const allTargetTerms = [
+      ...allBrandNames.map(b => b.toLowerCase()),
       brandName.toLowerCase(),
       targetBrandName.toLowerCase(),
       ...productNames.map(p => p.toLowerCase()),
