@@ -74,16 +74,26 @@ Once CLIP is installed, you should see:
      "vision": {
        "visualSummary": {
          "visualSimilaritySummary": {
-           "averageSimilarity": 0.387,
-           "maxSimilarity": 0.452,
-           "matchedFrames": 5,
+           "averageSimilarity": 0.587,
+           "maxSimilarity": 0.788,
+           "matchedFrames": 4,
            "totalFrames": 15,
-           "visibleSeconds": 10.0
+           "visibleSeconds": 8.0,
+           "referenceImageCount": 2
          }
        }
      }
    }
    ```
+
+## Important: False Positive Prevention
+
+The system uses **contextual validation** to reduce false positives:
+- **High similarity (≥0.50)**: Accepted automatically
+- **Medium similarity (0.40-0.50)**: Requires product-related objects (bottle, box, etc.) OR brand text detection
+- **Low similarity (<0.40)**: Rejected
+
+This ensures that frames showing just a person (without the product) are not counted as matches, even if CLIP gives a moderate similarity score.
 
 ## Troubleshooting
 

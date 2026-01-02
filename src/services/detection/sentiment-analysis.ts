@@ -359,9 +359,9 @@ export function detectSentiment(text: string): {
     if (positiveCount > negativeCount && positiveCount >= 2) {
       sentiment = 'positive';
     } else if (negativeCount > positiveCount && negativeCount >= 2) {
-      sentiment = 'negative';
-    } else {
-      sentiment = 'neutral';
+    sentiment = 'negative';
+  } else {
+    sentiment = 'neutral';
     }
   }
 

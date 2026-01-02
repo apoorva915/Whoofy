@@ -5,6 +5,7 @@ export interface VisualSimilarity {
   similarity: number; // 0-1, cosine similarity score
   match: boolean; // true if similarity >= threshold
   confidence: 'high' | 'medium' | 'low' | 'none';
+  referenceImageIndex?: number; // Index of the reference image that matched (when multiple images provided)
 }
 
 /**
@@ -48,13 +49,14 @@ export interface VisualSummary {
     reasoning: string; // Explanation of why this sentiment was determined
     confidence: number;
   };
-  // Visual similarity summary (if reference image provided)
+  // Visual similarity summary (if reference image(s) provided)
   visualSimilaritySummary?: {
     averageSimilarity: number;
     maxSimilarity: number;
     matchedFrames: number;
     totalFrames: number;
     visibleSeconds?: number;
+    referenceImageCount?: number; // Number of reference images used
   };
   frameAnalyses: FrameAnalysis[];
 }

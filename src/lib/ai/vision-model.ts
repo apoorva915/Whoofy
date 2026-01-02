@@ -39,7 +39,8 @@ class VisionModel {
   private yoloAvailable: boolean | null = null;
   private ocrAvailable: boolean | null = null;
   private clipAvailable: boolean | null = null;
-  private referenceEmbeddingPath: string | null = null; // Path to saved reference embedding JSON
+  private referenceEmbeddingPath: string | null = null; // Path to saved reference embedding JSON (deprecated, use referenceEmbeddingPaths)
+  private referenceEmbeddingPaths: string[] = []; // Paths to saved reference embedding JSON files
 
   constructor() {
     // Use same Python command as Whisper
@@ -153,7 +154,32 @@ class VisionModel {
   }
 
   /**
-   * Set reference product image for CLIP similarity matching
+   * Set multiple reference product images for CLIP similarity matching
+   * @param referenceImagePaths Array of paths to reference product images
+   * @returns Array of paths to saved embedding JSON files
+   */
+  async setReferenceImages(referenceImagePaths: string[]): Promise<string[]> {
+    const embeddingPaths: string[] = [];
+    
+    for (const referenceImagePath of referenceImagePaths) {
+      const embeddingPath = await this.setReferenceImage(referenceImagePath);
+      if (embeddingPath) {
+        embeddingPaths.push(embeddingPath);
+      }
+    }
+    
+    this.referenceEmbeddingPaths = embeddingPaths;
+    
+    if (embeddingPaths.length > 0) {
+      this.clipAvailable = true;
+      logger.info({ count: embeddingPaths.length }, `Set ${embeddingPaths.length} reference image(s) for CLIP similarity`);
+    }
+    
+    return embeddingPaths;
+  }
+
+  /**
+   * Set reference product image for CLIP similarity matching (single image, kept for backward compatibility)
    * @param referenceImagePath Path to reference product image
    * @returns Path to saved embedding JSON file
    */
@@ -197,7 +223,11 @@ class VisionModel {
       const embeddingPath = path.join(tempDir, `ref_embedding_${Date.now()}.json`);
       await fs.writeJSON(embeddingPath, embeddingResult);
 
+      // Update both single and array for backward compatibility
       this.referenceEmbeddingPath = embeddingPath;
+      if (!this.referenceEmbeddingPaths.includes(embeddingPath)) {
+        this.referenceEmbeddingPaths.push(embeddingPath);
+      }
       this.clipAvailable = true;
       logger.info({ 
         embeddingPath,
@@ -223,17 +253,22 @@ class VisionModel {
   }
 
   /**
-   * Compute visual similarity between frame and reference image
+   * Compute visual similarity between frame and reference images (compares against all and returns best match)
    * @param framePath Path to frame image
-   * @returns Visual similarity result or null if unavailable
+   * @returns Visual similarity result with best match across all reference images, or null if unavailable
    */
-  private async computeVisualSimilarity(framePath: string): Promise<{ similarity: number; match: boolean; confidence: 'high' | 'medium' | 'low' | 'none' } | null> {
+  private async computeVisualSimilarity(framePath: string): Promise<{ similarity: number; match: boolean; confidence: 'high' | 'medium' | 'low' | 'none'; referenceImageIndex?: number } | null> {
     // Check if CLIP is available
     if (this.clipAvailable === false) {
       return null; // CLIP was disabled due to errors
     }
 
-    if (!this.referenceEmbeddingPath || !(await fs.pathExists(this.referenceEmbeddingPath))) {
+    // Use multiple reference images if available, otherwise fall back to single
+    const embeddingPaths = this.referenceEmbeddingPaths.length > 0 
+      ? this.referenceEmbeddingPaths 
+      : (this.referenceEmbeddingPath ? [this.referenceEmbeddingPath] : []);
+
+    if (embeddingPaths.length === 0) {
       return null;
     }
 
@@ -246,28 +281,59 @@ class VisionModel {
         ? framePath
         : path.resolve(process.cwd(), framePath);
 
-      const result = await this.runClipCommand(['compare', absoluteFramePath, this.referenceEmbeddingPath]);
+      // Compare against all reference images and take the best match
+      const results: Array<{ similarity: number; match: boolean; confidence: 'high' | 'medium' | 'low' | 'none'; index: number }> = [];
       
-      if (result.error) {
-        logger.debug({ error: result.error, framePath }, 'CLIP similarity computation failed for frame');
-        // Mark CLIP as unavailable if we get consistent errors
-        if (result.error.includes('dependencies not installed')) {
-          this.clipAvailable = false;
+      for (let i = 0; i < embeddingPaths.length; i++) {
+        const embeddingPath = embeddingPaths[i];
+        
+        if (!(await fs.pathExists(embeddingPath))) {
+          continue;
         }
+
+        try {
+          const result = await this.runClipCommand(['compare', absoluteFramePath, embeddingPath]);
+          
+          if (result.error) {
+            logger.debug({ error: result.error, framePath, referenceIndex: i }, 'CLIP similarity computation failed for reference image');
+            continue;
+          }
+
+          results.push({
+            similarity: result.similarity,
+            match: result.match,
+            confidence: result.confidence,
+            index: i,
+          });
+        } catch (error: any) {
+          logger.debug({ error: error?.message, framePath, referenceIndex: i }, 'CLIP similarity failed for reference image');
+          continue;
+        }
+      }
+
+      if (results.length === 0) {
         return null;
       }
 
+      // Find the best match (highest similarity)
+      const bestMatch = results.reduce((best, current) => 
+        current.similarity > best.similarity ? current : best
+      );
+
       logger.debug({ 
         framePath: path.basename(framePath),
-        similarity: result.similarity,
-        match: result.match,
-        confidence: result.confidence 
-      }, 'CLIP similarity computed');
+        similarity: bestMatch.similarity,
+        match: bestMatch.match,
+        confidence: bestMatch.confidence,
+        referenceImageIndex: bestMatch.index,
+        totalReferences: embeddingPaths.length
+      }, 'CLIP similarity computed (best match across all reference images)');
 
       return {
-        similarity: result.similarity,
-        match: result.match,
-        confidence: result.confidence,
+        similarity: bestMatch.similarity,
+        match: bestMatch.match,
+        confidence: bestMatch.confidence,
+        referenceImageIndex: bestMatch.index,
       };
     } catch (error: any) {
       logger.debug({ error: error?.message, framePath }, 'CLIP similarity failed');
@@ -374,7 +440,7 @@ class VisionModel {
       }
 
       // Run object detection, OCR, and visual similarity in parallel
-      const [objects, ocrText, visualSimilarity] = await Promise.all([
+      const [objects, ocrText, visualSimilarityRaw] = await Promise.all([
         this.detectObjects(framePath),
         this.readText(framePath),
         this.computeVisualSimilarity(framePath), // May return null if no reference image
@@ -384,8 +450,50 @@ class VisionModel {
       const filteredObjects = this.filterFalsePositives(objects, ocrText);
 
       // Extract brands from objects and OCR text using dynamic brand/product detection
-      // Also incorporate visual similarity into brand confidence
-      const brands = this.detectBrands(filteredObjects, ocrText, targetBrand, productNames, visualSimilarity);
+      const brands = this.detectBrands(filteredObjects, ocrText, targetBrand, productNames, null); // Pass null initially
+
+      // Validate visual similarity with contextual information to reduce false positives
+      // Only accept matches if:
+      // 1. High similarity (>= 0.50) - likely a real match
+      // 2. Medium similarity (0.40-0.50) WITH product-related objects OR brand text
+      // 3. Reject low similarity (< 0.40) or medium without context
+      let visualSimilarity = visualSimilarityRaw;
+      if (visualSimilarity && visualSimilarity.match) {
+        const hasProductRelatedObject = filteredObjects.some(obj => 
+          BRAND_RELATED_OBJECTS.some(related => obj.toLowerCase().includes(related))
+        );
+        const hasBrandText = brands.length > 0 && brands.some(b => b.confidence > 0.3);
+        const hasContext = hasProductRelatedObject || hasBrandText;
+        
+        // Stricter validation based on similarity score
+        if (visualSimilarity.similarity < 0.50) {
+          // Medium similarity (0.40-0.50) requires contextual evidence
+          if (!hasContext) {
+            logger.debug({
+              timestamp,
+              similarity: visualSimilarity.similarity,
+              objects: filteredObjects,
+              brands: brands.map(b => `${b.name} (${b.confidence})`),
+              reason: 'Medium similarity without product-related objects or brand text - rejecting as false positive'
+            }, 'Rejecting CLIP match due to lack of contextual evidence');
+            
+            visualSimilarity = {
+              ...visualSimilarity,
+              match: false,
+              confidence: 'none' as const,
+            };
+          }
+        }
+        
+        // If we have context, update brands with visual similarity boost
+        if (visualSimilarity.match && hasContext) {
+          // Re-run brand detection with visual similarity for confidence boost
+          const brandsWithVisual = this.detectBrands(filteredObjects, ocrText, targetBrand, productNames, visualSimilarity);
+          // Update brands array
+          brands.length = 0;
+          brands.push(...brandsWithVisual);
+        }
+      }
 
       // Log detected objects and OCR text for debugging (all frames)
       const logData: any = {
@@ -404,13 +512,20 @@ class VisionModel {
           similarity: Number(visualSimilarity.similarity.toFixed(3)),
           match: visualSimilarity.match,
           confidence: visualSimilarity.confidence,
+          validated: visualSimilarityRaw !== visualSimilarity, // Indicate if validation changed the result
         };
-        logger.info(logData, `Frame ${timestamp}s - CLIP similarity: ${visualSimilarity.similarity.toFixed(3)} (${visualSimilarity.confidence})`);
+        if (visualSimilarity.match) {
+          logger.info(logData, `Frame ${timestamp}s - CLIP similarity: ${visualSimilarity.similarity.toFixed(3)} (${visualSimilarity.confidence}) - MATCH`);
+        } else {
+          logger.debug(logData, `Frame ${timestamp}s - CLIP similarity: ${visualSimilarity.similarity.toFixed(3)} (${visualSimilarity.confidence}) - NO MATCH (rejected)`);
+        }
       } else {
         logData.visualSimilarity = 'none';
         logger.debug(logData, `Frame ${timestamp}s detection results`);
       }
 
+      // Include visual similarity if available (even if not a match, so users can see the score)
+      // But mark match=false if validation rejected it
       return {
         timestamp,
         objects: filteredObjects,

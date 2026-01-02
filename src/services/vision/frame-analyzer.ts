@@ -207,23 +207,40 @@ class FrameAnalyzer {
     frameInterval: number,
     videoDuration: number | undefined
   ): VisualSummary['visualSimilaritySummary'] {
-    const similarities = analyses
+    // Get all frames with visual similarity computed
+    const allSimilarities = analyses
       .map(a => a.visualSimilarity)
       .filter((vs): vs is NonNullable<typeof vs> => vs !== undefined);
 
-    if (similarities.length === 0) {
+    if (allSimilarities.length === 0) {
       return undefined;
     }
 
-    const similarityScores = similarities.map(vs => vs.similarity);
+    // Only count validated matches (match === true)
+    const matchedSimilarities = allSimilarities.filter(vs => vs.match === true);
+    
+    if (matchedSimilarities.length === 0) {
+      return undefined; // No validated matches
+    }
+
+    // Calculate statistics only for validated matches
+    const similarityScores = matchedSimilarities.map(vs => vs.similarity);
     const averageSimilarity = similarityScores.reduce((a, b) => a + b, 0) / similarityScores.length;
     const maxSimilarity = Math.max(...similarityScores);
-    const matchedFrames = similarities.filter(vs => vs.match).length;
-    const totalFrames = similarities.length;
+    const matchedFrames = matchedSimilarities.length;
+    const totalFrames = analyses.length; // Total frames analyzed
     const visibleSeconds = matchedFrames * frameInterval;
     const clampedSeconds = videoDuration != null
       ? Math.min(videoDuration, visibleSeconds)
       : visibleSeconds;
+
+    // Count unique reference image indices to determine how many reference images were used
+    const referenceImageIndices = new Set(
+      matchedSimilarities
+        .map(vs => vs.referenceImageIndex)
+        .filter((idx): idx is number => idx !== undefined)
+    );
+    const referenceImageCount = referenceImageIndices.size > 0 ? referenceImageIndices.size : 1;
 
     return {
       averageSimilarity: Number(averageSimilarity.toFixed(3)),
@@ -231,11 +248,13 @@ class FrameAnalyzer {
       matchedFrames,
       totalFrames,
       visibleSeconds: Number(clampedSeconds.toFixed(2)),
+      referenceImageCount,
     };
   }
 
   /**
    * Build brand confirmation - explicitly states if target brand/product was detected
+   * Now includes CLIP visual similarity as evidence
    */
   private buildBrandConfirmation(
     brandsDetected: Array<{ name: string; confidence: number; totalFrames: number; totalVisibleSeconds?: number }>,
@@ -268,7 +287,7 @@ class FrameAnalyzer {
       ...productNames.map(p => p.toLowerCase()),
     ];
 
-    // Check if any target brand/product was detected
+    // Check if any target brand/product was detected via OCR/YOLO
     let detectedBrand: { name: string; confidence: number; totalFrames: number; totalVisibleSeconds?: number } | null = null;
     let detectedInFrames = 0;
     let maxConfidence = 0;
@@ -299,7 +318,7 @@ class FrameAnalyzer {
       }
     }
 
-    // Count frames where target brand was detected
+    // Count frames where target brand was detected via OCR/YOLO
     if (!detectedBrand) {
       analyses.forEach((analysis) => {
         const hasTargetBrand = analysis.brands.some((brand) => {
@@ -314,6 +333,59 @@ class FrameAnalyzer {
       });
     }
 
+    // Check CLIP visual similarity as additional evidence
+    // If CLIP shows strong matches, count that as brand detection even if OCR didn't find text
+    const clipMatchedFrames = analyses.filter(analysis => 
+      analysis.visualSimilarity && 
+      analysis.visualSimilarity.match &&
+      (analysis.visualSimilarity.confidence === 'high' || 
+       analysis.visualSimilarity.similarity >= 0.50)
+    ).length;
+
+    const clipTotalFrames = analyses.filter(a => a.visualSimilarity !== undefined).length;
+    
+    // If CLIP shows strong evidence (high confidence matches in significant number of frames)
+    // and OCR/YOLO didn't detect the brand, use CLIP as evidence
+    if (!detectedBrand && clipMatchedFrames > 0) {
+      // Require at least 30% of frames with CLIP matches OR at least 5 high-confidence matches
+      const clipMatchRatio = clipTotalFrames > 0 ? clipMatchedFrames / clipTotalFrames : 0;
+      const hasStrongClipEvidence = clipMatchRatio >= 0.3 || clipMatchedFrames >= 5;
+      
+      if (hasStrongClipEvidence) {
+        // Calculate average CLIP similarity for confidence
+        const clipSimilarities = analyses
+          .filter(a => a.visualSimilarity?.match && a.visualSimilarity.confidence === 'high')
+          .map(a => a.visualSimilarity!.similarity);
+        
+        const avgClipSimilarity = clipSimilarities.length > 0
+          ? clipSimilarities.reduce((a, b) => a + b, 0) / clipSimilarities.length
+          : 0.5; // Default confidence if no high-confidence matches
+        
+        detectedInFrames = clipMatchedFrames;
+        maxConfidence = Math.min(0.95, avgClipSimilarity);
+        
+        logger.info({
+          targetBrandName,
+          clipMatchedFrames,
+          clipTotalFrames,
+          avgClipSimilarity,
+          reason: 'Brand detected via CLIP visual similarity (OCR/YOLO did not find text)'
+        }, 'Brand detection confirmed via CLIP visual similarity');
+      }
+    } else if (detectedBrand && clipMatchedFrames > 0) {
+      // If both OCR/YOLO and CLIP detected, boost confidence
+      const clipSimilarities = analyses
+        .filter(a => a.visualSimilarity?.match && a.visualSimilarity.confidence === 'high')
+        .map(a => a.visualSimilarity!.similarity);
+      
+      if (clipSimilarities.length > 0) {
+        const avgClipSimilarity = clipSimilarities.reduce((a, b) => a + b, 0) / clipSimilarities.length;
+        // Boost confidence by incorporating CLIP evidence
+        maxConfidence = Math.min(0.95, (maxConfidence * 0.6) + (avgClipSimilarity * 0.4));
+        detectedInFrames = Math.max(detectedInFrames, clipMatchedFrames);
+      }
+    }
+
     const detected = detectedBrand !== null || detectedInFrames > 0;
     const visibleSeconds = detectedInFrames * frameInterval;
     const clampedSeconds = videoDuration != null
@@ -324,11 +396,15 @@ class FrameAnalyzer {
     let message: string;
     if (detected) {
       const brandDisplayName = detectedBrand?.name || targetBrandName;
+      const detectionMethod = detectedBrand 
+        ? 'detected via text/object recognition' 
+        : 'detected via visual similarity matching';
+      
       // Use simple, direct confirmation: "Yes, it shows [Brand/Product]"
       if (detectedInFrames === 1) {
-        message = `Yes, it shows ${brandDisplayName} (detected in 1 frame).`;
+        message = `Yes, it shows ${brandDisplayName} (detected in 1 frame${detectedBrand ? '' : ' via visual similarity'}).`;
       } else {
-        message = `Yes, it shows ${brandDisplayName} (detected in ${detectedInFrames} frames, visible for ${clampedSeconds.toFixed(1)}s).`;
+        message = `Yes, it shows ${brandDisplayName} (detected in ${detectedInFrames} frames, visible for ${clampedSeconds.toFixed(1)}s${detectedBrand ? '' : ' via visual similarity'}).`;
       }
     } else {
       message = `No, ${targetBrandName} was not detected in the video frames.`;
@@ -337,7 +413,7 @@ class FrameAnalyzer {
     return {
       detected,
       message,
-      confidence: detectedBrand ? detectedBrand.confidence : (detectedInFrames > 0 ? 0.6 : 0),
+      confidence: detectedBrand ? maxConfidence : (detectedInFrames > 0 ? Math.max(0.6, maxConfidence) : 0),
       detectedInFrames,
       totalVisibleSeconds: detected ? Number(clampedSeconds.toFixed(2)) : 0,
     };

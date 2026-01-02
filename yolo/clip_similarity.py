@@ -113,10 +113,19 @@ def compute_similarity(reference_image_path: str, frame_image_path: str):
         # For product matching, we're interested in positive similarity
         similarity = max(0.0, similarity)
         
+        # Stricter thresholds for product matching
+        # Base threshold increased to reduce false positives
+        match_threshold = 0.40  # Minimum similarity to consider a match
+        high_threshold = 0.50   # High confidence threshold
+        medium_threshold = 0.45 # Medium confidence threshold
+        
+        is_match = similarity >= match_threshold
+        confidence = "high" if similarity >= high_threshold else "medium" if similarity >= medium_threshold else "low" if is_match else "none"
+        
         return {
             "similarity": float(similarity),
-            "match": similarity >= 0.30,  # Threshold for weak match
-            "confidence": "high" if similarity >= 0.45 else "medium" if similarity >= 0.35 else "low" if similarity >= 0.30 else "none"
+            "match": is_match,
+            "confidence": confidence
         }
     except Exception as e:
         return {"error": f"Failed to compute similarity: {str(e)}"}
@@ -179,10 +188,18 @@ def compare_with_embedding(frame_image_path: str, reference_embedding_list: list
         similarity = torch.cosine_similarity(ref_embedding, frame_embedding).item()
         similarity = max(0.0, similarity)
         
+        # Stricter thresholds for product matching
+        match_threshold = 0.40  # Minimum similarity to consider a match
+        high_threshold = 0.50   # High confidence threshold
+        medium_threshold = 0.45 # Medium confidence threshold
+        
+        is_match = similarity >= match_threshold
+        confidence = "high" if similarity >= high_threshold else "medium" if similarity >= medium_threshold else "low" if is_match else "none"
+        
         return {
             "similarity": float(similarity),
-            "match": similarity >= 0.30,
-            "confidence": "high" if similarity >= 0.45 else "medium" if similarity >= 0.35 else "low" if similarity >= 0.30 else "none"
+            "match": is_match,
+            "confidence": confidence
         }
     except Exception as e:
         return {"error": f"Failed to compare with embedding: {str(e)}"}
@@ -256,4 +273,5 @@ if __name__ == "__main__":
     else:
         print(json.dumps({"error": f"Unknown command: {command}"}))
         sys.exit(1)
+
 

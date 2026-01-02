@@ -54,7 +54,8 @@ class VideoProcessor {
       targetBrandName?: string;
       productNames?: string[]; // Optional array of product names to detect
       analyzeSentiment?: boolean;
-      referenceImagePath?: string; // Optional path to reference product image for CLIP similarity
+      referenceImagePath?: string; // Optional path to reference product image for CLIP similarity (deprecated, use referenceImagePaths)
+      referenceImagePaths?: string[]; // Optional array of paths to reference product images for CLIP similarity
     } = {}
   ): Promise<VideoProcessingResult> {
     const {
@@ -87,12 +88,19 @@ class VideoProcessor {
       });
     }
 
-    // Step 3a: Set reference image for CLIP similarity (if provided)
-    if (options.referenceImagePath) {
+    // Step 3a: Set reference images for CLIP similarity (if provided)
+    // Support both single image (backward compatibility) and multiple images
+    const referenceImagePaths = options.referenceImagePaths || 
+                                (options.referenceImagePath ? [options.referenceImagePath] : []);
+    
+    if (referenceImagePaths.length > 0) {
       const { visionModel } = await import('@/lib/ai/vision-model');
-      const embeddingPath = await visionModel.setReferenceImage(options.referenceImagePath);
-      if (embeddingPath) {
-        logger.info({ embeddingPath }, 'Reference image set for CLIP similarity matching - visual similarity enabled');
+      const embeddingPaths = await visionModel.setReferenceImages(referenceImagePaths);
+      if (embeddingPaths.length > 0) {
+        logger.info({ 
+          count: embeddingPaths.length,
+          embeddingPaths 
+        }, `Reference images set for CLIP similarity matching - visual similarity enabled for ${embeddingPaths.length} image(s)`);
       } else {
         logger.warn('CLIP visual similarity is not available - dependencies may not be installed');
         logger.info('To enable CLIP, install dependencies: pip install -r yolo/requirements_clip.txt');

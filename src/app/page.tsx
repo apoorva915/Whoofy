@@ -95,6 +95,7 @@ interface VerificationResult {
         matchedFrames: number;
         totalFrames: number;
         visibleSeconds?: number;
+        referenceImageCount?: number;
       };
       frameAnalyses: Array<{
         timestamp: number;
@@ -107,6 +108,7 @@ interface VerificationResult {
           similarity: number;
           match: boolean;
           confidence: 'high' | 'medium' | 'low' | 'none';
+          referenceImageIndex?: number;
         };
       }>;
     };
@@ -118,23 +120,37 @@ export default function Home() {
   const [reelUrl, setReelUrl] = useState('');
   const [targetBrandName, setTargetBrandName] = useState('Cadbury');
   const [productNames, setProductNames] = useState('Dairy Milk, Silk Brownie');
-  const [productImage, setProductImage] = useState<File | null>(null);
-  const [productImagePreview, setProductImagePreview] = useState<string | null>(null);
+  const [productImages, setProductImages] = useState<File[]>([]);
+  const [productImagePreviews, setProductImagePreviews] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<VerificationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [framesExpanded, setFramesExpanded] = useState(false);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setProductImage(file);
-      // Create preview
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProductImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) {
+      setProductImages(files);
+      // Create previews for all images
+      const previews: string[] = [];
+      files.forEach((file) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          previews.push(reader.result as string);
+          if (previews.length === files.length) {
+            setProductImagePreviews(previews);
+          }
+        };
+        reader.readAsDataURL(file);
+      });
     }
+  };
+
+  const removeImage = (index: number) => {
+    const newImages = productImages.filter((_, i) => i !== index);
+    const newPreviews = productImagePreviews.filter((_, i) => i !== index);
+    setProductImages(newImages);
+    setProductImagePreviews(newPreviews);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -150,15 +166,19 @@ export default function Home() {
         .map(name => name.trim())
         .filter(name => name.length > 0);
 
-      // Convert image to base64 if provided
-      let productImageBase64: string | undefined = undefined;
-      if (productImage) {
-        productImageBase64 = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(productImage);
-        });
+      // Convert images to base64 if provided
+      let productImagesBase64: string[] | undefined = undefined;
+      if (productImages.length > 0) {
+        productImagesBase64 = await Promise.all(
+          productImages.map((file) => 
+            new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onloadend = () => resolve(reader.result as string);
+              reader.onerror = reject;
+              reader.readAsDataURL(file);
+            })
+          )
+        );
       }
 
       const response = await fetch('/api/verify', {
@@ -170,7 +190,7 @@ export default function Home() {
           reelUrl,
           targetBrandName: targetBrandName.trim() || undefined,
           productNames: productNamesArray.length > 0 ? productNamesArray : undefined,
-          productImage: productImageBase64,
+          productImages: productImagesBase64, // Changed to plural
         }),
       });
 
@@ -181,6 +201,7 @@ export default function Home() {
       }
 
       setResult(data.data);
+      setFramesExpanded(false); // Reset expansion when new result loads
     } catch (err: any) {
       setError(err.message || 'An error occurred');
     } finally {
@@ -265,13 +286,14 @@ export default function Home() {
           </div>
 
           <div style={{ marginBottom: '20px' }}>
-            <label htmlFor="productImage" style={{ display: 'block', marginBottom: '5px', fontWeight: '600' }}>
-              Product Image (Optional - for CLIP visual similarity)
+            <label htmlFor="productImages" style={{ display: 'block', marginBottom: '5px', fontWeight: '600' }}>
+              Product Images (Optional - for CLIP visual similarity)
             </label>
             <input
-              id="productImage"
+              id="productImages"
               type="file"
               accept="image/*"
+              multiple
               onChange={handleImageChange}
               disabled={loading}
               style={{
@@ -282,26 +304,54 @@ export default function Home() {
                 fontSize: '14px',
               }}
             />
-            {productImagePreview && (
-              <div style={{ marginTop: '10px' }}>
-                <img 
-                  src={productImagePreview} 
-                  alt="Product preview" 
-                  style={{ 
-                    maxWidth: '200px', 
-                    maxHeight: '200px', 
-                    borderRadius: '4px',
-                    border: '1px solid #ddd'
-                  }} 
-                />
-                <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-                  {productImage?.name}
-                </div>
+            {productImagePreviews.length > 0 && (
+              <div style={{ marginTop: '10px', display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                {productImagePreviews.map((preview, index) => (
+                  <div key={index} style={{ position: 'relative', display: 'inline-block' }}>
+                    <img 
+                      src={preview} 
+                      alt={`Product preview ${index + 1}`} 
+                      style={{ 
+                        maxWidth: '150px', 
+                        maxHeight: '150px', 
+                        borderRadius: '4px',
+                        border: '1px solid #ddd',
+                        objectFit: 'cover'
+                      }} 
+                    />
+                    <button
+                      onClick={() => removeImage(index)}
+                      style={{
+                        position: 'absolute',
+                        top: '4px',
+                        right: '4px',
+                        background: '#f44336',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '50%',
+                        width: '24px',
+                        height: '24px',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        fontWeight: 'bold',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                      title="Remove image"
+                    >
+                      ×
+                    </button>
+                    <div style={{ fontSize: '11px', color: '#666', marginTop: '4px', textAlign: 'center' }}>
+                      {productImages[index]?.name}
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
             <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-              Upload a reference image of the product to enable visual similarity matching using CLIP. 
-              This helps detect products even when OCR fails or text is not visible.
+              Upload one or more reference images of the product(s) to enable visual similarity matching using CLIP. 
+              This helps detect products even when OCR fails or text is not visible. You can upload multiple product variants or angles.
             </div>
           </div>
 
@@ -653,6 +703,18 @@ export default function Home() {
                         }}>
                           {result.vision.visualSummary.visualSimilaritySummary.matchedFrames}/{result.vision.visualSummary.visualSimilaritySummary.totalFrames} frames matched
                         </span>
+                        {result.vision.visualSummary.visualSimilaritySummary.referenceImageCount && result.vision.visualSummary.visualSimilaritySummary.referenceImageCount > 1 && (
+                          <span style={{
+                            padding: '4px 12px',
+                            borderRadius: '12px',
+                            fontSize: '11px',
+                            fontWeight: '500',
+                            backgroundColor: '#ffb74d',
+                            color: '#fff'
+                          }}>
+                            {result.vision.visualSummary.visualSimilaritySummary.referenceImageCount} reference images
+                          </span>
+                        )}
                       </div>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px', marginTop: '10px' }}>
                         <div>
@@ -692,6 +754,8 @@ export default function Home() {
                             'Weak visual match - product may be present' :
                             'Low similarity - product not clearly visible'
                         }
+                        {result.vision.visualSummary.visualSimilaritySummary.referenceImageCount && result.vision.visualSummary.visualSimilaritySummary.referenceImageCount > 1 && 
+                          ` (compared against ${result.vision.visualSummary.visualSimilaritySummary.referenceImageCount} reference images, best match shown)`}
                       </div>
                     </div>
                   )}
@@ -773,14 +837,17 @@ export default function Home() {
                         Frame-by-Frame Analysis ({result.vision.visualSummary.frameAnalyses.length} frames):
                       </strong>
                       <div style={{ 
-                        maxHeight: '300px', 
-                        overflowY: 'auto', 
+                        maxHeight: framesExpanded ? 'none' : '300px', 
+                        overflowY: framesExpanded ? 'visible' : 'auto', 
                         border: '1px solid #e0e0e0', 
                         borderRadius: '4px',
                         padding: '10px',
                         backgroundColor: '#fafafa'
                       }}>
-                        {result.vision.visualSummary.frameAnalyses.slice(0, 10).map((frame, idx) => (
+                        {(framesExpanded 
+                          ? result.vision.visualSummary.frameAnalyses 
+                          : result.vision.visualSummary.frameAnalyses.slice(0, 10)
+                        ).map((frame, idx) => (
                           <div
                             key={idx}
                             style={{
@@ -824,6 +891,7 @@ export default function Home() {
                               }}>
                                 <strong>CLIP Similarity:</strong> {(frame.visualSimilarity.similarity * 100).toFixed(1)}% 
                                 {' '}({frame.visualSimilarity.confidence})
+                                {frame.visualSimilarity.referenceImageIndex !== undefined && ` [Ref #${frame.visualSimilarity.referenceImageIndex + 1}]`}
                                 {frame.visualSimilarity.match && ' ✓'}
                               </div>
                             )}
@@ -835,8 +903,29 @@ export default function Home() {
                           </div>
                         ))}
                         {result.vision.visualSummary.frameAnalyses.length > 10 && (
-                          <div style={{ fontSize: '12px', color: '#666', textAlign: 'center', padding: '8px' }}>
-                            + {result.vision.visualSummary.frameAnalyses.length - 10} more frames
+                          <div 
+                            onClick={() => setFramesExpanded(!framesExpanded)}
+                            style={{ 
+                              fontSize: '12px', 
+                              color: '#0070f3',
+                              textAlign: 'center', 
+                              padding: '8px',
+                              cursor: 'pointer',
+                              fontWeight: '600',
+                              borderTop: '1px solid #e0e0e0',
+                              marginTop: '8px',
+                              backgroundColor: '#fff',
+                              borderRadius: '4px',
+                              transition: 'background-color 0.2s'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f0f0f0'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#fff'}
+                            title={framesExpanded ? 'Click to collapse' : 'Click to expand'}
+                          >
+                            {framesExpanded 
+                              ? `▲ Show less (hide ${result.vision.visualSummary.frameAnalyses.length - 10} frames)`
+                              : `▼ Show all ${result.vision.visualSummary.frameAnalyses.length} frames (+ ${result.vision.visualSummary.frameAnalyses.length - 10} more)`
+                            }
                           </div>
                         )}
                       </div>

@@ -57,12 +57,14 @@ python yolo/clip_similarity.py compare <frame_image_path> <embedding_json_file>
 
 ## Similarity Thresholds
 
-| Similarity Score | Meaning | Confidence |
-|-----------------|---------|------------|
-| ≥ 0.45 | Very confident match | high |
-| ≥ 0.35 | Likely product | medium |
-| ≥ 0.30 | Weak visual match | low |
-| < 0.30 | No match | none |
+| Similarity Score | Meaning | Confidence | Context Required |
+|-----------------|---------|------------|-----------------|
+| ≥ 0.50 | Very confident match | high | None (accepted automatically) |
+| 0.45-0.50 | Likely product match | medium | Product objects OR brand text |
+| 0.40-0.45 | Possible match | medium | Product objects OR brand text |
+| < 0.40 | No match | none | N/A (rejected) |
+
+**Note:** Medium similarity matches (0.40-0.50) require contextual evidence (product-related objects like "bottle", "box" OR detected brand text) to reduce false positives. High similarity (≥0.50) is accepted without context.
 
 ## Integration
 
@@ -93,4 +95,5 @@ The system automatically:
 - Ensure reference image is clear and shows the product prominently
 - Try different reference images (front view, side view, etc.)
 - Check that frames are not too blurry or dark
+
 
