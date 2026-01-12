@@ -145,9 +145,7 @@ export const SubmissionModel = {
       logger.error({ error }, 'Error deleting submission:', error);
       throw new DatabaseError('Failed to delete submission', error);
     }
-  },
-
-  /**
+  },  /**
    * Map Prisma model to Submission type
    */
   mapToSubmission(submission: any): Submission {

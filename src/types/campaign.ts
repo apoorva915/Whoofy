@@ -62,9 +62,7 @@ export const CreateCampaignSchema = z.object({
   endDate: z.date().or(z.string().datetime()),
 });
 
-export type CreateCampaignInput = z.infer<typeof CreateCampaignSchema>;
-
-/**
+export type CreateCampaignInput = z.infer<typeof CreateCampaignSchema>;/**
  * Campaign Update Input
  */
 export const UpdateCampaignSchema = CreateCampaignSchema.partial();

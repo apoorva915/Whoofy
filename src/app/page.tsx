@@ -2,34 +2,133 @@
 
 import { useState } from 'react';
 
-interface VerificationResult {
+interface ProfileData {
   reelUrl: string;
-  video: {
-    id: string;
-    duration: number;
-    frameCount: number;
-    frames: string[];
-  };
   metadata: {
     caption: string | null;
+    transcript: string | null;
     likes: number;
     comments: number;
     views: number | null;
+    shares: number | null;
     timestamp: Date;
+    duration: number | null;
+    hashtags: string[];
+    mentions: string[];
+    taggedUsers: string[];
+    videoUrl: string | null;
+    thumbnailUrl: string | null;
+    musicInfo: {
+      artist: string | null;
+      song: string | null;
+      originalAudio: boolean;
+    } | null;
+    isSponsored: boolean;
+    commentsDisabled: boolean;
+    coAuthors: string[];
+    mediaDimensions: {
+      width: number | null;
+      height: number | null;
+    } | null;
+    comments: Array<{
+      id?: string;
+      commentUrl?: string;
+      text: string;
+      author: string;
+      ownerUsername?: string;
+      ownerProfilePicUrl?: string;
+      timestamp: Date;
+      likes?: number;
+      likesCount?: number;
+      repliesCount?: number;
+      replies?: Array<{
+        id?: string;
+        text: string;
+        author: string;
+        ownerUsername?: string;
+        ownerProfilePicUrl?: string;
+        timestamp: Date;
+        likes?: number;
+        likesCount?: number;
+        repliesCount?: number;
+      }>;
+      owner?: {
+        id?: string;
+        username?: string;
+        fullName?: string;
+        profilePicUrl?: string;
+        isVerified?: boolean;
+        isPrivate?: boolean;
+      };
+    }>;
+    // Additional fields from Post Scraper
+    postType?: string | null;
+    isPinned?: boolean | null;
+    isPaidPartnership?: boolean | null;
+    childPosts?: Array<{
+      id: string;
+      url: string;
+      imageUrl: string | null;
+      caption: string | null;
+    }>;
+    imageUrls?: string[];
+    imageAltText?: string[];
+    imageDimensions?: Array<{
+      width: number | null;
+      height: number | null;
+    }>;
+    replyCount?: number | null;
+    postOwnerInfo?: {
+      username: string | null;
+      fullName: string | null;
+      profilePicUrl: string | null;
+      followers?: number | null;
+      following?: number | null;
+    } | null;
   } | null;
   creator: {
     username: string;
     followers: number;
     verified: boolean;
     bio: string | null;
+    accountType?: string;
+    following?: number;
+    mediaCount?: number;
+    profilePictureUrl?: string | null;
+    website?: string | null;
+    // Additional fields from Profile Scraper
+    profileId?: string | null;
+    location?: string | null;
+    joinDate?: Date | null;
+    videoCount?: number | null;
+    highlightReelsCount?: number | null;
+    businessCategory?: string | null;
+    relatedProfiles?: string[];
+    latestPosts?: Array<{
+      id: string;
+      url: string;
+      caption: string | null;
+      likes: number;
+      comments: number;
+      timestamp: Date;
+      type: string;
+    }>;
+    igtvVideoCount?: number | null;
+    usernameChangeCount?: number | null;
+    isRecentlyJoined?: boolean | null;
+    verifiedDate?: Date | null;
+    facebookId?: string | null;
   } | null;
-  audio: {
-    track: {
-      title: string;
-      artist: string;
-    } | null;
-    confidence: number;
-  } | null;
+  sources?: {
+    reel: string[];
+    creator: string[];
+  };
+}
+
+interface TranscriptionData {
+  reelUrl: string;
+  videoId: string;
+  videoPath: string;
   transcription: {
     transcript: string;
     language: string;
@@ -66,6 +165,16 @@ interface VerificationResult {
     };
     processingTime: number;
   } | null;
+}
+
+interface AnalysisData {
+  reelUrl: string;
+  video: {
+    id: string;
+    duration: number;
+    frameCount: number;
+    frames: string[];
+  };
   vision: {
     storagePath: string | null;
     visualSummary: {
@@ -113,7 +222,6 @@ interface VerificationResult {
       }>;
     };
   } | null;
-  processingTime: number;
 }
 
 export default function Home() {
@@ -122,8 +230,62 @@ export default function Home() {
   const [productNames, setProductNames] = useState('Dairy Milk, Silk Brownie');
   const [productImages, setProductImages] = useState<File[]>([]);
   const [productImagePreviews, setProductImagePreviews] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<VerificationResult | null>(null);
+  
+  // Tab states
+  const [activeTab, setActiveTab] = useState<'data' | 'transcription' | 'analysis'>('data');
+  const [loadingData, setLoadingData] = useState(false);
+  const [loadingTranscription, setLoadingTranscription] = useState(false);
+  const [loadingAnalysis, setLoadingAnalysis] = useState(false);
+  
+  // Results
+  const [profileData, setProfileData] = useState<ProfileData | null>(null);
+  const [transcriptionData, setTranscriptionData] = useState<TranscriptionData | null>(null);
+  const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
+  
+  // Gemini Sentiment Analysis
+  const [geminiSentiment, setGeminiSentiment] = useState<{
+    caption: { sentiment: string; confidence: number; reasoning: string; language: string; languageConfidence?: number };
+    transcript: { sentiment: string; confidence: number; reasoning: string; language: string; languageConfidence?: number };
+    isPositivePublicity: boolean;
+    overallReasoning: string;
+    processingTimeMs: number;
+  } | null>(null);
+  const [loadingGeminiSentiment, setLoadingGeminiSentiment] = useState(false);
+  
+  // Niche Analysis
+  const [nicheAnalysis, setNicheAnalysis] = useState<{
+    niches: string[];
+    confidence: number;
+    reasoning: string;
+    processingTimeMs: number;
+  } | null>(null);
+  const [loadingNicheAnalysis, setLoadingNicheAnalysis] = useState(false);
+  
+  // Engagement Verification
+  const [engagementVerification, setEngagementVerification] = useState<{
+    overallAuthentic: boolean;
+    overallScore: number;
+    overallIssues: string[];
+    commentAnalysis: {
+      totalComments: number;
+      suspiciousComments: number;
+      suspiciousCommentPercentage: number;
+      botLikelihood: number;
+      issues: any;
+      recommendations: string[];
+    } | null;
+    engagementAnalysis: {
+      isAuthentic: boolean;
+      authenticityScore: number;
+      promotionTimestamp: Date | null;
+      issues: any;
+      metrics: any;
+      recommendations: string[];
+    } | null;
+    promotionTimestamp: Date | null;
+  } | null>(null);
+  const [loadingEngagementVerification, setLoadingEngagementVerification] = useState(false);
+  
   const [error, setError] = useState<string | null>(null);
   const [framesExpanded, setFramesExpanded] = useState(false);
 
@@ -131,7 +293,6 @@ export default function Home() {
     const files = Array.from(e.target.files || []);
     if (files.length > 0) {
       setProductImages(files);
-      // Create previews for all images
       const previews: string[] = [];
       files.forEach((file) => {
         const reader = new FileReader();
@@ -153,11 +314,247 @@ export default function Home() {
     setProductImagePreviews(newPreviews);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Data Tab: Profile Scraping
+  const handleDataScraping = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setLoadingData(true);
     setError(null);
-    setResult(null);
+    setGeminiSentiment(null); // Reset sentiment when scraping new data
+    setNicheAnalysis(null); // Reset niche analysis when scraping new data
+    setEngagementVerification(null); // Reset engagement verification when scraping new data
+
+    try {
+      const response = await fetch('/api/profile', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ reelUrl }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error?.message || 'Profile scraping failed');
+      }
+
+      setProfileData(data.data);
+    } catch (err: any) {
+      setError(err.message || 'An error occurred');
+    } finally {
+      setLoadingData(false);
+    }
+  };
+
+  // Gemini Sentiment Analysis
+  const handleGeminiSentimentAnalysis = async () => {
+    if (!profileData?.metadata) {
+      setError('Please scrape data first');
+      return;
+    }
+
+    const caption = profileData.metadata.caption;
+    const transcript = profileData.metadata.transcript;
+
+    if (!caption && !transcript) {
+      setError('No caption or transcript available for sentiment analysis');
+      return;
+    }
+
+    setLoadingGeminiSentiment(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/sentiment/gemini', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          caption: caption || null,
+          transcript: transcript || null,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error?.message || 'Sentiment analysis failed');
+      }
+
+      setGeminiSentiment(data.data);
+    } catch (err: any) {
+      setError(err.message || 'An error occurred during sentiment analysis');
+    } finally {
+      setLoadingGeminiSentiment(false);
+    }
+  };
+
+  // Niche Analysis
+  const handleNicheAnalysis = async () => {
+    if (!profileData?.creator) {
+      setError('Please scrape data first to get creator profile');
+      return;
+    }
+
+    const bio = profileData.creator.bio;
+    const latestPosts = profileData.creator.latestPosts || [];
+
+    if (!bio && latestPosts.length === 0) {
+      setError('No bio or posts available for niche analysis');
+      return;
+    }
+
+    setLoadingNicheAnalysis(true);
+    setError(null);
+
+    try {
+      // Prepare posts data for analysis
+      const postsData = latestPosts.slice(0, 5).map(post => ({
+        caption: post.caption || null,
+        type: post.type || 'unknown',
+        likes: post.likes || 0,
+        comments: post.comments || 0,
+      }));
+
+      const response = await fetch('/api/creators/niche-analysis', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          bio: bio || null,
+          posts: postsData,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error?.message || 'Niche analysis failed');
+      }
+
+      setNicheAnalysis(data.data);
+    } catch (err: any) {
+      setError(err.message || 'An error occurred during niche analysis');
+    } finally {
+      setLoadingNicheAnalysis(false);
+    }
+  };
+
+  // Engagement Verification
+  const handleEngagementVerification = async () => {
+    if (!profileData?.metadata) {
+      setError('Please scrape data first to get reel metadata');
+      return;
+    }
+
+    const comments = profileData.metadata.comments || [];
+    const engagement = {
+      timestamp: profileData.metadata.timestamp,
+      likes: profileData.metadata.likes || 0,
+      views: profileData.metadata.views || null,
+      comments: profileData.metadata.comments?.length || 0,
+      shares: profileData.metadata.shares || null,
+    };
+    const followerCount = profileData.creator?.followers || null;
+
+    if (comments.length === 0 && !engagement.likes) {
+      setError('No comments or engagement data available for verification');
+      return;
+    }
+
+    setLoadingEngagementVerification(true);
+    setError(null);
+
+    try {
+      // Prepare historical engagement data from latest posts (if available)
+      const historicalEngagement = profileData.creator?.latestPosts?.slice(0, 10).map(post => ({
+        timestamp: post.timestamp,
+        likes: post.likes || 0,
+        comments: post.comments || 0,
+      })) || [];
+
+      const response = await fetch('/api/verify/engagement', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          comments: comments.map(comment => ({
+            id: comment.id,
+            text: comment.text,
+            author: comment.author,
+            ownerUsername: comment.ownerUsername,
+            timestamp: comment.timestamp,
+            likes: comment.likes || comment.likesCount,
+            replies: comment.replies || [],
+          })),
+          engagement,
+          followerCount,
+          historicalEngagement,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error?.message || 'Engagement verification failed');
+      }
+
+      setEngagementVerification(data.data);
+    } catch (err: any) {
+      setError(err.message || 'An error occurred during engagement verification');
+    } finally {
+      setLoadingEngagementVerification(false);
+    }
+  };
+
+  // Transcription Tab: Transcription & Sentiment Analysis
+  const handleTranscription = async () => {
+    if (!reelUrl) {
+      setError('Please enter a reel URL first');
+      return;
+    }
+    
+    setLoadingTranscription(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/transcribe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          reelUrl,
+          caption: profileData?.metadata?.caption || null,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error?.message || 'Transcription failed');
+      }
+
+      setTranscriptionData(data.data);
+    } catch (err: any) {
+      setError(err.message || 'An error occurred');
+    } finally {
+      setLoadingTranscription(false);
+    }
+  };
+
+  // Analysis Tab: Video Analysis
+  const handleAnalysis = async () => {
+    if (!reelUrl) {
+      setError('Please enter a reel URL first');
+      return;
+    }
+    
+    setLoadingAnalysis(true);
+    setError(null);
 
     try {
       // Parse product names from comma-separated string
@@ -181,32 +578,52 @@ export default function Home() {
         );
       }
 
-      const response = await fetch('/api/verify', {
+      // Build request body - reuse video data if transcription was run, otherwise let API download it
+      const requestBody: any = {
+        reelUrl,
+        targetBrandName: targetBrandName.trim() || undefined,
+        productNames: productNamesArray.length > 0 ? productNamesArray : undefined,
+        productImages: productImagesBase64,
+      };
+
+      // If transcription data exists, reuse the video to avoid re-downloading
+      if (transcriptionData?.videoId && transcriptionData?.videoPath) {
+        requestBody.videoId = transcriptionData.videoId;
+        requestBody.videoPath = transcriptionData.videoPath;
+      }
+
+      const response = await fetch('/api/analyze', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
-          reelUrl,
-          targetBrandName: targetBrandName.trim() || undefined,
-          productNames: productNamesArray.length > 0 ? productNamesArray : undefined,
-          productImages: productImagesBase64, // Changed to plural
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       const data = await response.json();
 
       if (!response.ok || !data.success) {
-        throw new Error(data.error?.message || 'Verification failed');
+        throw new Error(data.error?.message || 'Video analysis failed');
       }
 
-      setResult(data.data);
-      setFramesExpanded(false); // Reset expansion when new result loads
+      setAnalysisData(data.data);
+      setFramesExpanded(false);
     } catch (err: any) {
       setError(err.message || 'An error occurred');
     } finally {
-      setLoading(false);
+      setLoadingAnalysis(false);
     }
+  };
+
+  const resetWorkflow = () => {
+    setProfileData(null);
+    setTranscriptionData(null);
+    setAnalysisData(null);
+    setGeminiSentiment(null);
+    setNicheAnalysis(null);
+    setEngagementVerification(null);
+    setError(null);
+    setReelUrl('');
   };
 
   return (
@@ -214,164 +631,373 @@ export default function Home() {
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         <h1 style={{ marginBottom: '30px', color: '#333' }}>Whoofy - Reel Verification</h1>
 
-        <form onSubmit={handleSubmit} style={{ marginBottom: '30px', background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-          <div style={{ marginBottom: '15px' }}>
-            <label htmlFor="reelUrl" style={{ display: 'block', marginBottom: '5px', fontWeight: '600' }}>
-              Reel URL <span style={{ color: '#d32f2f' }}>*</span>
-            </label>
-            <input
-              id="reelUrl"
-              type="url"
-              value={reelUrl}
-              onChange={(e) => setReelUrl(e.target.value)}
-              placeholder="https://www.instagram.com/reel/..."
-              required
-              disabled={loading}
+        {/* Reel URL Input (Shared across all tabs) */}
+        <div style={{ marginBottom: '20px', background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+          <label htmlFor="reelUrl" style={{ display: 'block', marginBottom: '10px', fontWeight: '600', fontSize: '16px' }}>
+            Reel URL <span style={{ color: '#d32f2f' }}>*</span>
+          </label>
+          <input
+            id="reelUrl"
+            type="url"
+            value={reelUrl}
+            onChange={(e) => setReelUrl(e.target.value)}
+            placeholder="https://www.instagram.com/reel/..."
+            style={{
+              width: '100%',
+              padding: '12px',
+              border: '1px solid #ddd',
+              borderRadius: '4px',
+              fontSize: '14px',
+            }}
+          />
+        </div>
+
+        {/* Tabs */}
+        <div style={{ marginBottom: '20px', background: 'white', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+          <div style={{ display: 'flex', borderBottom: '2px solid #e0e0e0' }}>
+            <button
+              onClick={() => setActiveTab('data')}
               style={{
-                width: '100%',
-                padding: '10px',
-                border: '1px solid #ddd',
-                borderRadius: '4px',
-                fontSize: '14px',
+                flex: 1,
+                padding: '15px 20px',
+                background: activeTab === 'data' ? '#0070f3' : 'transparent',
+                color: activeTab === 'data' ? 'white' : '#666',
+                border: 'none',
+                borderBottom: activeTab === 'data' ? '3px solid #0070f3' : '3px solid transparent',
+                cursor: 'pointer',
+                fontSize: '15px',
+                fontWeight: activeTab === 'data' ? '600' : '400',
+                transition: 'all 0.2s',
+                position: 'relative',
               }}
-            />
+            >
+              📊 Data Scraping
+              {profileData && (
+                <span style={{
+                  position: 'absolute',
+                  top: '8px',
+                  right: '8px',
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: '#4caf50',
+                }} />
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab('transcription')}
+              style={{
+                flex: 1,
+                padding: '15px 20px',
+                background: activeTab === 'transcription' ? '#0070f3' : 'transparent',
+                color: activeTab === 'transcription' ? 'white' : '#666',
+                border: 'none',
+                borderBottom: activeTab === 'transcription' ? '3px solid #0070f3' : '3px solid transparent',
+                cursor: 'pointer',
+                fontSize: '15px',
+                fontWeight: activeTab === 'transcription' ? '600' : '400',
+                transition: 'all 0.2s',
+                position: 'relative',
+              }}
+            >
+              🎤 Transcription (Whisper Local)
+              {transcriptionData && (
+                <span style={{
+                  position: 'absolute',
+                  top: '8px',
+                  right: '8px',
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: '#4caf50',
+                }} />
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab('analysis')}
+              style={{
+                flex: 1,
+                padding: '15px 20px',
+                background: activeTab === 'analysis' ? '#0070f3' : 'transparent',
+                color: activeTab === 'analysis' ? 'white' : '#666',
+                border: 'none',
+                borderBottom: activeTab === 'analysis' ? '3px solid #0070f3' : '3px solid transparent',
+                cursor: 'pointer',
+                fontSize: '15px',
+                fontWeight: activeTab === 'analysis' ? '600' : '400',
+                transition: 'all 0.2s',
+                position: 'relative',
+              }}
+            >
+              🎬 Frame & Video Analysis
+              {analysisData && (
+                <span style={{
+                  position: 'absolute',
+                  top: '8px',
+                  right: '8px',
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: '#4caf50',
+                }} />
+              )}
+            </button>
           </div>
 
-          <div style={{ marginBottom: '15px' }}>
-            <label htmlFor="targetBrandName" style={{ display: 'block', marginBottom: '5px', fontWeight: '600' }}>
-              Target Brand Name
-            </label>
-            <input
-              id="targetBrandName"
-              type="text"
-              value={targetBrandName}
-              onChange={(e) => setTargetBrandName(e.target.value)}
-              placeholder="e.g., Cadbury, Nike, Pepsi"
-              disabled={loading}
-              style={{
-                width: '100%',
-                padding: '10px',
-                border: '1px solid #ddd',
-                borderRadius: '4px',
-                fontSize: '14px',
-              }}
-            />
-            <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-              The main brand name to detect (e.g., "Cadbury")
-            </div>
-          </div>
-
-          <div style={{ marginBottom: '20px' }}>
-            <label htmlFor="productNames" style={{ display: 'block', marginBottom: '5px', fontWeight: '600' }}>
-              Product Names (comma-separated)
-            </label>
-            <input
-              id="productNames"
-              type="text"
-              value={productNames}
-              onChange={(e) => setProductNames(e.target.value)}
-              placeholder="e.g., Dairy Milk, Silk Brownie, Air Max"
-              disabled={loading}
-              style={{
-                width: '100%',
-                padding: '10px',
-                border: '1px solid #ddd',
-                borderRadius: '4px',
-                fontSize: '14px',
-              }}
-            />
-            <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-              Specific product names to detect, separated by commas (e.g., "Dairy Milk, Silk Brownie")
-            </div>
-          </div>
-
-          <div style={{ marginBottom: '20px' }}>
-            <label htmlFor="productImages" style={{ display: 'block', marginBottom: '5px', fontWeight: '600' }}>
-              Product Images (Optional - for CLIP visual similarity)
-            </label>
-            <input
-              id="productImages"
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={handleImageChange}
-              disabled={loading}
-              style={{
-                width: '100%',
-                padding: '10px',
-                border: '1px solid #ddd',
-                borderRadius: '4px',
-                fontSize: '14px',
-              }}
-            />
-            {productImagePreviews.length > 0 && (
-              <div style={{ marginTop: '10px', display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-                {productImagePreviews.map((preview, index) => (
-                  <div key={index} style={{ position: 'relative', display: 'inline-block' }}>
-                    <img 
-                      src={preview} 
-                      alt={`Product preview ${index + 1}`} 
-                      style={{ 
-                        maxWidth: '150px', 
-                        maxHeight: '150px', 
-                        borderRadius: '4px',
-                        border: '1px solid #ddd',
-                        objectFit: 'cover'
-                      }} 
-                    />
+          {/* Tab Content */}
+          <div style={{ padding: '20px' }}>
+            {/* Data Tab */}
+            {activeTab === 'data' && (
+              <div>
+                <h2 style={{ marginTop: 0, marginBottom: '20px', color: '#333' }}>Data Scraping</h2>
+                <form onSubmit={handleDataScraping}>
+                  <button
+                    type="submit"
+                    disabled={loadingData || !reelUrl}
+                    style={{
+                      padding: '12px 24px',
+                      background: (loadingData || !reelUrl) ? '#ccc' : '#0070f3',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: (loadingData || !reelUrl) ? 'not-allowed' : 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      marginRight: '10px',
+                    }}
+                  >
+                    {loadingData ? 'Scraping Data...' : 'Scrape Profile & Reel Data'}
+                  </button>
+                </form>
+                {profileData?.metadata && (profileData.metadata.caption || profileData.metadata.transcript) && (
+                  <div style={{ marginTop: '20px' }}>
                     <button
-                      onClick={() => removeImage(index)}
+                      onClick={handleGeminiSentimentAnalysis}
+                      disabled={loadingGeminiSentiment}
                       style={{
-                        position: 'absolute',
-                        top: '4px',
-                        right: '4px',
-                        background: '#f44336',
+                        padding: '12px 24px',
+                        background: loadingGeminiSentiment ? '#ccc' : '#9c27b0',
                         color: 'white',
                         border: 'none',
-                        borderRadius: '50%',
-                        width: '24px',
-                        height: '24px',
-                        cursor: 'pointer',
+                        borderRadius: '4px',
+                        cursor: loadingGeminiSentiment ? 'not-allowed' : 'pointer',
                         fontSize: '14px',
-                        fontWeight: 'bold',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
+                        fontWeight: '600',
+                        marginRight: '10px',
                       }}
-                      title="Remove image"
                     >
-                      ×
+                      {loadingGeminiSentiment ? 'Analyzing Sentiment...' : '🤖 Analyze Sentiment with Gemini'}
                     </button>
-                    <div style={{ fontSize: '11px', color: '#666', marginTop: '4px', textAlign: 'center' }}>
-                      {productImages[index]?.name}
-                    </div>
+                    <p style={{ marginTop: '10px', fontSize: '13px', color: '#666' }}>
+                      Analyze sentiment of caption and transcript using Google Gemini AI
+                    </p>
                   </div>
-                ))}
+                )}
+                {profileData?.creator && (
+                  <div style={{ marginTop: '20px' }}>
+                    <button
+                      onClick={handleNicheAnalysis}
+                      disabled={loadingNicheAnalysis}
+                      style={{
+                        padding: '12px 24px',
+                        background: loadingNicheAnalysis ? '#ccc' : '#ff9800',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: loadingNicheAnalysis ? 'not-allowed' : 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        marginRight: '10px',
+                      }}
+                    >
+                      {loadingNicheAnalysis ? 'Analyzing Niche...' : '🎯 Analyze Creator Niche'}
+                    </button>
+                    <p style={{ marginTop: '10px', fontSize: '13px', color: '#666' }}>
+                      Analyze creator niche from bio and last 5 posts using Google Gemini AI
+                    </p>
+                  </div>
+                )}
+                {profileData?.metadata && (
+                  <div style={{ marginTop: '20px' }}>
+                    <button
+                      onClick={handleEngagementVerification}
+                      disabled={loadingEngagementVerification}
+                      style={{
+                        padding: '12px 24px',
+                        background: loadingEngagementVerification ? '#ccc' : '#f44336',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: loadingEngagementVerification ? 'not-allowed' : 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                      }}
+                    >
+                      {loadingEngagementVerification ? 'Verifying Engagement...' : '🔍 Verify Engagement Authenticity'}
+                    </button>
+                    <p style={{ marginTop: '10px', fontSize: '13px', color: '#666' }}>
+                      Detect fake views, bot comments, and engagement manipulation. Checks for duplicate comments, emoji-only comments, and suspicious engagement patterns.
+                    </p>
+                  </div>
+                )}
               </div>
             )}
-            <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-              Upload one or more reference images of the product(s) to enable visual similarity matching using CLIP. 
-              This helps detect products even when OCR fails or text is not visible. You can upload multiple product variants or angles.
-            </div>
-          </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            style={{
-              padding: '10px 20px',
-              background: loading ? '#ccc' : '#0070f3',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              fontSize: '14px',
-              fontWeight: '600',
-            }}
-          >
-            {loading ? 'Processing...' : 'Verify Reel'}
-          </button>
-        </form>
+            {/* Transcription Tab */}
+            {activeTab === 'transcription' && (
+              <div>
+                <h2 style={{ marginTop: 0, marginBottom: '20px', color: '#333' }}>Transcription & Sentiment Analysis</h2>
+                <button
+                  onClick={handleTranscription}
+                  disabled={loadingTranscription || !reelUrl}
+                  style={{
+                    padding: '12px 24px',
+                    background: (loadingTranscription || !reelUrl) ? '#ccc' : '#0070f3',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: (loadingTranscription || !reelUrl) ? 'not-allowed' : 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                  }}
+                >
+                  {loadingTranscription ? 'Transcribing & Analyzing...' : 'Start Transcription & Sentiment Analysis'}
+                </button>
+              </div>
+            )}
+
+            {/* Analysis Tab */}
+            {activeTab === 'analysis' && (
+              <div>
+                <h2 style={{ marginTop: 0, marginBottom: '20px', color: '#333' }}>Frame & Video Analysis</h2>
+                
+                <div style={{ marginBottom: '15px' }}>
+                  <label htmlFor="targetBrandName" style={{ display: 'block', marginBottom: '5px', fontWeight: '600' }}>
+                    Target Brand Name
+                  </label>
+                  <input
+                    id="targetBrandName"
+                    type="text"
+                    value={targetBrandName}
+                    onChange={(e) => setTargetBrandName(e.target.value)}
+                    placeholder="e.g., Cadbury, Nike, Pepsi"
+                    disabled={loadingAnalysis}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontSize: '14px',
+                    }}
+                  />
+                </div>
+
+                <div style={{ marginBottom: '15px' }}>
+                  <label htmlFor="productNames" style={{ display: 'block', marginBottom: '5px', fontWeight: '600' }}>
+                    Product Names (comma-separated)
+                  </label>
+                  <input
+                    id="productNames"
+                    type="text"
+                    value={productNames}
+                    onChange={(e) => setProductNames(e.target.value)}
+                    placeholder="e.g., Dairy Milk, Silk Brownie"
+                    disabled={loadingAnalysis}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontSize: '14px',
+                    }}
+                  />
+                </div>
+
+                <div style={{ marginBottom: '20px' }}>
+                  <label htmlFor="productImages" style={{ display: 'block', marginBottom: '5px', fontWeight: '600' }}>
+                    Product Images (Optional - for CLIP visual similarity)
+                  </label>
+                  <input
+                    id="productImages"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageChange}
+                    disabled={loadingAnalysis}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontSize: '14px',
+                    }}
+                  />
+                  {productImagePreviews.length > 0 && (
+                    <div style={{ marginTop: '10px', display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                      {productImagePreviews.map((preview, index) => (
+                        <div key={index} style={{ position: 'relative', display: 'inline-block' }}>
+                          <img 
+                            src={preview} 
+                            alt={`Product preview ${index + 1}`} 
+                            style={{ 
+                              maxWidth: '150px', 
+                              maxHeight: '150px', 
+                              borderRadius: '4px',
+                              border: '1px solid #ddd',
+                              objectFit: 'cover'
+                            }} 
+                          />
+                          <button
+                            onClick={() => removeImage(index)}
+                            style={{
+                              position: 'absolute',
+                              top: '4px',
+                              right: '4px',
+                              background: '#f44336',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '50%',
+                              width: '24px',
+                              height: '24px',
+                              cursor: 'pointer',
+                              fontSize: '14px',
+                              fontWeight: 'bold',
+                            }}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  onClick={handleAnalysis}
+                  disabled={loadingAnalysis || !reelUrl}
+                  style={{
+                    padding: '12px 24px',
+                    background: (loadingAnalysis || !reelUrl) ? '#ccc' : '#0070f3',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: (loadingAnalysis || !reelUrl) ? 'not-allowed' : 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                  }}
+                >
+                  {loadingAnalysis ? 'Analyzing Video...' : 'Start Video Analysis'}
+                </button>
+                {transcriptionData && (
+                  <p style={{ marginTop: '10px', color: '#4caf50', fontSize: '14px' }}>
+                    ℹ️ Will reuse video from transcription (faster). If transcription wasn't run, video will be downloaded automatically.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
 
         {error && (
           <div style={{ background: '#fee', padding: '15px', borderRadius: '4px', marginBottom: '20px', color: '#c33' }}>
@@ -379,136 +1005,938 @@ export default function Home() {
           </div>
         )}
 
-        {result && (
-          <div style={{ background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+        {/* Data Results */}
+        {profileData && activeTab === 'data' && (
+          <div style={{ background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', marginBottom: '20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h2 style={{ marginTop: 0, marginBottom: 0, color: '#333' }}>Verification Results</h2>
-              <button
-                onClick={() => {
-                  const jsonStr = JSON.stringify(result, null, 2);
-                  const blob = new Blob([jsonStr], { type: 'application/json' });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement('a');
-                  a.href = url;
-                  a.download = `verification_results_${Date.now()}.json`;
-                  document.body.appendChild(a);
-                  a.click();
-                  document.body.removeChild(a);
-                  URL.revokeObjectURL(url);
-                }}
-                style={{
-                  padding: '8px 16px',
-                  background: '#4caf50',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                }}
-              >
-                📥 Download JSON
-              </button>
+              <h2 style={{ marginTop: 0, marginBottom: 0, color: '#333' }}>Data Scraping Results</h2>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
-              {/* Video Info */}
-              <div style={{ border: '1px solid #ddd', padding: '15px', borderRadius: '4px' }}>
-                <h3 style={{ marginTop: 0, fontSize: '16px' }}>Video Information</h3>
-                <p><strong>Duration:</strong> {result.video.duration.toFixed(1)}s</p>
-                <p><strong>Frames Extracted:</strong> {result.video.frameCount}</p>
-                <p><strong>Processing Time:</strong> {(result.processingTime / 1000).toFixed(1)}s</p>
+            {profileData.sources && (
+              <div style={{ marginBottom: '15px', padding: '10px 15px', background: '#e3f2fd', borderRadius: '4px', fontSize: '13px', color: '#1976d2' }}>
+                <div style={{ marginBottom: '8px', fontWeight: '600' }}>
+                  📊 Data Sources (Combined Results)
               </div>
-
-              {/* Metadata */}
-              {result.metadata && (
-                <div style={{ border: '1px solid #ddd', padding: '15px', borderRadius: '4px' }}>
-                  <h3 style={{ marginTop: 0, fontSize: '16px' }}>Reel Metadata</h3>
-                  <p><strong>Likes:</strong> {result.metadata.likes.toLocaleString()}</p>
-                  <p><strong>Comments:</strong> {result.metadata.comments.toLocaleString()}</p>
-                  {result.metadata.views && (
-                    <p><strong>Views:</strong> {result.metadata.views.toLocaleString()}</p>
+                <div style={{ marginBottom: '5px' }}>
+                  <strong>Reel Data:</strong>{' '}
+                  {profileData.sources.reel.length > 0 ? (
+                    profileData.sources.reel.map((source, idx) => (
+                      <span key={idx} style={{ 
+                        marginLeft: '8px', 
+                        padding: '2px 8px', 
+                        background: '#1976d2', 
+                        color: 'white', 
+                        borderRadius: '4px',
+                        fontSize: '12px'
+                      }}>
+                        {source === 'apify-reel-scraper' ? '🎬 Apify Reel Scraper' : 
+                         source === 'apify-post-scraper' ? '📸 Apify Post Scraper' :
+                         source === 'apify-instagram-scraper' ? '📱 Apify Instagram Scraper' :
+                         source === 'apify-comments-scraper' ? '💬 Apify Comments Scraper' :
+                         source === 'instagram-api' ? '🔗 Instagram API' : source}
+                      </span>
+                    ))
+                  ) : (
+                    <span style={{ color: '#999' }}>None</span>
                   )}
-                  {result.metadata.caption && (
-                    <div style={{ marginTop: '10px' }}>
-                      <strong>Caption:</strong>
-                      <p style={{ marginTop: '5px', fontSize: '14px', color: '#666' }}>{result.metadata.caption}</p>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Creator Info */}
-              {result.creator && (
-                <div style={{ border: '1px solid #ddd', padding: '15px', borderRadius: '4px' }}>
-                  <h3 style={{ marginTop: 0, fontSize: '16px' }}>Creator</h3>
-                  <p><strong>Username:</strong> @{result.creator.username}</p>
-                  <p><strong>Followers:</strong> {result.creator.followers.toLocaleString()}</p>
-                  <p><strong>Verified:</strong> {result.creator.verified ? 'Yes' : 'No'}</p>
-                  {result.creator.bio && (
-                    <div style={{ marginTop: '10px' }}>
-                      <strong>Bio:</strong>
-                      <p style={{ marginTop: '5px', fontSize: '14px', color: '#666' }}>{result.creator.bio}</p>
-                    </div>
+                  {profileData.sources.reel.length > 1 && (
+                    <span style={{ marginLeft: '8px', fontSize: '11px', color: '#666', fontStyle: 'italic' }}>
+                      (Data merged from multiple sources)
+                    </span>
                   )}
                 </div>
-              )}
-
-              {/* Audio Recognition */}
-              {result.audio && result.audio.track && (
-                <div style={{ border: '1px solid #ddd', padding: '15px', borderRadius: '4px' }}>
-                  <h3 style={{ marginTop: 0, fontSize: '16px' }}>Audio Recognition</h3>
-                  <p><strong>Track:</strong> {result.audio.track.title}</p>
-                  <p><strong>Artist:</strong> {result.audio.track.artist}</p>
-                  <p><strong>Confidence:</strong> {(result.audio.confidence * 100).toFixed(1)}%</p>
-                </div>
-              )}
-
-              {result.transcription && (
-                <div style={{ border: '1px solid #ddd', padding: '15px', borderRadius: '4px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  <h3 style={{ marginTop: 0, fontSize: '16px' }}>Transcription (Local Whisper)</h3>
-                  <p style={{ marginBottom: 0 }}>
-                    <strong>Language:</strong> {result.transcription.language}
-                  </p>
-                  <p style={{ marginBottom: 0 }}>
-                    <strong>Processing Time:</strong> {(result.transcription.processingTime / 1000).toFixed(1)}s
-                  </p>
-                  <div style={{ background: '#fafafa', padding: '10px', borderRadius: '4px', maxHeight: '150px', overflowY: 'auto', fontSize: '14px', color: '#111', whiteSpace: 'pre-wrap' }}>
-                    {result.transcription.transcript || <em>No transcript available</em>}
+                {profileData.sources.creator.length > 0 && (
+                  <div>
+                    <strong>Creator Profile:</strong>{' '}
+                    {profileData.sources.creator.map((source, idx) => (
+                      <span key={idx} style={{ 
+                        marginLeft: '8px', 
+                        padding: '2px 8px', 
+                        background: '#4caf50', 
+                        color: 'white', 
+                        borderRadius: '4px',
+                        fontSize: '12px'
+                      }}>
+                        {source === 'apify-profile-scraper' ? '👤 Apify Profile Scraper' :
+                         source === 'apify-instagram-scraper' ? '📱 Apify Instagram Scraper' :
+                         source === 'instagram-api' ? '🔗 Instagram API' : source}
+                      </span>
+                    ))}
                   </div>
-                  {result.transcription.segments.length > 0 && (
-                    <div style={{ fontSize: '13px', color: '#555' }}>
-                      <strong>Segments:</strong>
-                      <ul style={{ paddingLeft: '18px', margin: '8px 0 0', maxHeight: '120px', overflowY: 'auto', listStyle: 'disc' }}>
-                        {result.transcription.segments.slice(0, 3).map((seg, idx) => (
-                          <li key={idx}>
-                            <span style={{ fontWeight: 600 }}>
-                              {seg.start.toFixed(2)}s - {seg.end.toFixed(2)}s
-                            </span>
-                            : {seg.text || <em>…</em>}
-                          </li>
-                        ))}
-                        {result.transcription.segments.length > 3 && (
-                          <li>+ {result.transcription.segments.length - 3} more segments</li>
+                )}
+              </div>
+            )}
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
+              {profileData.metadata && (
+                <div style={{ border: '1px solid #ddd', padding: '15px', borderRadius: '4px', gridColumn: '1 / -1' }}>
+                  <h3 style={{ marginTop: 0, fontSize: '16px' }}>Reel Metadata</h3>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', marginBottom: '15px' }}>
+                    <div>
+                      {profileData.metadata.likes !== undefined && (
+                        <p><strong>Likes:</strong> {profileData.metadata.likes.toLocaleString()}</p>
+                      )}
+                      {profileData.metadata.comments !== undefined && (
+                        <p><strong>Comments:</strong> {profileData.metadata.comments.toLocaleString()}</p>
+                      )}
+                      {profileData.metadata.views !== undefined && profileData.metadata.views !== null && (
+                        <p><strong>Views:</strong> {profileData.metadata.views.toLocaleString()}</p>
+                      )}
+                      {profileData.metadata.shares !== undefined && profileData.metadata.shares !== null && (
+                        <p><strong>Shares:</strong> {profileData.metadata.shares.toLocaleString()}</p>
+                      )}
+                      {profileData.metadata.duration !== undefined && profileData.metadata.duration !== null && (
+                        <p><strong>Duration:</strong> {profileData.metadata.duration.toFixed(1)}s</p>
+                      )}
+                      {profileData.metadata.timestamp && (
+                        <p><strong>Posted:</strong> {new Date(profileData.metadata.timestamp).toLocaleString()}</p>
+                      )}
+                    </div>
+                    <div>
+                      {profileData.metadata.postType && (
+                        <p><strong>Post Type:</strong> {profileData.metadata.postType}</p>
+                      )}
+                      {profileData.metadata.isPinned !== undefined && profileData.metadata.isPinned !== null && (
+                        <p><strong>Pinned:</strong> {profileData.metadata.isPinned ? 'Yes' : 'No'}</p>
+                      )}
+                      {profileData.metadata.isSponsored && (
+                        <p><strong>Sponsored:</strong> Yes</p>
+                      )}
+                      {profileData.metadata.isPaidPartnership !== undefined && profileData.metadata.isPaidPartnership !== null && (
+                        <p><strong>Paid Partnership:</strong> {profileData.metadata.isPaidPartnership ? 'Yes' : 'No'}</p>
+                      )}
+                      {profileData.metadata.commentsDisabled && (
+                        <p><strong>Comments:</strong> Disabled</p>
+                      )}
+                      {profileData.metadata.replyCount !== undefined && profileData.metadata.replyCount !== null && (
+                        <p><strong>Replies:</strong> {profileData.metadata.replyCount.toLocaleString()}</p>
+                      )}
+                      {profileData.metadata.coAuthors && profileData.metadata.coAuthors.length > 0 && (
+                        <p><strong>Co-Authors:</strong> {profileData.metadata.coAuthors.join(', ')}</p>
+                      )}
+                      {profileData.metadata.mediaDimensions && (
+                        <p><strong>Dimensions:</strong> {profileData.metadata.mediaDimensions.width}x{profileData.metadata.mediaDimensions.height}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {profileData.metadata.postOwnerInfo && (
+                    <div style={{ marginTop: '10px', marginBottom: '10px', padding: '10px', background: '#f0f0f0', borderRadius: '4px' }}>
+                      <strong>Post Owner Info:</strong>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px', marginTop: '8px' }}>
+                        {profileData.metadata.postOwnerInfo.username && (
+                          <p style={{ fontSize: '14px' }}>
+                            <strong>Username:</strong> @{profileData.metadata.postOwnerInfo.username}
+                          </p>
                         )}
-                      </ul>
+                        {profileData.metadata.postOwnerInfo.fullName && (
+                          <p style={{ fontSize: '14px' }}>
+                            <strong>Full Name:</strong> {profileData.metadata.postOwnerInfo.fullName}
+                          </p>
+                        )}
+                        {profileData.metadata.postOwnerInfo.followers !== undefined && profileData.metadata.postOwnerInfo.followers !== null && (
+                          <p style={{ fontSize: '14px' }}>
+                            <strong>Followers:</strong> {profileData.metadata.postOwnerInfo.followers.toLocaleString()}
+                          </p>
+                        )}
+                        {profileData.metadata.postOwnerInfo.following !== undefined && profileData.metadata.postOwnerInfo.following !== null && (
+                          <p style={{ fontSize: '14px' }}>
+                            <strong>Following:</strong> {profileData.metadata.postOwnerInfo.following.toLocaleString()}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {profileData.metadata.caption && (
+                    <div style={{ marginTop: '10px', marginBottom: '10px' }}>
+                      <strong>Caption:</strong>
+                      <p style={{ marginTop: '5px', fontSize: '14px', color: '#666', whiteSpace: 'pre-wrap' }}>{profileData.metadata.caption}</p>
+                    </div>
+                  )}
+
+                  {profileData.metadata.transcript && (
+                    <div style={{ marginTop: '10px', marginBottom: '10px', padding: '10px', background: '#f5f5f5', borderRadius: '4px' }}>
+                      <strong>Transcript (from Apify):</strong>
+                      <p style={{ marginTop: '5px', fontSize: '14px', color: '#333', whiteSpace: 'pre-wrap' }}>{profileData.metadata.transcript}</p>
+                </div>
+              )}
+
+                  {/* Gemini Sentiment Analysis Results */}
+                  {geminiSentiment && (
+                    <div style={{ marginTop: '20px', padding: '15px', background: '#f3e5f5', borderRadius: '4px', border: '2px solid #9c27b0' }}>
+                      <h3 style={{ marginTop: 0, fontSize: '16px', color: '#7b1fa2' }}>
+                        🤖 Gemini Sentiment Analysis
+                      </h3>
+                      
+                      {/* Overall Positive Publicity */}
+                      <div style={{ 
+                        marginBottom: '20px', 
+                        padding: '15px', 
+                        borderRadius: '4px',
+                        backgroundColor: geminiSentiment.isPositivePublicity ? '#e8f5e9' : '#ffebee',
+                        border: `2px solid ${geminiSentiment.isPositivePublicity ? '#4caf50' : '#f44336'}`
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                          <strong style={{ fontSize: '15px', color: '#333' }}>
+                            Positive Publicity Assessment:
+                          </strong>
+                          <span style={{
+                            padding: '6px 16px',
+                            borderRadius: '16px',
+                            fontSize: '13px',
+                            fontWeight: '600',
+                            backgroundColor: geminiSentiment.isPositivePublicity ? '#4caf50' : '#f44336',
+                            color: 'white'
+                          }}>
+                            {geminiSentiment.isPositivePublicity ? '✅ YES' : '❌ NO'}
+                          </span>
+                        </div>
+                        <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#333', lineHeight: '1.6' }}>
+                          {geminiSentiment.overallReasoning}
+                        </p>
+                      </div>
+
+                      {/* Caption and Transcript Sentiment */}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px' }}>
+                        {/* Caption Sentiment */}
+                        <div style={{ padding: '15px', backgroundColor: 'white', borderRadius: '4px', border: '1px solid #e0e0e0' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                            <strong style={{ fontSize: '14px' }}>Caption Sentiment:</strong>
+                            <span style={{
+                              padding: '4px 12px',
+                              borderRadius: '12px',
+                              fontSize: '12px',
+                              fontWeight: '600',
+                              textTransform: 'uppercase',
+                              backgroundColor: geminiSentiment.caption.sentiment === 'positive' ? '#4caf50' :
+                                              geminiSentiment.caption.sentiment === 'negative' ? '#f44336' : '#9e9e9e',
+                              color: 'white'
+                            }}>
+                              {geminiSentiment.caption.sentiment}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>
+                            Confidence: <strong>{(geminiSentiment.caption.confidence * 100).toFixed(1)}%</strong>
+                            {geminiSentiment.caption.language && geminiSentiment.caption.language !== 'unknown' && (
+                              <span style={{ marginLeft: '12px' }}>
+                                Language: <strong style={{ textTransform: 'uppercase' }}>{geminiSentiment.caption.language}</strong>
+                                {geminiSentiment.caption.languageConfidence !== undefined && (
+                                  <span style={{ fontSize: '11px', color: '#999' }}>
+                                    {' '}({(geminiSentiment.caption.languageConfidence * 100).toFixed(0)}%)
+                                  </span>
+                                )}
+                              </span>
+                            )}
+                          </div>
+                          <p style={{ fontSize: '13px', color: '#333', lineHeight: '1.5', margin: 0 }}>
+                            {geminiSentiment.caption.reasoning}
+                          </p>
+                        </div>
+
+                        {/* Transcript Sentiment */}
+                        <div style={{ padding: '15px', backgroundColor: 'white', borderRadius: '4px', border: '1px solid #e0e0e0' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                            <strong style={{ fontSize: '14px' }}>Transcript Sentiment:</strong>
+                            <span style={{
+                              padding: '4px 12px',
+                              borderRadius: '12px',
+                              fontSize: '12px',
+                              fontWeight: '600',
+                              textTransform: 'uppercase',
+                              backgroundColor: geminiSentiment.transcript.sentiment === 'positive' ? '#4caf50' :
+                                              geminiSentiment.transcript.sentiment === 'negative' ? '#f44336' : '#9e9e9e',
+                              color: 'white'
+                            }}>
+                              {geminiSentiment.transcript.sentiment}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>
+                            Confidence: <strong>{(geminiSentiment.transcript.confidence * 100).toFixed(1)}%</strong>
+                            {geminiSentiment.transcript.language && geminiSentiment.transcript.language !== 'unknown' && (
+                              <span style={{ marginLeft: '12px' }}>
+                                Language: <strong style={{ textTransform: 'uppercase' }}>{geminiSentiment.transcript.language}</strong>
+                                {geminiSentiment.transcript.languageConfidence !== undefined && (
+                                  <span style={{ fontSize: '11px', color: '#999' }}>
+                                    {' '}({(geminiSentiment.transcript.languageConfidence * 100).toFixed(0)}%)
+                                  </span>
+                                )}
+                              </span>
+                            )}
+                          </div>
+                          <p style={{ fontSize: '13px', color: '#333', lineHeight: '1.5', margin: 0 }}>
+                            {geminiSentiment.transcript.reasoning}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div style={{ fontSize: '12px', color: '#666', fontStyle: 'italic' }}>
+                        Processing time: {geminiSentiment.processingTimeMs}ms
+                      </div>
+                    </div>
+                  )}
+
+                  {profileData.metadata.hashtags && profileData.metadata.hashtags.length > 0 && (
+                    <div style={{ marginTop: '10px', marginBottom: '10px' }}>
+                      <strong>Hashtags:</strong>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '5px' }}>
+                        {profileData.metadata.hashtags.map((tag, idx) => (
+                          <span key={idx} style={{ padding: '4px 8px', background: '#e3f2fd', borderRadius: '4px', fontSize: '12px', color: '#1976d2' }}>
+                            #{tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {profileData.metadata.mentions && profileData.metadata.mentions.length > 0 && (
+                    <div style={{ marginTop: '10px', marginBottom: '10px' }}>
+                      <strong>Mentions:</strong>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '5px' }}>
+                        {profileData.metadata.mentions.map((mention, idx) => (
+                          <span key={idx} style={{ padding: '4px 8px', background: '#fff3e0', borderRadius: '4px', fontSize: '12px', color: '#e65100' }}>
+                            @{mention}
+                          </span>
+                        ))}
+                      </div>
+                </div>
+              )}
+
+                  {profileData.metadata.taggedUsers && profileData.metadata.taggedUsers.length > 0 && (
+                    <div style={{ marginTop: '10px', marginBottom: '10px' }}>
+                      <strong>Tagged Users:</strong>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '5px' }}>
+                        {profileData.metadata.taggedUsers.map((user, idx) => (
+                          <span key={idx} style={{ padding: '4px 8px', background: '#e8f5e9', borderRadius: '4px', fontSize: '12px', color: '#2e7d32' }}>
+                            @{user}
+                          </span>
+                        ))}
+                      </div>
+                </div>
+              )}
+
+                  {profileData.metadata.musicInfo && (
+                    <div style={{ marginTop: '10px', marginBottom: '10px', padding: '10px', background: '#f3e5f5', borderRadius: '4px' }}>
+                      <strong>Music:</strong>
+                      {profileData.metadata.musicInfo.artist && (
+                        <p style={{ marginTop: '5px', fontSize: '14px' }}>
+                          <strong>Artist:</strong> {profileData.metadata.musicInfo.artist}
+                        </p>
+                      )}
+                      {profileData.metadata.musicInfo.song && (
+                        <p style={{ fontSize: '14px' }}>
+                          <strong>Song:</strong> {profileData.metadata.musicInfo.song}
+                        </p>
+                      )}
+                      {profileData.metadata.musicInfo.originalAudio && (
+                        <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>Original Audio</p>
+                      )}
+                  </div>
+                  )}
+
+                  {profileData.metadata.comments && profileData.metadata.comments.length > 0 && (
+                    <div style={{ marginTop: '15px' }}>
+                      <strong>Comments ({profileData.metadata.comments.length}):</strong>
+                      <div style={{ maxHeight: '400px', overflowY: 'auto', marginTop: '10px' }}>
+                        {profileData.metadata.comments.map((comment, idx) => (
+                          <div key={comment.id || idx} style={{ padding: '12px', marginBottom: '10px', background: '#fafafa', borderRadius: '4px', border: '1px solid #e0e0e0' }}>
+                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: '8px' }}>
+                              {comment.ownerProfilePicUrl && (
+                                <img 
+                                  src={comment.ownerProfilePicUrl} 
+                                  alt={comment.author}
+                                  style={{ 
+                                    width: '32px', 
+                                    height: '32px', 
+                                    borderRadius: '50%',
+                                    objectFit: 'cover',
+                                    border: '1px solid #ddd'
+                                  }} 
+                                />
+                              )}
+                              <div style={{ flex: 1 }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <strong style={{ fontSize: '13px' }}>@{comment.ownerUsername || comment.author}</strong>
+                                    {comment.owner?.isVerified && (
+                                      <span style={{ fontSize: '12px' }}>✓</span>
+                                    )}
+                                    {comment.owner?.isPrivate && (
+                                      <span style={{ fontSize: '10px', color: '#666' }}>🔒</span>
+                                    )}
+                                  </div>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    {(comment.likes !== undefined || comment.likesCount !== undefined) && (
+                                      <span style={{ fontSize: '12px', color: '#666' }}>❤️ {(comment.likesCount !== undefined ? comment.likesCount : comment.likes)?.toLocaleString()}</span>
+                                    )}
+                                    {comment.repliesCount !== undefined && comment.repliesCount > 0 && (
+                                      <span style={{ fontSize: '12px', color: '#666' }}>💬 {comment.repliesCount}</span>
+                                    )}
+                                  </div>
+                                </div>
+                                {comment.owner?.fullName && (
+                                  <div style={{ fontSize: '11px', color: '#666', marginBottom: '4px' }}>
+                                    {comment.owner.fullName}
+                                  </div>
+                                )}
+                                <p style={{ fontSize: '13px', color: '#333', margin: '4px 0', whiteSpace: 'pre-wrap' }}>{comment.text}</p>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '6px', fontSize: '11px', color: '#999' }}>
+                                  <span>{new Date(comment.timestamp).toLocaleString()}</span>
+                                  {comment.commentUrl && (
+                                    <a href={comment.commentUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#0070f3', textDecoration: 'none' }}>
+                                      View Comment →
+                                    </a>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            {comment.replies && comment.replies.length > 0 && (
+                              <div style={{ marginLeft: '42px', marginTop: '10px', paddingLeft: '12px', borderLeft: '2px solid #e0e0e0' }}>
+                                <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px', fontWeight: '600' }}>
+                                  Replies ({comment.replies.length}):
+                                </div>
+                                {comment.replies.map((reply, ridx) => (
+                                  <div key={reply.id || ridx} style={{ marginBottom: '8px', padding: '8px', background: '#f5f5f5', borderRadius: '4px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                                      {reply.ownerProfilePicUrl && (
+                                        <img 
+                                          src={reply.ownerProfilePicUrl} 
+                                          alt={reply.author}
+                                          style={{ 
+                                            width: '24px', 
+                                            height: '24px', 
+                                            borderRadius: '50%',
+                                            objectFit: 'cover',
+                                            border: '1px solid #ddd'
+                                          }} 
+                                        />
+                                      )}
+                                      <div style={{ flex: 1 }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3px' }}>
+                                          <strong style={{ fontSize: '12px' }}>@{reply.ownerUsername || reply.author}</strong>
+                                          {(reply.likes !== undefined || reply.likesCount !== undefined) && (
+                                            <span style={{ fontSize: '11px', color: '#666' }}>❤️ {(reply.likesCount !== undefined ? reply.likesCount : reply.likes)?.toLocaleString()}</span>
+                                          )}
+                                        </div>
+                                        <p style={{ fontSize: '12px', color: '#333', margin: '2px 0', whiteSpace: 'pre-wrap' }}>{reply.text}</p>
+                                        <div style={{ fontSize: '10px', color: '#999', marginTop: '4px' }}>
+                                          {new Date(reply.timestamp).toLocaleString()}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {profileData.metadata.videoUrl && (
+                    <div style={{ marginTop: '15px' }}>
+                      <strong>Video URL:</strong>
+                      <div style={{ marginTop: '5px' }}>
+                        <a href={profileData.metadata.videoUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#0070f3', fontSize: '14px', wordBreak: 'break-all' }}>
+                          {profileData.metadata.videoUrl}
+                        </a>
+                      </div>
+                    </div>
+                  )}
+
+                  {profileData.metadata.thumbnailUrl && (
+                    <div style={{ marginTop: '15px' }}>
+                      <strong>Thumbnail:</strong>
+                      <img 
+                        src={profileData.metadata.thumbnailUrl} 
+                        alt="Reel thumbnail" 
+                        style={{ 
+                          maxWidth: '300px', 
+                          maxHeight: '300px', 
+                          borderRadius: '4px',
+                          marginTop: '10px',
+                          border: '1px solid #ddd'
+                        }} 
+                      />
+                    </div>
+                  )}
+
+                  {profileData.metadata.childPosts && profileData.metadata.childPosts.length > 0 && (
+                    <div style={{ marginTop: '15px' }}>
+                      <strong>Child Posts ({profileData.metadata.childPosts.length}):</strong>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '10px', marginTop: '10px' }}>
+                        {profileData.metadata.childPosts.map((childPost, idx) => (
+                          <div key={idx} style={{ padding: '10px', background: '#fafafa', borderRadius: '4px', border: '1px solid #e0e0e0' }}>
+                            {childPost.imageUrl && (
+                              <img 
+                                src={childPost.imageUrl} 
+                                alt={childPost.caption || `Child post ${idx + 1}`}
+                                style={{ 
+                                  width: '100%', 
+                                  maxHeight: '150px', 
+                                  objectFit: 'cover',
+                                  borderRadius: '4px',
+                                  marginBottom: '8px'
+                                }} 
+                              />
+                            )}
+                            {childPost.caption && (
+                              <div style={{ fontSize: '12px', color: '#666', marginBottom: '5px', maxHeight: '60px', overflow: 'hidden' }}>
+                                {childPost.caption.substring(0, 100)}{childPost.caption.length > 100 ? '...' : ''}
+                              </div>
+                            )}
+                            {childPost.url && (
+                              <a href={childPost.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: '11px', color: '#0070f3', display: 'block' }}>
+                                View Post →
+                              </a>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {profileData.metadata.imageUrls && profileData.metadata.imageUrls.length > 0 && (
+                    <div style={{ marginTop: '15px' }}>
+                      <strong>Images ({profileData.metadata.imageUrls.length}):</strong>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '10px', marginTop: '10px' }}>
+                        {profileData.metadata.imageUrls.map((imageUrl, idx) => (
+                          <div key={idx} style={{ position: 'relative' }}>
+                            <img 
+                              src={imageUrl} 
+                              alt={profileData.metadata?.imageAltText?.[idx] || `Image ${idx + 1}`}
+                              style={{ 
+                                width: '100%', 
+                                maxHeight: '200px', 
+                                objectFit: 'cover',
+                                borderRadius: '4px',
+                                border: '1px solid #ddd'
+                              }} 
+                            />
+                            {profileData.metadata.imageAltText && profileData.metadata.imageAltText[idx] && (
+                              <div style={{ fontSize: '11px', color: '#666', marginTop: '5px' }}>
+                                {profileData.metadata.imageAltText[idx]}
+                              </div>
+                            )}
+                            {profileData.metadata.imageDimensions && profileData.metadata.imageDimensions[idx] && (
+                              <div style={{ fontSize: '10px', color: '#999', marginTop: '2px' }}>
+                                {profileData.metadata.imageDimensions[idx].width}x{profileData.metadata.imageDimensions[idx].height}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
               )}
 
-              {/* Sentiment Analysis */}
-              {result.sentiment && (
+              {profileData.creator && (
                 <div style={{ border: '1px solid #ddd', padding: '15px', borderRadius: '4px', gridColumn: '1 / -1' }}>
+                  <h3 style={{ marginTop: 0, fontSize: '16px' }}>Creator Profile</h3>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '15px', marginBottom: '15px' }}>
+                    <div>
+                      {profileData.creator.username && (
+                        <p><strong>Username:</strong> @{profileData.creator.username}</p>
+                      )}
+                      {profileData.creator.profileId && (
+                        <p><strong>Profile ID:</strong> {profileData.creator.profileId}</p>
+                      )}
+                      {profileData.creator.followers !== undefined && profileData.creator.followers !== null && (
+                        <p><strong>Followers:</strong> {profileData.creator.followers.toLocaleString()}</p>
+                      )}
+                      {profileData.creator.following !== undefined && profileData.creator.following !== null && (
+                        <p><strong>Following:</strong> {profileData.creator.following.toLocaleString()}</p>
+                      )}
+                      {profileData.creator.mediaCount !== undefined && profileData.creator.mediaCount !== null && (
+                        <p><strong>Posts:</strong> {profileData.creator.mediaCount.toLocaleString()}</p>
+                      )}
+                      {profileData.creator.videoCount !== undefined && profileData.creator.videoCount !== null && (
+                        <p><strong>Videos:</strong> {profileData.creator.videoCount.toLocaleString()}</p>
+                      )}
+                      {profileData.creator.highlightReelsCount !== undefined && profileData.creator.highlightReelsCount !== null && (
+                        <p><strong>Highlight Reels:</strong> {profileData.creator.highlightReelsCount}</p>
+                      )}
+                      {profileData.creator.igtvVideoCount !== undefined && profileData.creator.igtvVideoCount !== null && (
+                        <p><strong>IGTV Videos:</strong> {profileData.creator.igtvVideoCount}</p>
+                      )}
+                      {profileData.creator.usernameChangeCount !== undefined && profileData.creator.usernameChangeCount !== null && (
+                        <p><strong>Username Changes:</strong> {profileData.creator.usernameChangeCount}</p>
+                      )}
+                      {profileData.creator.isRecentlyJoined !== undefined && profileData.creator.isRecentlyJoined !== null && (
+                        <p><strong>Recently Joined:</strong> {profileData.creator.isRecentlyJoined ? 'Yes' : 'No'}</p>
+                      )}
+                    </div>
+                    <div>
+                      {profileData.creator.profilePictureUrl && (
+                        <div style={{ marginBottom: '10px' }}>
+                          <strong>Profile Picture:</strong>
+                          <img 
+                            src={profileData.creator.profilePictureUrl} 
+                            alt="Profile picture" 
+                            style={{ 
+                              width: '80px', 
+                              height: '80px', 
+                              borderRadius: '50%',
+                              marginTop: '5px',
+                              border: '1px solid #ddd',
+                              objectFit: 'cover'
+                            }} 
+                          />
+                        </div>
+                      )}
+                      {profileData.creator.verified !== undefined && (
+                        <p><strong>Verified:</strong> {profileData.creator.verified ? '✅ Yes' : 'No'}</p>
+                      )}
+                      {profileData.creator.verifiedDate && (
+                        <p><strong>Verified Date:</strong> {new Date(profileData.creator.verifiedDate).toLocaleDateString()}</p>
+                      )}
+                      {profileData.creator.accountType && (
+                        <p><strong>Account Type:</strong> {profileData.creator.accountType}</p>
+                      )}
+                      {profileData.creator.businessCategory && (
+                        <p><strong>Business Category:</strong> {profileData.creator.businessCategory}</p>
+                      )}
+                      {profileData.creator.location && (
+                        <p><strong>Location:</strong> {profileData.creator.location}</p>
+                      )}
+                      {profileData.creator.joinDate && (
+                        <p><strong>Join Date:</strong> {new Date(profileData.creator.joinDate).toLocaleDateString()}</p>
+                      )}
+                      {profileData.creator.facebookId && (
+                        <p><strong>Facebook ID:</strong> {profileData.creator.facebookId}</p>
+                      )}
+                      {profileData.creator.website && (
+                        <p><strong>Website:</strong> <a href={profileData.creator.website} target="_blank" rel="noopener noreferrer" style={{ color: '#0070f3' }}>{profileData.creator.website}</a></p>
+                      )}
+                    </div>
+                  </div>
+
+                  {profileData.creator.bio && (
+                    <div style={{ marginTop: '10px', marginBottom: '15px' }}>
+                      <strong>Bio:</strong>
+                      <p style={{ marginTop: '5px', fontSize: '14px', color: '#666', whiteSpace: 'pre-wrap' }}>{profileData.creator.bio}</p>
+                    </div>
+                  )}
+
+                  {profileData.creator.relatedProfiles && profileData.creator.relatedProfiles.length > 0 && (
+                    <div style={{ marginTop: '15px', marginBottom: '15px' }}>
+                      <strong>Related Profiles ({profileData.creator.relatedProfiles.length}):</strong>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '5px' }}>
+                        {profileData.creator.relatedProfiles.map((profile, idx) => (
+                          <span key={idx} style={{ padding: '4px 8px', background: '#e8f5e9', borderRadius: '4px', fontSize: '12px', color: '#2e7d32' }}>
+                            @{profile}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {profileData.creator.latestPosts && profileData.creator.latestPosts.length > 0 && (
+                    <div style={{ marginTop: '15px' }}>
+                      <strong>Latest Posts ({profileData.creator.latestPosts.length}):</strong>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '10px', marginTop: '10px' }}>
+                        {profileData.creator.latestPosts.map((post, idx) => (
+                          <div key={idx} style={{ padding: '10px', background: '#fafafa', borderRadius: '4px', border: '1px solid #e0e0e0' }}>
+                            <div style={{ fontSize: '12px', marginBottom: '5px' }}>
+                              <strong>Type:</strong> {post.type}
+                            </div>
+                            {post.caption && (
+                              <div style={{ fontSize: '11px', color: '#666', marginBottom: '5px', maxHeight: '60px', overflow: 'hidden' }}>
+                                {post.caption.substring(0, 100)}{post.caption.length > 100 ? '...' : ''}
+                              </div>
+                            )}
+                            <div style={{ fontSize: '11px', color: '#999', marginTop: '5px' }}>
+                              ❤️ {post.likes.toLocaleString()} | 💬 {post.comments.toLocaleString()}
+                            </div>
+                            {post.url && (
+                              <a href={post.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: '11px', color: '#0070f3', marginTop: '5px', display: 'block' }}>
+                                View Post →
+                              </a>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Niche Analysis Results */}
+                  {nicheAnalysis && (
+                    <div style={{ marginTop: '20px', padding: '15px', background: '#fff3e0', borderRadius: '4px', border: '2px solid #ff9800' }}>
+                      <h3 style={{ marginTop: 0, fontSize: '16px', color: '#e65100' }}>
+                        🎯 Creator Niche Analysis
+                      </h3>
+                      
+                      <div style={{ marginBottom: '15px' }}>
+                        <strong style={{ fontSize: '14px', display: 'block', marginBottom: '8px' }}>
+                          Detected Niches:
+                        </strong>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                          {nicheAnalysis.niches.map((niche, idx) => (
+                            <span
+                              key={idx}
+                              style={{
+                                padding: '6px 14px',
+                                borderRadius: '16px',
+                                fontSize: '13px',
+                                fontWeight: '600',
+                                backgroundColor: '#ff9800',
+                                color: 'white',
+                              }}
+                            >
+                              {niche}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div style={{ marginBottom: '15px', padding: '12px', backgroundColor: 'white', borderRadius: '4px', border: '1px solid #e0e0e0' }}>
+                        <div style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>
+                          Confidence: <strong style={{ color: '#333' }}>{(nicheAnalysis.confidence * 100).toFixed(1)}%</strong>
+                        </div>
+                        <div style={{ fontSize: '13px', color: '#333', lineHeight: '1.6' }}>
+                          <strong>Reasoning:</strong> {nicheAnalysis.reasoning}
+                        </div>
+                      </div>
+
+                      <div style={{ fontSize: '12px', color: '#666', fontStyle: 'italic' }}>
+                        Processing time: {nicheAnalysis.processingTimeMs}ms
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Engagement Verification Results */}
+                  {engagementVerification && (
+                    <div style={{ marginTop: '20px', padding: '15px', background: engagementVerification.overallAuthentic ? '#e8f5e9' : '#ffebee', borderRadius: '4px', border: `2px solid ${engagementVerification.overallAuthentic ? '#4caf50' : '#f44336'}` }}>
+                      <h3 style={{ marginTop: 0, fontSize: '16px', color: engagementVerification.overallAuthentic ? '#2e7d32' : '#c62828' }}>
+                        🔍 Engagement Authenticity Verification
+                      </h3>
+                      
+                      {/* Overall Assessment */}
+                      <div style={{ 
+                        marginBottom: '20px', 
+                        padding: '15px', 
+                        borderRadius: '4px',
+                        backgroundColor: engagementVerification.overallAuthentic ? '#c8e6c9' : '#ffcdd2',
+                        border: `2px solid ${engagementVerification.overallAuthentic ? '#4caf50' : '#f44336'}`
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                          <strong style={{ fontSize: '15px', color: '#333' }}>
+                            Overall Assessment:
+                          </strong>
+                          <span style={{
+                            padding: '6px 16px',
+                            borderRadius: '16px',
+                            fontSize: '13px',
+                            fontWeight: '600',
+                            backgroundColor: engagementVerification.overallAuthentic ? '#4caf50' : '#f44336',
+                            color: 'white'
+                          }}>
+                            {engagementVerification.overallAuthentic ? '✅ AUTHENTIC' : '❌ SUSPICIOUS'}
+                          </span>
+                          <span style={{
+                            padding: '6px 12px',
+                            borderRadius: '12px',
+                            fontSize: '12px',
+                            fontWeight: '600',
+                            backgroundColor: '#fff',
+                            color: '#333'
+                          }}>
+                            Score: {(engagementVerification.overallScore * 100).toFixed(1)}%
+                          </span>
+                        </div>
+                        {engagementVerification.promotionTimestamp && (
+                          <div style={{ fontSize: '13px', color: '#666', marginTop: '8px' }}>
+                            <strong>Promotion Timestamp:</strong> {new Date(engagementVerification.promotionTimestamp).toLocaleString()}
+                          </div>
+                        )}
+                        {engagementVerification.overallIssues.length > 0 && (
+                          <div style={{ marginTop: '10px' }}>
+                            <strong style={{ fontSize: '13px' }}>Issues Detected:</strong>
+                            <ul style={{ margin: '5px 0 0 20px', fontSize: '13px', color: '#333' }}>
+                              {engagementVerification.overallIssues.map((issue, idx) => (
+                                <li key={idx}>{issue}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Comment Analysis */}
+                      {engagementVerification.commentAnalysis && (
+                        <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: 'white', borderRadius: '4px', border: '1px solid #e0e0e0' }}>
+                          <h4 style={{ marginTop: 0, fontSize: '15px', color: '#333' }}>Comment Analysis</h4>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px', marginBottom: '15px' }}>
+                            <div>
+                              <div style={{ fontSize: '12px', color: '#666' }}>Total Comments</div>
+                              <div style={{ fontSize: '18px', fontWeight: '600', color: '#333' }}>{engagementVerification.commentAnalysis.totalComments}</div>
+                            </div>
+                            <div>
+                              <div style={{ fontSize: '12px', color: '#666' }}>Suspicious</div>
+                              <div style={{ fontSize: '18px', fontWeight: '600', color: engagementVerification.commentAnalysis.suspiciousComments > 0 ? '#f44336' : '#4caf50' }}>
+                                {engagementVerification.commentAnalysis.suspiciousComments}
+                              </div>
+                            </div>
+                            <div>
+                              <div style={{ fontSize: '12px', color: '#666' }}>Bot Likelihood</div>
+                              <div style={{ fontSize: '18px', fontWeight: '600', color: engagementVerification.commentAnalysis.botLikelihood > 0.4 ? '#f44336' : '#4caf50' }}>
+                                {(engagementVerification.commentAnalysis.botLikelihood * 100).toFixed(1)}%
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Comment Issues */}
+                          {engagementVerification.commentAnalysis.issues.duplicateComments.count > 0 && (
+                            <div style={{ marginBottom: '10px', padding: '10px', background: '#fff3e0', borderRadius: '4px' }}>
+                              <strong style={{ fontSize: '13px' }}>Duplicate Comments:</strong> {engagementVerification.commentAnalysis.issues.duplicateComments.count} found
+                              {engagementVerification.commentAnalysis.issues.duplicateComments.examples.length > 0 && (
+                                <div style={{ marginTop: '5px', fontSize: '12px', color: '#666' }}>
+                                  Examples: {engagementVerification.commentAnalysis.issues.duplicateComments.examples.slice(0, 3).map(ex => `"${ex.text.substring(0, 30)}..." (${ex.count}x)`).join(', ')}
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {engagementVerification.commentAnalysis.issues.emojiOnlyComments.count > 0 && (
+                            <div style={{ marginBottom: '10px', padding: '10px', background: '#fff3e0', borderRadius: '4px' }}>
+                              <strong style={{ fontSize: '13px' }}>Emoji-Only Comments:</strong> {engagementVerification.commentAnalysis.issues.emojiOnlyComments.count} found
+                            </div>
+                          )}
+
+                          {engagementVerification.commentAnalysis.issues.suspiciousTiming.detected && (
+                            <div style={{ marginBottom: '10px', padding: '10px', background: '#ffebee', borderRadius: '4px' }}>
+                              <strong style={{ fontSize: '13px' }}>Suspicious Timing:</strong> {engagementVerification.commentAnalysis.issues.suspiciousTiming.description}
+                            </div>
+                          )}
+
+                          {engagementVerification.commentAnalysis.recommendations.length > 0 && (
+                            <div style={{ marginTop: '10px', fontSize: '12px', color: '#666' }}>
+                              <strong>Recommendations:</strong>
+                              <ul style={{ margin: '5px 0 0 20px' }}>
+                                {engagementVerification.commentAnalysis.recommendations.map((rec, idx) => (
+                                  <li key={idx}>{rec}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Engagement Analysis */}
+                      {engagementVerification.engagementAnalysis && (
+                        <div style={{ padding: '15px', backgroundColor: 'white', borderRadius: '4px', border: '1px solid #e0e0e0' }}>
+                          <h4 style={{ marginTop: 0, fontSize: '15px', color: '#333' }}>Engagement Pattern Analysis</h4>
+                          
+                          {/* Metrics */}
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '10px', marginBottom: '15px' }}>
+                            {engagementVerification.engagementAnalysis.metrics.totalLikes !== undefined && (
+                              <div>
+                                <div style={{ fontSize: '12px', color: '#666' }}>Likes</div>
+                                <div style={{ fontSize: '16px', fontWeight: '600', color: '#333' }}>{engagementVerification.engagementAnalysis.metrics.totalLikes.toLocaleString()}</div>
+                              </div>
+                            )}
+                            {engagementVerification.engagementAnalysis.metrics.totalViews !== null && (
+                              <div>
+                                <div style={{ fontSize: '12px', color: '#666' }}>Views</div>
+                                <div style={{ fontSize: '16px', fontWeight: '600', color: '#333' }}>{engagementVerification.engagementAnalysis.metrics.totalViews.toLocaleString()}</div>
+                              </div>
+                            )}
+                            {engagementVerification.engagementAnalysis.metrics.totalComments !== undefined && (
+                              <div>
+                                <div style={{ fontSize: '12px', color: '#666' }}>Comments</div>
+                                <div style={{ fontSize: '16px', fontWeight: '600', color: '#333' }}>{engagementVerification.engagementAnalysis.metrics.totalComments}</div>
+                              </div>
+                            )}
+                            {engagementVerification.engagementAnalysis.metrics.engagementRate !== null && (
+                              <div>
+                                <div style={{ fontSize: '12px', color: '#666' }}>Engagement Rate</div>
+                                <div style={{ fontSize: '16px', fontWeight: '600', color: '#333' }}>{engagementVerification.engagementAnalysis.metrics.engagementRate.toFixed(2)}%</div>
+                              </div>
+                            )}
+                            {engagementVerification.engagementAnalysis.metrics.likeToViewRatio !== null && (
+                              <div>
+                                <div style={{ fontSize: '12px', color: '#666' }}>Like/View Ratio</div>
+                                <div style={{ fontSize: '16px', fontWeight: '600', color: '#333' }}>{(engagementVerification.engagementAnalysis.metrics.likeToViewRatio * 100).toFixed(2)}%</div>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Engagement Issues */}
+                          {engagementVerification.engagementAnalysis.issues.suspiciousLikePattern.detected && (
+                            <div style={{ marginBottom: '10px', padding: '10px', background: '#ffebee', borderRadius: '4px' }}>
+                              <strong style={{ fontSize: '13px' }}>Suspicious Like Pattern:</strong> {engagementVerification.engagementAnalysis.issues.suspiciousLikePattern.description}
+                            </div>
+                          )}
+
+                          {engagementVerification.engagementAnalysis.issues.engagementRateAnomaly.detected && (
+                            <div style={{ marginBottom: '10px', padding: '10px', background: '#ffebee', borderRadius: '4px' }}>
+                              <strong style={{ fontSize: '13px' }}>Engagement Rate Anomaly:</strong> {engagementVerification.engagementAnalysis.issues.engagementRateAnomaly.description}
+                            </div>
+                          )}
+
+                          {engagementVerification.engagementAnalysis.issues.viewLikeRatioAnomaly.detected && (
+                            <div style={{ marginBottom: '10px', padding: '10px', background: '#ffebee', borderRadius: '4px' }}>
+                              <strong style={{ fontSize: '13px' }}>View/Like Ratio Anomaly:</strong> {engagementVerification.engagementAnalysis.issues.viewLikeRatioAnomaly.description}
+                            </div>
+                          )}
+
+                          {engagementVerification.engagementAnalysis.issues.rapidEngagementGrowth.detected && (
+                            <div style={{ marginBottom: '10px', padding: '10px', background: '#ffebee', borderRadius: '4px' }}>
+                              <strong style={{ fontSize: '13px' }}>Rapid Growth:</strong> {engagementVerification.engagementAnalysis.issues.rapidEngagementGrowth.description}
+                            </div>
+                          )}
+
+                          {engagementVerification.engagementAnalysis.recommendations.length > 0 && (
+                            <div style={{ marginTop: '10px', fontSize: '12px', color: '#666' }}>
+                              <strong>Recommendations:</strong>
+                              <ul style={{ margin: '5px 0 0 20px' }}>
+                                {engagementVerification.engagementAnalysis.recommendations.map((rec, idx) => (
+                                  <li key={idx}>{rec}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+                </div>
+              )}
+
+        {/* Transcription Results */}
+        {transcriptionData && activeTab === 'transcription' && (
+          <div style={{ background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2 style={{ marginTop: 0, marginBottom: 0, color: '#333' }}>Transcription & Sentiment Results</h2>
+            </div>
+
+            {transcriptionData.transcription && (
+              <div style={{ border: '1px solid #ddd', padding: '15px', borderRadius: '4px', marginBottom: '20px' }}>
+                  <h3 style={{ marginTop: 0, fontSize: '16px' }}>Transcription (Local Whisper)</h3>
+                <p><strong>Language:</strong> {transcriptionData.transcription.language}</p>
+                <p><strong>Processing Time:</strong> {(transcriptionData.transcription.processingTime / 1000).toFixed(1)}s</p>
+                <div style={{ background: '#fafafa', padding: '10px', borderRadius: '4px', maxHeight: '150px', overflowY: 'auto', fontSize: '14px', color: '#111', whiteSpace: 'pre-wrap', marginTop: '10px' }}>
+                  {transcriptionData.transcription.transcript || <em>No transcript available</em>}
+                  </div>
+                </div>
+              )}
+
+            {transcriptionData.sentiment && (
+              <div style={{ border: '1px solid #ddd', padding: '15px', borderRadius: '4px' }}>
                   <h3 style={{ marginTop: 0, fontSize: '16px' }}>Sentiment Analysis</h3>
                   
-                  {/* Combined Sentiment (Main) */}
                   <div style={{ 
                     marginBottom: '15px', 
                     padding: '10px', 
                     borderRadius: '4px',
-                    backgroundColor: result.sentiment.combined.sentiment === 'positive' ? '#e8f5e9' :
-                                    result.sentiment.combined.sentiment === 'negative' ? '#ffebee' : '#f5f5f5'
+                  backgroundColor: transcriptionData.sentiment.combined.sentiment === 'positive' ? '#e8f5e9' :
+                                  transcriptionData.sentiment.combined.sentiment === 'negative' ? '#ffebee' : '#f5f5f5'
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                       <strong style={{ fontSize: '14px' }}>Overall Sentiment:</strong>
@@ -518,18 +1946,16 @@ export default function Home() {
                         fontSize: '12px',
                         fontWeight: '600',
                         textTransform: 'uppercase',
-                        backgroundColor: result.sentiment.combined.sentiment === 'positive' ? '#4caf50' :
-                                        result.sentiment.combined.sentiment === 'negative' ? '#f44336' : '#9e9e9e',
+                      backgroundColor: transcriptionData.sentiment.combined.sentiment === 'positive' ? '#4caf50' :
+                                      transcriptionData.sentiment.combined.sentiment === 'negative' ? '#f44336' : '#9e9e9e',
                         color: 'white'
                       }}>
-                        {result.sentiment.combined.sentiment}
+                      {transcriptionData.sentiment.combined.sentiment}
                       </span>
                     </div>
                   </div>
 
-                  {/* Breakdown */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginTop: '10px' }}>
-                    {/* Transcript Sentiment */}
                     <div style={{ padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
                       <strong style={{ fontSize: '13px' }}>Transcript Sentiment:</strong>
                       <div style={{ marginTop: '5px' }}>
@@ -538,17 +1964,16 @@ export default function Home() {
                           borderRadius: '8px',
                           fontSize: '11px',
                           fontWeight: '600',
-                          backgroundColor: result.sentiment.transcript.sentiment === 'positive' ? '#c8e6c9' :
-                                          result.sentiment.transcript.sentiment === 'negative' ? '#ffcdd2' : '#e0e0e0',
-                          color: result.sentiment.transcript.sentiment === 'positive' ? '#2e7d32' :
-                                 result.sentiment.transcript.sentiment === 'negative' ? '#c62828' : '#616161'
-                        }}>
-                          {result.sentiment.transcript.sentiment}
+                        backgroundColor: transcriptionData.sentiment.transcript.sentiment === 'positive' ? '#c8e6c9' :
+                                        transcriptionData.sentiment.transcript.sentiment === 'negative' ? '#ffcdd2' : '#e0e0e0',
+                        color: transcriptionData.sentiment.transcript.sentiment === 'positive' ? '#2e7d32' :
+                               transcriptionData.sentiment.transcript.sentiment === 'negative' ? '#c62828' : '#616161'
+                      }}>
+                        {transcriptionData.sentiment.transcript.sentiment}
                         </span>
                       </div>
                     </div>
 
-                    {/* Caption Sentiment */}
                     <div style={{ padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
                       <strong style={{ fontSize: '13px' }}>Caption Sentiment:</strong>
                       <div style={{ marginTop: '5px' }}>
@@ -557,54 +1982,64 @@ export default function Home() {
                           borderRadius: '8px',
                           fontSize: '11px',
                           fontWeight: '600',
-                          backgroundColor: result.sentiment.caption.sentiment === 'positive' ? '#c8e6c9' :
-                                          result.sentiment.caption.sentiment === 'negative' ? '#ffcdd2' : '#e0e0e0',
-                          color: result.sentiment.caption.sentiment === 'positive' ? '#2e7d32' :
-                                 result.sentiment.caption.sentiment === 'negative' ? '#c62828' : '#616161'
-                        }}>
-                          {result.sentiment.caption.sentiment}
+                        backgroundColor: transcriptionData.sentiment.caption.sentiment === 'positive' ? '#c8e6c9' :
+                                        transcriptionData.sentiment.caption.sentiment === 'negative' ? '#ffcdd2' : '#e0e0e0',
+                        color: transcriptionData.sentiment.caption.sentiment === 'positive' ? '#2e7d32' :
+                               transcriptionData.sentiment.caption.sentiment === 'negative' ? '#c62828' : '#616161'
+                      }}>
+                        {transcriptionData.sentiment.caption.sentiment}
                         </span>
                       </div>
                     </div>
                   </div>
+              </div>
+            )}
+          </div>
+        )}
 
-                  {/* Publicity Assessment */}
-                  <div style={{ 
-                    marginTop: '15px', 
-                    padding: '10px', 
-                    borderRadius: '4px',
-                    backgroundColor: result.sentiment.combined.sentiment === 'positive' ? '#e3f2fd' : 
-                                    result.sentiment.combined.sentiment === 'negative' ? '#fff3e0' : '#f5f5f5',
-                    border: `1px solid ${result.sentiment.combined.sentiment === 'positive' ? '#2196f3' : 
-                                            result.sentiment.combined.sentiment === 'negative' ? '#ff9800' : '#9e9e9e'}`
-                  }}>
-                    <strong style={{ fontSize: '13px' }}>Publicity Assessment:</strong>
-                    <p style={{ marginTop: '5px', fontSize: '13px', color: '#333' }}>
-                      {result.sentiment.combined.sentiment === 'positive' 
-                        ? '✅ This reel provides GOOD publicity for the product. The sentiment is positive overall.'
-                        : result.sentiment.combined.sentiment === 'negative'
-                        ? '⚠️ This reel may provide POOR publicity for the product. The sentiment is negative overall.'
-                        : '➖ This reel provides NEUTRAL publicity for the product. The sentiment is neither strongly positive nor negative.'}
-                    </p>
-                  </div>
+        {/* Analysis Results */}
+        {analysisData && activeTab === 'analysis' && (
+          <div style={{ background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2 style={{ marginTop: 0, marginBottom: 0, color: '#333' }}>Video Analysis Results</h2>
+              <button
+                onClick={resetWorkflow}
+                style={{
+                  padding: '8px 16px',
+                  background: '#9e9e9e',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                }}
+              >
+                Reset All
+              </button>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginBottom: '20px' }}>
+              <div style={{ border: '1px solid #ddd', padding: '15px', borderRadius: '4px' }}>
+                <h3 style={{ marginTop: 0, fontSize: '16px' }}>Video Information</h3>
+                <p><strong>Duration:</strong> {analysisData.video.duration.toFixed(1)}s</p>
+                <p><strong>Frames Extracted:</strong> {analysisData.video.frameCount}</p>
                 </div>
-              )}
+            </div>
 
-              {/* Vision Analysis */}
-              {result.vision && (
-                <div style={{ border: '1px solid #ddd', padding: '15px', borderRadius: '4px', gridColumn: '1 / -1' }}>
+            {analysisData.vision && (
+              <div style={{ border: '1px solid #ddd', padding: '15px', borderRadius: '4px', marginBottom: '20px' }}>
                   <h3 style={{ marginTop: 0, fontSize: '16px' }}>
-                    Vision Analysis (YOLO + OCR{result.vision.visualSummary.visualSimilaritySummary ? ' + CLIP' : ''})
+                  Vision Analysis (YOLO + OCR{analysisData.vision.visualSummary.visualSimilaritySummary ? ' + CLIP' : ''})
                   </h3>
                   
-                  {/* Brand Confirmation - Most Important */}
-                  {result.vision.visualSummary.targetBrandConfirmation && (
+                {analysisData.vision.visualSummary.targetBrandConfirmation && (
                     <div style={{ 
                       marginBottom: '20px', 
                       padding: '15px', 
                       borderRadius: '4px',
-                      backgroundColor: result.vision.visualSummary.targetBrandConfirmation.detected ? '#e8f5e9' : '#ffebee',
-                      border: `2px solid ${result.vision.visualSummary.targetBrandConfirmation.detected ? '#4caf50' : '#f44336'}`
+                    backgroundColor: analysisData.vision.visualSummary.targetBrandConfirmation.detected ? '#e8f5e9' : '#ffebee',
+                    border: `2px solid ${analysisData.vision.visualSummary.targetBrandConfirmation.detected ? '#4caf50' : '#f44336'}`
                     }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
                         <strong style={{ fontSize: '15px', color: '#333' }}>
@@ -615,159 +2050,25 @@ export default function Home() {
                           borderRadius: '12px',
                           fontSize: '12px',
                           fontWeight: '600',
-                          backgroundColor: result.vision.visualSummary.targetBrandConfirmation.detected ? '#4caf50' : '#f44336',
+                        backgroundColor: analysisData.vision.visualSummary.targetBrandConfirmation.detected ? '#4caf50' : '#f44336',
                           color: 'white'
                         }}>
-                          {result.vision.visualSummary.targetBrandConfirmation.detected ? '✓ DETECTED' : '✗ NOT DETECTED'}
+                        {analysisData.vision.visualSummary.targetBrandConfirmation.detected ? '✓ DETECTED' : '✗ NOT DETECTED'}
                         </span>
                       </div>
-                      <p style={{ 
-                        margin: '8px 0 0 0', 
-                        fontSize: '14px', 
-                        color: '#333',
-                        fontWeight: '500'
-                      }}>
-                        {result.vision.visualSummary.targetBrandConfirmation.message}
-                      </p>
-                      {result.vision.visualSummary.targetBrandConfirmation.detected && (
-                        <div style={{ marginTop: '8px', fontSize: '12px', color: '#666' }}>
-                          Confidence: {(result.vision.visualSummary.targetBrandConfirmation.confidence * 100).toFixed(0)}%
-                        </div>
-                      )}
+                    <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#333', fontWeight: '500' }}>
+                      {analysisData.vision.visualSummary.targetBrandConfirmation.message}
+                    </p>
                     </div>
                   )}
 
-                  {/* Visual Sentiment - Publicity Assessment */}
-                  {result.vision.visualSummary.visualSentiment && (
-                    <div style={{ 
-                      marginBottom: '20px', 
-                      padding: '15px', 
-                      borderRadius: '4px',
-                      backgroundColor: result.vision.visualSummary.visualSentiment.sentiment === 'positive' ? '#e3f2fd' : 
-                                      result.vision.visualSummary.visualSentiment.sentiment === 'negative' ? '#ffebee' : '#f5f5f5',
-                      border: `2px solid ${result.vision.visualSummary.visualSentiment.sentiment === 'positive' ? '#2196f3' : 
-                                              result.vision.visualSummary.visualSentiment.sentiment === 'negative' ? '#f44336' : '#9e9e9e'}`
-                    }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                        <strong style={{ fontSize: '15px', color: '#333' }}>
-                          Visual Publicity Assessment:
-                        </strong>
-                        <span style={{
-                          padding: '4px 12px',
-                          borderRadius: '12px',
-                          fontSize: '12px',
-                          fontWeight: '600',
-                          textTransform: 'uppercase',
-                          backgroundColor: result.vision.visualSummary.visualSentiment.sentiment === 'positive' ? '#4caf50' :
-                                          result.vision.visualSummary.visualSentiment.sentiment === 'negative' ? '#f44336' : '#9e9e9e',
-                          color: 'white'
-                        }}>
-                          {result.vision.visualSummary.visualSentiment.sentiment}
-                        </span>
-                      </div>
-                      <p style={{ 
-                        margin: '8px 0', 
-                        fontSize: '13px', 
-                        color: '#333',
-                        lineHeight: '1.5'
-                      }}>
-                        {result.vision.visualSummary.visualSentiment.reasoning}
-                      </p>
-                      <div style={{ marginTop: '8px', fontSize: '12px', color: '#666' }}>
-                        Score: {result.vision.visualSummary.visualSentiment.score.toFixed(2)} | 
-                        Confidence: {(result.vision.visualSummary.visualSentiment.confidence * 100).toFixed(0)}%
-                      </div>
-                    </div>
-                  )}
-
-                  {/* CLIP Visual Similarity Summary */}
-                  {result.vision.visualSummary.visualSimilaritySummary && (
-                    <div style={{ 
-                      marginBottom: '20px', 
-                      padding: '15px', 
-                      borderRadius: '4px',
-                      backgroundColor: '#fff3e0',
-                      border: '2px solid #ff9800'
-                    }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                        <strong style={{ fontSize: '15px', color: '#333' }}>
-                          CLIP Visual Similarity (Product Match):
-                        </strong>
-                        <span style={{
-                          padding: '4px 12px',
-                          borderRadius: '12px',
-                          fontSize: '12px',
-                          fontWeight: '600',
-                          backgroundColor: '#ff9800',
-                          color: 'white'
-                        }}>
-                          {result.vision.visualSummary.visualSimilaritySummary.matchedFrames}/{result.vision.visualSummary.visualSimilaritySummary.totalFrames} frames matched
-                        </span>
-                        {result.vision.visualSummary.visualSimilaritySummary.referenceImageCount && result.vision.visualSummary.visualSimilaritySummary.referenceImageCount > 1 && (
-                          <span style={{
-                            padding: '4px 12px',
-                            borderRadius: '12px',
-                            fontSize: '11px',
-                            fontWeight: '500',
-                            backgroundColor: '#ffb74d',
-                            color: '#fff'
-                          }}>
-                            {result.vision.visualSummary.visualSimilaritySummary.referenceImageCount} reference images
-                          </span>
-                        )}
-                      </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px', marginTop: '10px' }}>
-                        <div>
-                          <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>Average Similarity</div>
-                          <div style={{ fontSize: '18px', fontWeight: '600', color: '#e65100' }}>
-                            {(result.vision.visualSummary.visualSimilaritySummary.averageSimilarity * 100).toFixed(1)}%
-                          </div>
-                        </div>
-                        <div>
-                          <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>Max Similarity</div>
-                          <div style={{ fontSize: '18px', fontWeight: '600', color: '#e65100' }}>
-                            {(result.vision.visualSummary.visualSimilaritySummary.maxSimilarity * 100).toFixed(1)}%
-                          </div>
-                        </div>
-                        <div>
-                          <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>Matched Frames</div>
-                          <div style={{ fontSize: '18px', fontWeight: '600', color: '#e65100' }}>
-                            {result.vision.visualSummary.visualSimilaritySummary.matchedFrames}
-                          </div>
-                        </div>
-                        {result.vision.visualSummary.visualSimilaritySummary.visibleSeconds !== undefined && (
-                          <div>
-                            <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>Visible Duration</div>
-                            <div style={{ fontSize: '18px', fontWeight: '600', color: '#e65100' }}>
-                              {result.vision.visualSummary.visualSimilaritySummary.visibleSeconds.toFixed(1)}s
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                      <div style={{ marginTop: '10px', fontSize: '12px', color: '#666', padding: '8px', backgroundColor: '#fff', borderRadius: '4px' }}>
-                        <strong>Interpretation:</strong> {
-                          result.vision.visualSummary.visualSimilaritySummary.averageSimilarity >= 0.45 ? 
-                            'Very confident product match - product is clearly visible' :
-                          result.vision.visualSummary.visualSimilaritySummary.averageSimilarity >= 0.35 ?
-                            'Likely product match - product appears to be present' :
-                          result.vision.visualSummary.visualSimilaritySummary.averageSimilarity >= 0.30 ?
-                            'Weak visual match - product may be present' :
-                            'Low similarity - product not clearly visible'
-                        }
-                        {result.vision.visualSummary.visualSimilaritySummary.referenceImageCount && result.vision.visualSummary.visualSimilaritySummary.referenceImageCount > 1 && 
-                          ` (compared against ${result.vision.visualSummary.visualSimilaritySummary.referenceImageCount} reference images, best match shown)`}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Objects Detected */}
-                  {result.vision.visualSummary.uniqueObjects.length > 0 && (
+                {analysisData.vision.visualSummary.uniqueObjects.length > 0 && (
                     <div style={{ marginBottom: '15px' }}>
                       <strong style={{ fontSize: '14px', display: 'block', marginBottom: '8px' }}>
-                        Objects Detected ({result.vision.visualSummary.uniqueObjects.length}):
+                      Objects Detected ({analysisData.vision.visualSummary.uniqueObjects.length}):
                       </strong>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                        {result.vision.visualSummary.uniqueObjects.map((obj, idx) => (
+                      {analysisData.vision.visualSummary.uniqueObjects.map((obj, idx) => (
                           <span
                             key={idx}
                             style={{
@@ -786,14 +2087,13 @@ export default function Home() {
                     </div>
                   )}
 
-                  {/* Brands Detected */}
-                  {result.vision.visualSummary.brandsDetected.length > 0 && (
+                {analysisData.vision.visualSummary.brandsDetected.length > 0 && (
                     <div style={{ marginBottom: '15px' }}>
                       <strong style={{ fontSize: '14px', display: 'block', marginBottom: '8px' }}>
-                        Brands/Logos Detected ({result.vision.visualSummary.brandsDetected.length}):
+                      Brands/Logos Detected ({analysisData.vision.visualSummary.brandsDetected.length}):
                       </strong>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        {result.vision.visualSummary.brandsDetected.map((brand, idx) => (
+                      {analysisData.vision.visualSummary.brandsDetected.map((brand, idx) => (
                           <div
                             key={idx}
                             style={{
@@ -809,7 +2109,6 @@ export default function Home() {
                               <strong style={{ fontSize: '13px' }}>{brand.name}</strong>
                               <div style={{ fontSize: '12px', color: '#666', marginTop: '2px' }}>
                                 Visible in {brand.totalFrames} frame{brand.totalFrames !== 1 ? 's' : ''}
-                                {brand.totalVisibleSeconds !== undefined && ` (${brand.totalVisibleSeconds.toFixed(1)}s)`}
                               </div>
                             </div>
                             <div
@@ -829,125 +2128,15 @@ export default function Home() {
                       </div>
                     </div>
                   )}
-
-                  {/* Frame-by-Frame Analysis */}
-                  {result.vision.visualSummary.frameAnalyses.length > 0 && (
-                    <div>
-                      <strong style={{ fontSize: '14px', display: 'block', marginBottom: '8px' }}>
-                        Frame-by-Frame Analysis ({result.vision.visualSummary.frameAnalyses.length} frames):
-                      </strong>
-                      <div style={{ 
-                        maxHeight: framesExpanded ? 'none' : '300px', 
-                        overflowY: framesExpanded ? 'visible' : 'auto', 
-                        border: '1px solid #e0e0e0', 
-                        borderRadius: '4px',
-                        padding: '10px',
-                        backgroundColor: '#fafafa'
-                      }}>
-                        {(framesExpanded 
-                          ? result.vision.visualSummary.frameAnalyses 
-                          : result.vision.visualSummary.frameAnalyses.slice(0, 10)
-                        ).map((frame, idx) => (
-                          <div
-                            key={idx}
-                            style={{
-                              padding: '8px',
-                              marginBottom: '8px',
-                              backgroundColor: 'white',
-                              borderRadius: '4px',
-                              border: '1px solid #e0e0e0',
-                            }}
-                          >
-                            <div style={{ fontSize: '12px', fontWeight: '600', marginBottom: '4px', color: '#555' }}>
-                              Frame at {frame.timestamp.toFixed(1)}s
-                            </div>
-                            {frame.objects.length > 0 && (
-                              <div style={{ fontSize: '11px', color: '#666', marginBottom: '4px' }}>
-                                <strong>Objects:</strong> {frame.objects.join(', ')}
-                              </div>
-                            )}
-                            {frame.brands.length > 0 && (
-                              <div style={{ fontSize: '11px', color: '#666', marginBottom: '4px' }}>
-                                <strong>Brands:</strong>{' '}
-                                {frame.brands.map((b, i) => (
-                                  <span key={i}>
-                                    {b.name} ({(b.confidence * 100).toFixed(0)}%)
-                                    {i < frame.brands.length - 1 ? ', ' : ''}
-                                  </span>
-                                ))}
-                              </div>
-                            )}
-                            {frame.visualSimilarity && (
-                              <div style={{ 
-                                fontSize: '11px', 
-                                padding: '4px 8px',
-                                borderRadius: '4px',
-                                backgroundColor: frame.visualSimilarity.match ? 
-                                  (frame.visualSimilarity.confidence === 'high' ? '#c8e6c9' : 
-                                   frame.visualSimilarity.confidence === 'medium' ? '#fff9c4' : '#ffe0b2') : '#f5f5f5',
-                                color: frame.visualSimilarity.match ? '#2e7d32' : '#666',
-                                display: 'inline-block',
-                                marginTop: '4px'
-                              }}>
-                                <strong>CLIP Similarity:</strong> {(frame.visualSimilarity.similarity * 100).toFixed(1)}% 
-                                {' '}({frame.visualSimilarity.confidence})
-                                {frame.visualSimilarity.referenceImageIndex !== undefined && ` [Ref #${frame.visualSimilarity.referenceImageIndex + 1}]`}
-                                {frame.visualSimilarity.match && ' ✓'}
-                              </div>
-                            )}
-                            {frame.objects.length === 0 && frame.brands.length === 0 && !frame.visualSimilarity && (
-                              <div style={{ fontSize: '11px', color: '#999', fontStyle: 'italic' }}>
-                                No objects or brands detected
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                        {result.vision.visualSummary.frameAnalyses.length > 10 && (
-                          <div 
-                            onClick={() => setFramesExpanded(!framesExpanded)}
-                            style={{ 
-                              fontSize: '12px', 
-                              color: '#0070f3',
-                              textAlign: 'center', 
-                              padding: '8px',
-                              cursor: 'pointer',
-                              fontWeight: '600',
-                              borderTop: '1px solid #e0e0e0',
-                              marginTop: '8px',
-                              backgroundColor: '#fff',
-                              borderRadius: '4px',
-                              transition: 'background-color 0.2s'
-                            }}
-                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f0f0f0'}
-                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#fff'}
-                            title={framesExpanded ? 'Click to collapse' : 'Click to expand'}
-                          >
-                            {framesExpanded 
-                              ? `▲ Show less (hide ${result.vision.visualSummary.frameAnalyses.length - 10} frames)`
-                              : `▼ Show all ${result.vision.visualSummary.frameAnalyses.length} frames (+ ${result.vision.visualSummary.frameAnalyses.length - 10} more)`
-                            }
-                          </div>
-                        )}
-                      </div>
                     </div>
                   )}
-
-                  {result.vision.visualSummary.uniqueObjects.length === 0 && 
-                   result.vision.visualSummary.brandsDetected.length === 0 && (
-                    <div style={{ padding: '15px', textAlign: 'center', color: '#999', fontStyle: 'italic' }}>
-                      No objects or brands detected in video frames
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
 
             {/* Frames */}
-            {result.video.frames.length > 0 && (
+            {analysisData.video.frames.length > 0 && (
               <div style={{ marginTop: '20px' }}>
-                <h3 style={{ fontSize: '16px' }}>Extracted Frames ({result.video.frames.length})</h3>
+                <h3 style={{ fontSize: '16px' }}>Extracted Frames ({analysisData.video.frames.length})</h3>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '10px', marginTop: '10px' }}>
-                  {result.video.frames.map((frame, idx) => (
+                  {analysisData.video.frames.map((frame, idx) => (
                     <div key={idx} style={{ border: '1px solid #ddd', borderRadius: '4px', overflow: 'hidden' }}>
                       <img
                         src={`/api/frames?path=${encodeURIComponent(frame)}`}

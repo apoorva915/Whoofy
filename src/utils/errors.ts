@@ -87,9 +87,7 @@ export class ProcessingError extends AppError {
   constructor(message: string, public originalError?: any) {
     super('PROCESSING_ERROR', `Processing error: ${message}`, 500, originalError);
   }
-}
-
-/**
+}/**
  * Rate Limit Error
  */
 export class RateLimitError extends AppError {

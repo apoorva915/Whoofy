@@ -126,9 +126,7 @@ export const FILE_LIMITS = {
 /**
  * Supported Video Formats
  */
-export const VIDEO_FORMATS = ['.mp4', '.mov', '.avi', '.mkv', '.webm'] as const;
-
-/**
+export const VIDEO_FORMATS = ['.mp4', '.mov', '.avi', '.mkv', '.webm'] as const;/**
  * Supported Image Formats
  */
 export const IMAGE_FORMATS = ['.jpg', '.jpeg', '.png', '.webp'] as const;

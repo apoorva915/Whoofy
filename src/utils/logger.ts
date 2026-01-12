@@ -11,6 +11,4 @@ const logger = pino({
   base: {
     env: process.env.NODE_ENV || 'development',
   },
-});
-
-export default logger;
+});export default logger;

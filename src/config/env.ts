@@ -1,8 +1,9 @@
 import { z } from 'zod';
 import dotenv from 'dotenv';
 
-// Load environment variables
-dotenv.config();
+// Load environment variables from .env file
+// Set override: true to ensure .env file values override system environment variables
+dotenv.config({ override: true });
 
 /**
  * Environment Variables Schema

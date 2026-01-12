@@ -71,9 +71,7 @@ export const CreateCreatorSchema = z.object({
   isVerified: z.boolean().default(false),
 });
 
-export type CreateCreatorInput = z.infer<typeof CreateCreatorSchema>;
-
-/**
+export type CreateCreatorInput = z.infer<typeof CreateCreatorSchema>;/**
  * Creator Update Input
  */
 export const UpdateCreatorSchema = CreateCreatorSchema.partial();

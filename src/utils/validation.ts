@@ -88,9 +88,7 @@ export function validatePagination(page?: number, limit?: number): {
  */
 export function sanitizeString(input: string): string {
   return input.trim().replace(/\s+/g, ' ');
-}
-
-/**
+}/**
  * Validate email (basic)
  */
 export function validateEmail(email: string): boolean {

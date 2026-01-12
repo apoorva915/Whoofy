@@ -70,9 +70,7 @@ export interface GetVerificationStatusResponse {
   progress: number; // 0-100
   estimatedTimeRemaining?: number; // seconds
   result?: any; // VerificationResult if completed
-}
-
-/**
+}/**
  * Health Check Response
  */
 export interface HealthCheckResponse {

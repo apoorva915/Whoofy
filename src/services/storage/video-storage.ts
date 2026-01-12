@@ -50,13 +50,54 @@ class VideoStorageService {
    */
   async saveVideoFromUrl(url: string, videoId?: string): Promise<string> {
     const axios = (await import('axios')).default;
-    const response = await axios.get(url, {
-      responseType: 'arraybuffer',
-      timeout: 300000, // 5 minutes
-    });
+    
+    try {
+      const response = await axios.get(url, {
+        responseType: 'arraybuffer',
+        timeout: 300000, // 5 minutes
+        maxContentLength: Infinity,
+        maxBodyLength: Infinity,
+      });
 
-    const buffer = Buffer.from(response.data);
-    return this.saveVideo(buffer, videoId);
+      // Validate response data
+      if (!response.data || response.data.byteLength === 0) {
+        throw new Error('Downloaded video file is empty');
+      }
+
+      const buffer = Buffer.from(response.data);
+      
+      // Validate buffer size
+      if (buffer.length === 0) {
+        throw new Error('Video buffer is empty');
+      }
+
+      const filePath = await this.saveVideo(buffer, videoId);
+      
+      // Verify file was written correctly
+      const stats = await fs.stat(filePath);
+      if (stats.size === 0) {
+        throw new Error('Video file was written but is empty');
+      }
+
+      if (stats.size !== buffer.length) {
+        throw new Error(`File size mismatch: expected ${buffer.length} bytes, got ${stats.size} bytes`);
+      }
+
+      return filePath;
+    } catch (error: any) {
+      // Clean up partial file if it exists
+      if (videoId) {
+        const filePath = this.getVideoPath(videoId);
+        try {
+          if (await fs.pathExists(filePath)) {
+            await fs.remove(filePath);
+          }
+        } catch (cleanupError) {
+          // Ignore cleanup errors
+        }
+      }
+      throw error;
+    }
   }
 
   /**
