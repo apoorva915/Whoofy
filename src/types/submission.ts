@@ -48,6 +48,4 @@ export type CreateSubmissionInput = z.infer<typeof CreateSubmissionSchema>;
 export const UpdateSubmissionSchema = z.object({
   status: z.nativeEnum(SubmissionStatus).optional(),
   caption: z.string().nullable().optional(),
-});
-
-export type UpdateSubmissionInput = z.infer<typeof UpdateSubmissionSchema>;
+});export type UpdateSubmissionInput = z.infer<typeof UpdateSubmissionSchema>;

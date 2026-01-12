@@ -76,6 +76,24 @@ class VideoProcessor {
     const downloadResult = await videoDownloader.downloadVideo(url);
     const { videoId, filePath, metadata } = downloadResult;
 
+    // Step 1a: Validate video file before processing
+    if (!filePath.startsWith('mock://')) {
+      const { validateVideoFile } = await import('@/utils/video-validation');
+      const validation = await validateVideoFile(filePath, {
+        maxWaitTime: 10000, // Wait up to 10 seconds for file to stabilize
+        checkInterval: 500,
+        minFileSize: 1024, // At least 1KB
+      });
+
+      if (!validation.valid) {
+        logger.error({ filePath, error: validation.error }, 'Video file validation failed');
+        throw new ProcessingError(
+          `Video file is invalid or incomplete: ${validation.error || 'Unknown error'}. ` +
+          'The file may still be downloading or may be corrupted. Please try again.'
+        );
+      }
+    }
+
     // Step 2: Get video duration
     const duration = await frameExtractor.getVideoDuration(filePath);
 

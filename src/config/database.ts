@@ -58,6 +58,4 @@ export async function checkDatabaseHealth(): Promise<'up' | 'down'> {
     logger.error({ error }, 'Database health check failed');
     return 'down';
   }
-}
-
-export default prisma;
+}export default prisma;

@@ -25,6 +25,4 @@ class CaptionExtractor {
   extractFromMetadata(metadata: { caption?: string | null }): string | null {
     return metadata.caption || null;
   }
-}
-
-export const captionExtractor = new CaptionExtractor();
+}export const captionExtractor = new CaptionExtractor();

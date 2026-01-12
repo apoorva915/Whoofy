@@ -5,6 +5,9 @@
 /.pnp
 .pnp.js
 
+.venv/
+venv/
+
 # testing
 /coverage
 
@@ -42,4 +45,3 @@ next-env.d.ts
 
 # storage (videos and frames)
 /storage
-

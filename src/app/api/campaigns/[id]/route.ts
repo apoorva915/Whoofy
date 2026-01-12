@@ -19,9 +19,7 @@ export async function PUT(
 ) {
   const { id } = await params;
   return NextResponse.json({ message: 'Not implemented' }, { status: 501 });
-}
-
-export async function DELETE(
+}export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {

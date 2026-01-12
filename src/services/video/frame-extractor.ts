@@ -248,6 +248,12 @@ class FrameExtractor {
         return 0;
       }
 
+      // Quick validation - check file size
+      const stats = await fs.stat(videoPath);
+      if (stats.size < 1024) {
+        logger.warn({ videoPath, size: stats.size }, 'Video file is suspiciously small');
+      }
+
       const ffprobe = this.getFfprobePath();
       
       // Normalize paths for Windows (use forward slashes)

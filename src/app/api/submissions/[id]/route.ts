@@ -10,9 +10,7 @@ export async function GET(
 ) {
   const { id } = await params;
   return NextResponse.json({ message: 'Not implemented' }, { status: 501 });
-}
-
-export async function PUT(
+}export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {

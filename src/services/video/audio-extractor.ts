@@ -78,6 +78,20 @@ class AudioExtractor {
         throw new ProcessingError(`Video file not found: ${videoPath}`);
       }
 
+      // Validate video file before processing
+      const { validateVideoFile } = await import('@/utils/video-validation');
+      const validation = await validateVideoFile(videoPath, {
+        maxWaitTime: 5000,
+        checkInterval: 500,
+        minFileSize: 1024,
+      });
+
+      if (!validation.valid) {
+        throw new ProcessingError(
+          `Cannot extract audio: Video file is invalid or incomplete. ${validation.error || 'Unknown error'}`
+        );
+      }
+
       logger.info(`Extracting audio from: ${videoPath}`);
 
       const ffmpeg = this.getFfmpegPath();

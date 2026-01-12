@@ -157,9 +157,7 @@ export const VerificationResultModel = {
       logger.error({ error }, 'Error deleting verification result:', error);
       throw new DatabaseError('Failed to delete verification result', error);
     }
-  },
-
-  /**
+  },  /**
    * Map Prisma model to VerificationResult type
    */
   mapToVerificationResult(result: any): VerificationResult {

@@ -178,9 +178,7 @@ export const CreatorModel = {
       logger.error({ error }, 'Error deleting creator:', error);
       throw new DatabaseError('Failed to delete creator', error);
     }
-  },
-
-  /**
+  },  /**
    * Map Prisma model to Creator type
    */
   mapToCreator(creator: any): Creator {
