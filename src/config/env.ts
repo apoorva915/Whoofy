@@ -38,11 +38,8 @@ const EnvSchema = z.object({
   // AI Services - OpenAI
   OPENAI_API_KEY: z.string().optional(),
   
-  // Local Whisper transcription (Python CLI)
-  LOCAL_WHISPER_PYTHON: z.string().default('python'),
-  LOCAL_WHISPER_MODEL: z.string().default('tiny'),
-  LOCAL_WHISPER_DEVICE: z.string().default('cpu'),
-  LOCAL_WHISPER_TASK: z.enum(['transcribe', 'translate']).default('transcribe'),
+  // Python command for YOLO/CLIP scripts
+  PYTHON_COMMAND: z.string().optional(),
 
   // AI Services - Google Gemini
   GEMINI_API_KEY: z.string().optional(),

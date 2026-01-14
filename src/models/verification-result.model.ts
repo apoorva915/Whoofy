@@ -128,9 +128,7 @@ export const VerificationResultModel = {
       const result = await prisma.verificationResult.update({
         where: { id },
         data: updateData,
-      });
-
-      logger.info(`Verification result updated: ${id}`);
+      });      logger.info(`Verification result updated: ${id}`);
       return this.mapToVerificationResult(result);
     } catch (error: any) {
       if (error.code === 'P2025') {
@@ -139,9 +137,7 @@ export const VerificationResultModel = {
       logger.error({ error }, 'Error updating verification result:', error);
       throw new DatabaseError('Failed to update verification result', error);
     }
-  },
-
-  /**
+  },  /**
    * Delete verification result
    */
   async delete(id: string): Promise<void> {

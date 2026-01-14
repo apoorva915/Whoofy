@@ -26,9 +26,7 @@ export enum CreatorGender {
   FEMALE = 'female',
   OTHER = 'other',
   PREFER_NOT_TO_SAY = 'prefer_not_to_say',
-}
-
-/**
+}/**
  * Creator Entity
  */
 export interface Creator {
@@ -69,9 +67,7 @@ export const CreateCreatorSchema = z.object({
   profilePictureUrl: z.string().url().nullable().optional(),
   bio: z.string().nullable().optional(),
   isVerified: z.boolean().default(false),
-});
-
-export type CreateCreatorInput = z.infer<typeof CreateCreatorSchema>;/**
+});export type CreateCreatorInput = z.infer<typeof CreateCreatorSchema>;/**
  * Creator Update Input
  */
 export const UpdateCreatorSchema = CreateCreatorSchema.partial();

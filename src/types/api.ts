@@ -47,9 +47,7 @@ export const VerifyReelRequestSchema = z.object({
   creatorId: z.string().optional(),
 });
 
-export type VerifyReelRequest = z.infer<typeof VerifyReelRequestSchema>;
-
-/**
+export type VerifyReelRequest = z.infer<typeof VerifyReelRequestSchema>;/**
  * Verify Reel Response
  */
 export interface VerifyReelResponse {
@@ -57,9 +55,7 @@ export interface VerifyReelResponse {
   submissionId: string;
   status: 'processing' | 'completed' | 'failed';
   message: string;
-}
-
-/**
+}/**
  * Get Verification Status Response
  */
 export interface GetVerificationStatusResponse {

@@ -149,9 +149,7 @@ export const CreatorModel = {
       const creator = await prisma.creator.update({
         where: { id },
         data: updateData,
-      });
-
-      logger.info(`Creator updated: ${id}`);
+      });      logger.info(`Creator updated: ${id}`);
       return this.mapToCreator(creator);
     } catch (error: any) {
       if (error.code === 'P2025') {
@@ -160,9 +158,7 @@ export const CreatorModel = {
       logger.error({ error }, 'Error updating creator:', error);
       throw new DatabaseError('Failed to update creator', error);
     }
-  },
-
-  /**
+  },  /**
    * Delete creator
    */
   async delete(id: string): Promise<void> {

@@ -43,8 +43,8 @@ class VisionModel {
   private referenceEmbeddingPaths: string[] = []; // Paths to saved reference embedding JSON files
 
   constructor() {
-    // Use same Python command as Whisper
-    this.pythonCommand = process.env.LOCAL_WHISPER_PYTHON || 
+    // Use Python command from env or default to venv Python
+    this.pythonCommand = process.env.PYTHON_COMMAND || 
       (process.platform === 'win32' 
         ? path.join(process.cwd(), '.venv', 'Scripts', 'python.exe')
         : path.join(process.cwd(), '.venv', 'bin', 'python'));
@@ -281,14 +281,10 @@ class VisionModel {
         ? framePath
         : path.resolve(process.cwd(), framePath);
 
-      // Compare against all reference images and take the best match
-      const results: Array<{ similarity: number; match: boolean; confidence: 'high' | 'medium' | 'low' | 'none'; index: number }> = [];
-      
-      for (let i = 0; i < embeddingPaths.length; i++) {
-        const embeddingPath = embeddingPaths[i];
-        
+      // Compare against all reference images in parallel and take the best match
+      const comparisonPromises = embeddingPaths.map(async (embeddingPath, i) => {
         if (!(await fs.pathExists(embeddingPath))) {
-          continue;
+          return null;
         }
 
         try {
@@ -296,20 +292,24 @@ class VisionModel {
           
           if (result.error) {
             logger.debug({ error: result.error, framePath, referenceIndex: i }, 'CLIP similarity computation failed for reference image');
-            continue;
+            return null;
           }
 
-          results.push({
+          return {
             similarity: result.similarity,
             match: result.match,
             confidence: result.confidence,
             index: i,
-          });
+          };
         } catch (error: any) {
           logger.debug({ error: error?.message, framePath, referenceIndex: i }, 'CLIP similarity failed for reference image');
-          continue;
+          return null;
         }
-      }
+      });
+
+      // Wait for all comparisons to complete in parallel
+      const comparisonResults = await Promise.all(comparisonPromises);
+      const results = comparisonResults.filter((r): r is { similarity: number; match: boolean; confidence: 'high' | 'medium' | 'low' | 'none'; index: number } => r !== null);
 
       if (results.length === 0) {
         return null;

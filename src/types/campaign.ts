@@ -47,9 +47,7 @@ export interface Campaign {
   endDate: Date;
   createdAt: Date;
   updatedAt: Date;
-}
-
-/**
+}/**
  * Campaign Creation Input
  */
 export const CreateCampaignSchema = z.object({
@@ -60,9 +58,7 @@ export const CreateCampaignSchema = z.object({
   requirements: CampaignRequirementsSchema,
   startDate: z.date().or(z.string().datetime()),
   endDate: z.date().or(z.string().datetime()),
-});
-
-export type CreateCampaignInput = z.infer<typeof CreateCampaignSchema>;/**
+});export type CreateCampaignInput = z.infer<typeof CreateCampaignSchema>;/**
  * Campaign Update Input
  */
 export const UpdateCampaignSchema = CreateCampaignSchema.partial();

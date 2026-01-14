@@ -652,6 +652,14 @@ class ApifyScraperClient {
           likes: reply.likesCount || reply.likes || reply.likeCount || undefined,
           likesCount: reply.likesCount || reply.likes || reply.likeCount || undefined,
           repliesCount: reply.repliesCount || undefined,
+          owner: reply.owner ? {
+            id: reply.owner.id || undefined,
+            username: reply.owner.username || undefined,
+            fullName: reply.owner.full_name || reply.owner.fullName || undefined,
+            profilePicUrl: reply.owner.profile_pic_url || reply.owner.profilePicUrl || undefined,
+            isVerified: reply.owner.is_verified !== undefined ? reply.owner.is_verified : (reply.owner.isVerified !== undefined ? reply.owner.isVerified : undefined),
+            isPrivate: reply.owner.is_private !== undefined ? reply.owner.is_private : (reply.owner.isPrivate !== undefined ? reply.owner.isPrivate : undefined),
+          } : undefined,
         }));
       };
 

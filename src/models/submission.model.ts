@@ -116,9 +116,7 @@ export const SubmissionModel = {
       const submission = await prisma.submission.update({
         where: { id },
         data,
-      });
-
-      logger.info(`Submission updated: ${id}`);
+      });      logger.info(`Submission updated: ${id}`);
       return this.mapToSubmission(submission);
     } catch (error: any) {
       if (error.code === 'P2025') {
@@ -127,9 +125,7 @@ export const SubmissionModel = {
       logger.error({ error }, 'Error updating submission:', error);
       throw new DatabaseError('Failed to update submission', error);
     }
-  },
-
-  /**
+  },  /**
    * Delete submission
    */
   async delete(id: string): Promise<void> {
