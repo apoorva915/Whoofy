@@ -2,6 +2,23 @@
 
 import { useState } from 'react';
 
+// Utility function to safely extract string from owner object
+const safeGetOwnerFullName = (owner: any): string | null => {
+  if (!owner || typeof owner !== 'object' || Array.isArray(owner)) return null;
+  
+  // Check camelCase first
+  if (owner.fullName && typeof owner.fullName === 'string' && owner.fullName.length > 0) {
+    return owner.fullName;
+  }
+  
+  // Check snake_case
+  if (owner.full_name && typeof owner.full_name === 'string' && owner.full_name.length > 0) {
+    return owner.full_name;
+  }
+  
+  return null;
+};
+
 interface ProfileData {
   reelUrl: string;
   metadata: {
@@ -125,47 +142,6 @@ interface ProfileData {
   };
 }
 
-interface TranscriptionData {
-  reelUrl: string;
-  videoId: string;
-  videoPath: string;
-  transcription: {
-    transcript: string;
-    language: string;
-    segments: Array<{
-      text: string;
-      start: number;
-      end: number;
-      confidence: number;
-    }>;
-    processingTime: number;
-  } | null;
-  sentiment: {
-    transcript: {
-      sentiment: 'positive' | 'negative' | 'neutral';
-      score: number;
-      positiveCount: number;
-      negativeCount: number;
-      wordCount: number;
-    };
-    caption: {
-      sentiment: 'positive' | 'negative' | 'neutral';
-      score: number;
-      positiveCount: number;
-      negativeCount: number;
-      wordCount: number;
-    };
-    combined: {
-      sentiment: 'positive' | 'negative' | 'neutral';
-      score: number;
-      positiveCount: number;
-      negativeCount: number;
-      wordCount: number;
-      confidence: number;
-    };
-    processingTime: number;
-  } | null;
-}
 
 interface AnalysisData {
   reelUrl: string;
@@ -232,14 +208,12 @@ export default function Home() {
   const [productImagePreviews, setProductImagePreviews] = useState<string[]>([]);
   
   // Tab states
-  const [activeTab, setActiveTab] = useState<'data' | 'transcription' | 'analysis'>('data');
+  const [activeTab, setActiveTab] = useState<'data' | 'analysis'>('data');
   const [loadingData, setLoadingData] = useState(false);
-  const [loadingTranscription, setLoadingTranscription] = useState(false);
   const [loadingAnalysis, setLoadingAnalysis] = useState(false);
   
   // Results
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
-  const [transcriptionData, setTranscriptionData] = useState<TranscriptionData | null>(null);
   const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
   
   // Gemini Sentiment Analysis
@@ -396,7 +370,7 @@ export default function Home() {
       setError('Please scrape data first to get creator profile');
       return;
     }
-
+    
     const bio = profileData.creator.bio;
     const latestPosts = profileData.creator.latestPosts || [];
 
@@ -422,7 +396,7 @@ export default function Home() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
+        body: JSON.stringify({ 
           bio: bio || null,
           posts: postsData,
         }),
@@ -510,41 +484,6 @@ export default function Home() {
     }
   };
 
-  // Transcription Tab: Transcription & Sentiment Analysis
-  const handleTranscription = async () => {
-    if (!reelUrl) {
-      setError('Please enter a reel URL first');
-      return;
-    }
-    
-    setLoadingTranscription(true);
-    setError(null);
-
-    try {
-      const response = await fetch('/api/transcribe', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          reelUrl,
-          caption: profileData?.metadata?.caption || null,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
-        throw new Error(data.error?.message || 'Transcription failed');
-      }
-
-      setTranscriptionData(data.data);
-    } catch (err: any) {
-      setError(err.message || 'An error occurred');
-    } finally {
-      setLoadingTranscription(false);
-    }
-  };
 
   // Analysis Tab: Video Analysis
   const handleAnalysis = async () => {
@@ -586,11 +525,6 @@ export default function Home() {
         productImages: productImagesBase64,
       };
 
-      // If transcription data exists, reuse the video to avoid re-downloading
-      if (transcriptionData?.videoId && transcriptionData?.videoPath) {
-        requestBody.videoId = transcriptionData.videoId;
-        requestBody.videoPath = transcriptionData.videoPath;
-      }
 
       const response = await fetch('/api/analyze', {
         method: 'POST',
@@ -617,7 +551,6 @@ export default function Home() {
 
   const resetWorkflow = () => {
     setProfileData(null);
-    setTranscriptionData(null);
     setAnalysisData(null);
     setGeminiSentiment(null);
     setNicheAnalysis(null);
@@ -671,37 +604,8 @@ export default function Home() {
                 position: 'relative',
               }}
             >
-              📊 Data Scraping
+              Data Scraping And Analysis
               {profileData && (
-                <span style={{
-                  position: 'absolute',
-                  top: '8px',
-                  right: '8px',
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  background: '#4caf50',
-                }} />
-              )}
-            </button>
-            <button
-              onClick={() => setActiveTab('transcription')}
-              style={{
-                flex: 1,
-                padding: '15px 20px',
-                background: activeTab === 'transcription' ? '#0070f3' : 'transparent',
-                color: activeTab === 'transcription' ? 'white' : '#666',
-                border: 'none',
-                borderBottom: activeTab === 'transcription' ? '3px solid #0070f3' : '3px solid transparent',
-                cursor: 'pointer',
-                fontSize: '15px',
-                fontWeight: activeTab === 'transcription' ? '600' : '400',
-                transition: 'all 0.2s',
-                position: 'relative',
-              }}
-            >
-              🎤 Transcription (Whisper Local)
-              {transcriptionData && (
                 <span style={{
                   position: 'absolute',
                   top: '8px',
@@ -729,7 +633,7 @@ export default function Home() {
                 position: 'relative',
               }}
             >
-              🎬 Frame & Video Analysis
+              Frame & Video Analysis
               {analysisData && (
                 <span style={{
                   position: 'absolute',
@@ -769,100 +673,6 @@ export default function Home() {
                     {loadingData ? 'Scraping Data...' : 'Scrape Profile & Reel Data'}
                   </button>
                 </form>
-                {profileData?.metadata && (profileData.metadata.caption || profileData.metadata.transcript) && (
-                  <div style={{ marginTop: '20px' }}>
-                    <button
-                      onClick={handleGeminiSentimentAnalysis}
-                      disabled={loadingGeminiSentiment}
-                      style={{
-                        padding: '12px 24px',
-                        background: loadingGeminiSentiment ? '#ccc' : '#9c27b0',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: loadingGeminiSentiment ? 'not-allowed' : 'pointer',
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        marginRight: '10px',
-                      }}
-                    >
-                      {loadingGeminiSentiment ? 'Analyzing Sentiment...' : '🤖 Analyze Sentiment with Gemini'}
-                    </button>
-                    <p style={{ marginTop: '10px', fontSize: '13px', color: '#666' }}>
-                      Analyze sentiment of caption and transcript using Google Gemini AI
-                    </p>
-                  </div>
-                )}
-                {profileData?.creator && (
-                  <div style={{ marginTop: '20px' }}>
-                    <button
-                      onClick={handleNicheAnalysis}
-                      disabled={loadingNicheAnalysis}
-                      style={{
-                        padding: '12px 24px',
-                        background: loadingNicheAnalysis ? '#ccc' : '#ff9800',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: loadingNicheAnalysis ? 'not-allowed' : 'pointer',
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        marginRight: '10px',
-                      }}
-                    >
-                      {loadingNicheAnalysis ? 'Analyzing Niche...' : '🎯 Analyze Creator Niche'}
-                    </button>
-                    <p style={{ marginTop: '10px', fontSize: '13px', color: '#666' }}>
-                      Analyze creator niche from bio and last 5 posts using Google Gemini AI
-                    </p>
-                  </div>
-                )}
-                {profileData?.metadata && (
-                  <div style={{ marginTop: '20px' }}>
-                    <button
-                      onClick={handleEngagementVerification}
-                      disabled={loadingEngagementVerification}
-                      style={{
-                        padding: '12px 24px',
-                        background: loadingEngagementVerification ? '#ccc' : '#f44336',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: loadingEngagementVerification ? 'not-allowed' : 'pointer',
-                        fontSize: '14px',
-                        fontWeight: '600',
-                      }}
-                    >
-                      {loadingEngagementVerification ? 'Verifying Engagement...' : '🔍 Verify Engagement Authenticity'}
-                    </button>
-                    <p style={{ marginTop: '10px', fontSize: '13px', color: '#666' }}>
-                      Detect fake views, bot comments, and engagement manipulation. Checks for duplicate comments, emoji-only comments, and suspicious engagement patterns.
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Transcription Tab */}
-            {activeTab === 'transcription' && (
-              <div>
-                <h2 style={{ marginTop: 0, marginBottom: '20px', color: '#333' }}>Transcription & Sentiment Analysis</h2>
-                <button
-                  onClick={handleTranscription}
-                  disabled={loadingTranscription || !reelUrl}
-                  style={{
-                    padding: '12px 24px',
-                    background: (loadingTranscription || !reelUrl) ? '#ccc' : '#0070f3',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: (loadingTranscription || !reelUrl) ? 'not-allowed' : 'pointer',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                  }}
-                >
-                  {loadingTranscription ? 'Transcribing & Analyzing...' : 'Start Transcription & Sentiment Analysis'}
-                </button>
               </div>
             )}
 
@@ -988,11 +798,6 @@ export default function Home() {
                 >
                   {loadingAnalysis ? 'Analyzing Video...' : 'Start Video Analysis'}
                 </button>
-                {transcriptionData && (
-                  <p style={{ marginTop: '10px', color: '#4caf50', fontSize: '14px' }}>
-                    ℹ️ Will reuse video from transcription (faster). If transcription wasn't run, video will be downloaded automatically.
-                  </p>
-                )}
               </div>
             )}
           </div>
@@ -1015,7 +820,7 @@ export default function Home() {
             {profileData.sources && (
               <div style={{ marginBottom: '15px', padding: '10px 15px', background: '#e3f2fd', borderRadius: '4px', fontSize: '13px', color: '#1976d2' }}>
                 <div style={{ marginBottom: '8px', fontWeight: '600' }}>
-                  📊 Data Sources (Combined Results)
+                  Data Sources (Combined Results)
               </div>
                 <div style={{ marginBottom: '5px' }}>
                   <strong>Reel Data:</strong>{' '}
@@ -1029,11 +834,11 @@ export default function Home() {
                         borderRadius: '4px',
                         fontSize: '12px'
                       }}>
-                        {source === 'apify-reel-scraper' ? '🎬 Apify Reel Scraper' : 
-                         source === 'apify-post-scraper' ? '📸 Apify Post Scraper' :
-                         source === 'apify-instagram-scraper' ? '📱 Apify Instagram Scraper' :
-                         source === 'apify-comments-scraper' ? '💬 Apify Comments Scraper' :
-                         source === 'instagram-api' ? '🔗 Instagram API' : source}
+                        {source === 'apify-reel-scraper' ? 'Apify Reel Scraper' : 
+                         source === 'apify-post-scraper' ? 'Apify Post Scraper' :
+                         source === 'apify-instagram-scraper' ? 'Apify Instagram Scraper' :
+                         source === 'apify-comments-scraper' ? 'Apify Comments Scraper' :
+                         source === 'instagram-api' ? 'Instagram API' : source}
                       </span>
                     ))
                   ) : (
@@ -1057,9 +862,9 @@ export default function Home() {
                         borderRadius: '4px',
                         fontSize: '12px'
                       }}>
-                        {source === 'apify-profile-scraper' ? '👤 Apify Profile Scraper' :
-                         source === 'apify-instagram-scraper' ? '📱 Apify Instagram Scraper' :
-                         source === 'instagram-api' ? '🔗 Instagram API' : source}
+                        {source === 'apify-profile-scraper' ? 'Apify Profile Scraper' :
+                         source === 'apify-instagram-scraper' ? 'Apify Instagram Scraper' :
+                         source === 'instagram-api' ? 'Instagram API' : source}
                       </span>
                     ))}
                   </div>
@@ -1158,122 +963,8 @@ export default function Home() {
 
                   {profileData.metadata.transcript && (
                     <div style={{ marginTop: '10px', marginBottom: '10px', padding: '10px', background: '#f5f5f5', borderRadius: '4px' }}>
-                      <strong>Transcript (from Apify):</strong>
+                      <strong>Transcript:</strong>
                       <p style={{ marginTop: '5px', fontSize: '14px', color: '#333', whiteSpace: 'pre-wrap' }}>{profileData.metadata.transcript}</p>
-                </div>
-              )}
-
-                  {/* Gemini Sentiment Analysis Results */}
-                  {geminiSentiment && (
-                    <div style={{ marginTop: '20px', padding: '15px', background: '#f3e5f5', borderRadius: '4px', border: '2px solid #9c27b0' }}>
-                      <h3 style={{ marginTop: 0, fontSize: '16px', color: '#7b1fa2' }}>
-                        🤖 Gemini Sentiment Analysis
-                      </h3>
-                      
-                      {/* Overall Positive Publicity */}
-                      <div style={{ 
-                        marginBottom: '20px', 
-                        padding: '15px', 
-                        borderRadius: '4px',
-                        backgroundColor: geminiSentiment.isPositivePublicity ? '#e8f5e9' : '#ffebee',
-                        border: `2px solid ${geminiSentiment.isPositivePublicity ? '#4caf50' : '#f44336'}`
-                      }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                          <strong style={{ fontSize: '15px', color: '#333' }}>
-                            Positive Publicity Assessment:
-                          </strong>
-                          <span style={{
-                            padding: '6px 16px',
-                            borderRadius: '16px',
-                            fontSize: '13px',
-                            fontWeight: '600',
-                            backgroundColor: geminiSentiment.isPositivePublicity ? '#4caf50' : '#f44336',
-                            color: 'white'
-                          }}>
-                            {geminiSentiment.isPositivePublicity ? '✅ YES' : '❌ NO'}
-                          </span>
-                        </div>
-                        <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#333', lineHeight: '1.6' }}>
-                          {geminiSentiment.overallReasoning}
-                        </p>
-                      </div>
-
-                      {/* Caption and Transcript Sentiment */}
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px' }}>
-                        {/* Caption Sentiment */}
-                        <div style={{ padding: '15px', backgroundColor: 'white', borderRadius: '4px', border: '1px solid #e0e0e0' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-                            <strong style={{ fontSize: '14px' }}>Caption Sentiment:</strong>
-                            <span style={{
-                              padding: '4px 12px',
-                              borderRadius: '12px',
-                              fontSize: '12px',
-                              fontWeight: '600',
-                              textTransform: 'uppercase',
-                              backgroundColor: geminiSentiment.caption.sentiment === 'positive' ? '#4caf50' :
-                                              geminiSentiment.caption.sentiment === 'negative' ? '#f44336' : '#9e9e9e',
-                              color: 'white'
-                            }}>
-                              {geminiSentiment.caption.sentiment}
-                            </span>
-                          </div>
-                          <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>
-                            Confidence: <strong>{(geminiSentiment.caption.confidence * 100).toFixed(1)}%</strong>
-                            {geminiSentiment.caption.language && geminiSentiment.caption.language !== 'unknown' && (
-                              <span style={{ marginLeft: '12px' }}>
-                                Language: <strong style={{ textTransform: 'uppercase' }}>{geminiSentiment.caption.language}</strong>
-                                {geminiSentiment.caption.languageConfidence !== undefined && (
-                                  <span style={{ fontSize: '11px', color: '#999' }}>
-                                    {' '}({(geminiSentiment.caption.languageConfidence * 100).toFixed(0)}%)
-                                  </span>
-                                )}
-                              </span>
-                            )}
-                          </div>
-                          <p style={{ fontSize: '13px', color: '#333', lineHeight: '1.5', margin: 0 }}>
-                            {geminiSentiment.caption.reasoning}
-                          </p>
-                        </div>
-
-                        {/* Transcript Sentiment */}
-                        <div style={{ padding: '15px', backgroundColor: 'white', borderRadius: '4px', border: '1px solid #e0e0e0' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-                            <strong style={{ fontSize: '14px' }}>Transcript Sentiment:</strong>
-                            <span style={{
-                              padding: '4px 12px',
-                              borderRadius: '12px',
-                              fontSize: '12px',
-                              fontWeight: '600',
-                              textTransform: 'uppercase',
-                              backgroundColor: geminiSentiment.transcript.sentiment === 'positive' ? '#4caf50' :
-                                              geminiSentiment.transcript.sentiment === 'negative' ? '#f44336' : '#9e9e9e',
-                              color: 'white'
-                            }}>
-                              {geminiSentiment.transcript.sentiment}
-                            </span>
-                          </div>
-                          <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>
-                            Confidence: <strong>{(geminiSentiment.transcript.confidence * 100).toFixed(1)}%</strong>
-                            {geminiSentiment.transcript.language && geminiSentiment.transcript.language !== 'unknown' && (
-                              <span style={{ marginLeft: '12px' }}>
-                                Language: <strong style={{ textTransform: 'uppercase' }}>{geminiSentiment.transcript.language}</strong>
-                                {geminiSentiment.transcript.languageConfidence !== undefined && (
-                                  <span style={{ fontSize: '11px', color: '#999' }}>
-                                    {' '}({(geminiSentiment.transcript.languageConfidence * 100).toFixed(0)}%)
-                                  </span>
-                                )}
-                              </span>
-                            )}
-                          </div>
-                          <p style={{ fontSize: '13px', color: '#333', lineHeight: '1.5', margin: 0 }}>
-                            {geminiSentiment.transcript.reasoning}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div style={{ fontSize: '12px', color: '#666', fontStyle: 'italic' }}>
-                        Processing time: {geminiSentiment.processingTimeMs}ms
-                      </div>
                     </div>
                   )}
 
@@ -1316,24 +1007,6 @@ export default function Home() {
                 </div>
               )}
 
-                  {profileData.metadata.musicInfo && (
-                    <div style={{ marginTop: '10px', marginBottom: '10px', padding: '10px', background: '#f3e5f5', borderRadius: '4px' }}>
-                      <strong>Music:</strong>
-                      {profileData.metadata.musicInfo.artist && (
-                        <p style={{ marginTop: '5px', fontSize: '14px' }}>
-                          <strong>Artist:</strong> {profileData.metadata.musicInfo.artist}
-                        </p>
-                      )}
-                      {profileData.metadata.musicInfo.song && (
-                        <p style={{ fontSize: '14px' }}>
-                          <strong>Song:</strong> {profileData.metadata.musicInfo.song}
-                        </p>
-                      )}
-                      {profileData.metadata.musicInfo.originalAudio && (
-                        <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>Original Audio</p>
-                      )}
-                  </div>
-                  )}
 
                   {profileData.metadata.comments && profileData.metadata.comments.length > 0 && (
                     <div style={{ marginTop: '15px' }}>
@@ -1375,11 +1048,18 @@ export default function Home() {
                                     )}
                                   </div>
                                 </div>
-                                {comment.owner?.fullName && (
-                                  <div style={{ fontSize: '11px', color: '#666', marginBottom: '4px' }}>
-                                    {comment.owner.fullName}
-                                  </div>
-                                )}
+                                {/* Safely render owner fullName - handle both camelCase and snake_case */}
+                                {(() => {
+                                  const fullName = safeGetOwnerFullName(comment.owner);
+                                  if (fullName) {
+                                    return (
+                                      <div style={{ fontSize: '11px', color: '#666', marginBottom: '4px' }}>
+                                        {fullName}
+                                      </div>
+                                    );
+                                  }
+                                  return null;
+                                })()}
                                 <p style={{ fontSize: '13px', color: '#333', margin: '4px 0', whiteSpace: 'pre-wrap' }}>{comment.text}</p>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '6px', fontSize: '11px', color: '#999' }}>
                                   <span>{new Date(comment.timestamp).toLocaleString()}</span>
@@ -1435,33 +1115,6 @@ export default function Home() {
                     </div>
                   )}
 
-                  {profileData.metadata.videoUrl && (
-                    <div style={{ marginTop: '15px' }}>
-                      <strong>Video URL:</strong>
-                      <div style={{ marginTop: '5px' }}>
-                        <a href={profileData.metadata.videoUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#0070f3', fontSize: '14px', wordBreak: 'break-all' }}>
-                          {profileData.metadata.videoUrl}
-                        </a>
-                      </div>
-                    </div>
-                  )}
-
-                  {profileData.metadata.thumbnailUrl && (
-                    <div style={{ marginTop: '15px' }}>
-                      <strong>Thumbnail:</strong>
-                      <img 
-                        src={profileData.metadata.thumbnailUrl} 
-                        alt="Reel thumbnail" 
-                        style={{ 
-                          maxWidth: '300px', 
-                          maxHeight: '300px', 
-                          borderRadius: '4px',
-                          marginTop: '10px',
-                          border: '1px solid #ddd'
-                        }} 
-                      />
-                    </div>
-                  )}
 
                   {profileData.metadata.childPosts && profileData.metadata.childPosts.length > 0 && (
                     <div style={{ marginTop: '15px' }}>
@@ -1571,25 +1224,8 @@ export default function Home() {
                       )}
                     </div>
                     <div>
-                      {profileData.creator.profilePictureUrl && (
-                        <div style={{ marginBottom: '10px' }}>
-                          <strong>Profile Picture:</strong>
-                          <img 
-                            src={profileData.creator.profilePictureUrl} 
-                            alt="Profile picture" 
-                            style={{ 
-                              width: '80px', 
-                              height: '80px', 
-                              borderRadius: '50%',
-                              marginTop: '5px',
-                              border: '1px solid #ddd',
-                              objectFit: 'cover'
-                            }} 
-                          />
-                        </div>
-                      )}
                       {profileData.creator.verified !== undefined && (
-                        <p><strong>Verified:</strong> {profileData.creator.verified ? '✅ Yes' : 'No'}</p>
+                        <p><strong>Verified:</strong> {profileData.creator.verified ? 'Yes' : 'No'}</p>
                       )}
                       {profileData.creator.verifiedDate && (
                         <p><strong>Verified Date:</strong> {new Date(profileData.creator.verifiedDate).toLocaleDateString()}</p>
@@ -1605,12 +1241,6 @@ export default function Home() {
                       )}
                       {profileData.creator.joinDate && (
                         <p><strong>Join Date:</strong> {new Date(profileData.creator.joinDate).toLocaleDateString()}</p>
-                      )}
-                      {profileData.creator.facebookId && (
-                        <p><strong>Facebook ID:</strong> {profileData.creator.facebookId}</p>
-                      )}
-                      {profileData.creator.website && (
-                        <p><strong>Website:</strong> <a href={profileData.creator.website} target="_blank" rel="noopener noreferrer" style={{ color: '#0070f3' }}>{profileData.creator.website}</a></p>
                       )}
                     </div>
                   </div>
@@ -1663,11 +1293,87 @@ export default function Home() {
                     </div>
                   )}
 
+                  {/* Analysis Buttons */}
+                  {profileData?.metadata && (profileData.metadata.caption || profileData.metadata.transcript) && (
+                    <div style={{ marginTop: '30px', paddingTop: '20px', borderTop: '2px solid #e0e0e0' }}>
+                      <h3 style={{ marginTop: 0, marginBottom: '20px', color: '#333' }}>Analysis</h3>
+                      <div style={{ marginBottom: '20px' }}>
+                        <button
+                          onClick={handleGeminiSentimentAnalysis}
+                          disabled={loadingGeminiSentiment}
+                          style={{
+                            padding: '12px 24px',
+                            background: loadingGeminiSentiment ? '#ccc' : '#9c27b0',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: loadingGeminiSentiment ? 'not-allowed' : 'pointer',
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            marginRight: '10px',
+                          }}
+                        >
+                          {loadingGeminiSentiment ? 'Analyzing Sentiment...' : 'Analyze Sentiment with Gemini'}
+                        </button>
+                        <p style={{ marginTop: '10px', fontSize: '13px', color: '#666' }}>
+                          Analyze sentiment of caption and transcript using Google Gemini AI
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  {profileData?.creator && (
+                    <div style={{ marginTop: '20px' }}>
+                      <button
+                        onClick={handleNicheAnalysis}
+                        disabled={loadingNicheAnalysis}
+                        style={{
+                          padding: '12px 24px',
+                          background: loadingNicheAnalysis ? '#ccc' : '#ff9800',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: loadingNicheAnalysis ? 'not-allowed' : 'pointer',
+                          fontSize: '14px',
+                          fontWeight: '600',
+                          marginRight: '10px',
+                        }}
+                      >
+                        {loadingNicheAnalysis ? 'Analyzing Niche...' : 'Analyze Creator Niche'}
+                      </button>
+                      <p style={{ marginTop: '10px', fontSize: '13px', color: '#666' }}>
+                        Analyze creator niche from bio and last 5 posts using Google Gemini AI
+                      </p>
+                    </div>
+                  )}
+                  {profileData?.metadata && (
+                    <div style={{ marginTop: '20px' }}>
+                      <button
+                        onClick={handleEngagementVerification}
+                        disabled={loadingEngagementVerification}
+                        style={{
+                          padding: '12px 24px',
+                          background: loadingEngagementVerification ? '#ccc' : '#f44336',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: loadingEngagementVerification ? 'not-allowed' : 'pointer',
+                          fontSize: '14px',
+                          fontWeight: '600',
+                        }}
+                      >
+                        {loadingEngagementVerification ? 'Verifying Engagement...' : 'Verify Engagement Authenticity'}
+                      </button>
+                      <p style={{ marginTop: '10px', fontSize: '13px', color: '#666' }}>
+                        Detect fake views, bot comments, and engagement manipulation. Checks for duplicate comments, emoji-only comments, and suspicious engagement patterns.
+                      </p>
+                    </div>
+                  )}
+
                   {/* Niche Analysis Results */}
                   {nicheAnalysis && (
                     <div style={{ marginTop: '20px', padding: '15px', background: '#fff3e0', borderRadius: '4px', border: '2px solid #ff9800' }}>
                       <h3 style={{ marginTop: 0, fontSize: '16px', color: '#e65100' }}>
-                        🎯 Creator Niche Analysis
+                        Creator Niche Analysis
                       </h3>
                       
                       <div style={{ marginBottom: '15px' }}>
@@ -1705,14 +1411,14 @@ export default function Home() {
                       <div style={{ fontSize: '12px', color: '#666', fontStyle: 'italic' }}>
                         Processing time: {nicheAnalysis.processingTimeMs}ms
                       </div>
-                    </div>
-                  )}
+                </div>
+              )}
 
                   {/* Engagement Verification Results */}
                   {engagementVerification && (
                     <div style={{ marginTop: '20px', padding: '15px', background: engagementVerification.overallAuthentic ? '#e8f5e9' : '#ffebee', borderRadius: '4px', border: `2px solid ${engagementVerification.overallAuthentic ? '#4caf50' : '#f44336'}` }}>
                       <h3 style={{ marginTop: 0, fontSize: '16px', color: engagementVerification.overallAuthentic ? '#2e7d32' : '#c62828' }}>
-                        🔍 Engagement Authenticity Verification
+                        Engagement Authenticity Verification
                       </h3>
                       
                       {/* Overall Assessment */}
@@ -1735,7 +1441,7 @@ export default function Home() {
                             backgroundColor: engagementVerification.overallAuthentic ? '#4caf50' : '#f44336',
                             color: 'white'
                           }}>
-                            {engagementVerification.overallAuthentic ? '✅ AUTHENTIC' : '❌ SUSPICIOUS'}
+                            {engagementVerification.overallAuthentic ? 'AUTHENTIC' : 'SUSPICIOUS'}
                           </span>
                           <span style={{
                             padding: '6px 12px',
@@ -1747,12 +1453,12 @@ export default function Home() {
                           }}>
                             Score: {(engagementVerification.overallScore * 100).toFixed(1)}%
                           </span>
-                        </div>
+            </div>
                         {engagementVerification.promotionTimestamp && (
                           <div style={{ fontSize: '13px', color: '#666', marginTop: '8px' }}>
                             <strong>Promotion Timestamp:</strong> {new Date(engagementVerification.promotionTimestamp).toLocaleString()}
-                          </div>
-                        )}
+                </div>
+              )}
                         {engagementVerification.overallIssues.length > 0 && (
                           <div style={{ marginTop: '10px' }}>
                             <strong style={{ fontSize: '13px' }}>Issues Detected:</strong>
@@ -1786,7 +1492,7 @@ export default function Home() {
                                 {(engagementVerification.commentAnalysis.botLikelihood * 100).toFixed(1)}%
                               </div>
                             </div>
-                          </div>
+            </div>
 
                           {/* Comment Issues */}
                           {engagementVerification.commentAnalysis.issues.duplicateComments.count > 0 && (
@@ -1795,10 +1501,10 @@ export default function Home() {
                               {engagementVerification.commentAnalysis.issues.duplicateComments.examples.length > 0 && (
                                 <div style={{ marginTop: '5px', fontSize: '12px', color: '#666' }}>
                                   Examples: {engagementVerification.commentAnalysis.issues.duplicateComments.examples.slice(0, 3).map(ex => `"${ex.text.substring(0, 30)}..." (${ex.count}x)`).join(', ')}
-                                </div>
+                  </div>
                               )}
-                            </div>
-                          )}
+                </div>
+              )}
 
                           {engagementVerification.commentAnalysis.issues.emojiOnlyComments.count > 0 && (
                             <div style={{ marginBottom: '10px', padding: '10px', background: '#fff3e0', borderRadius: '4px' }}>
@@ -1903,99 +1609,126 @@ export default function Home() {
                       )}
                     </div>
                   )}
-                </div>
-              )}
-            </div>
-                </div>
-              )}
 
-        {/* Transcription Results */}
-        {transcriptionData && activeTab === 'transcription' && (
-          <div style={{ background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', marginBottom: '20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h2 style={{ marginTop: 0, marginBottom: 0, color: '#333' }}>Transcription & Sentiment Results</h2>
-            </div>
-
-            {transcriptionData.transcription && (
-              <div style={{ border: '1px solid #ddd', padding: '15px', borderRadius: '4px', marginBottom: '20px' }}>
-                  <h3 style={{ marginTop: 0, fontSize: '16px' }}>Transcription (Local Whisper)</h3>
-                <p><strong>Language:</strong> {transcriptionData.transcription.language}</p>
-                <p><strong>Processing Time:</strong> {(transcriptionData.transcription.processingTime / 1000).toFixed(1)}s</p>
-                <div style={{ background: '#fafafa', padding: '10px', borderRadius: '4px', maxHeight: '150px', overflowY: 'auto', fontSize: '14px', color: '#111', whiteSpace: 'pre-wrap', marginTop: '10px' }}>
-                  {transcriptionData.transcription.transcript || <em>No transcript available</em>}
-                  </div>
-                </div>
-              )}
-
-            {transcriptionData.sentiment && (
-              <div style={{ border: '1px solid #ddd', padding: '15px', borderRadius: '4px' }}>
-                  <h3 style={{ marginTop: 0, fontSize: '16px' }}>Sentiment Analysis</h3>
-                  
+                  {/* Gemini Sentiment Analysis Results */}
+                  {geminiSentiment && (
+                    <div style={{ marginTop: '20px', padding: '15px', background: '#f3e5f5', borderRadius: '4px', border: '2px solid #9c27b0' }}>
+                      <h3 style={{ marginTop: 0, fontSize: '16px', color: '#7b1fa2' }}>
+                        Gemini Sentiment Analysis
+                      </h3>
+                      
+                      {/* Overall Positive Publicity */}
                   <div style={{ 
-                    marginBottom: '15px', 
-                    padding: '10px', 
+                        marginBottom: '20px', 
+                        padding: '15px', 
                     borderRadius: '4px',
-                  backgroundColor: transcriptionData.sentiment.combined.sentiment === 'positive' ? '#e8f5e9' :
-                                  transcriptionData.sentiment.combined.sentiment === 'negative' ? '#ffebee' : '#f5f5f5'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <strong style={{ fontSize: '14px' }}>Overall Sentiment:</strong>
+                        backgroundColor: geminiSentiment.isPositivePublicity ? '#e8f5e9' : '#ffebee',
+                        border: `2px solid ${geminiSentiment.isPositivePublicity ? '#4caf50' : '#f44336'}`
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                          <strong style={{ fontSize: '15px', color: '#333' }}>
+                            Positive Publicity Assessment:
+                          </strong>
                       <span style={{
-                        padding: '4px 12px',
-                        borderRadius: '12px',
-                        fontSize: '12px',
+                            padding: '6px 16px',
+                            borderRadius: '16px',
+                            fontSize: '13px',
                         fontWeight: '600',
-                        textTransform: 'uppercase',
-                      backgroundColor: transcriptionData.sentiment.combined.sentiment === 'positive' ? '#4caf50' :
-                                      transcriptionData.sentiment.combined.sentiment === 'negative' ? '#f44336' : '#9e9e9e',
+                            backgroundColor: geminiSentiment.isPositivePublicity ? '#4caf50' : '#f44336',
                         color: 'white'
                       }}>
-                      {transcriptionData.sentiment.combined.sentiment}
+                            {geminiSentiment.isPositivePublicity ? 'YES' : 'NO'}
                       </span>
                     </div>
+                        <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#333', lineHeight: '1.6' }}>
+                          {geminiSentiment.overallReasoning}
+                        </p>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginTop: '10px' }}>
-                    <div style={{ padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
-                      <strong style={{ fontSize: '13px' }}>Transcript Sentiment:</strong>
-                      <div style={{ marginTop: '5px' }}>
+                      {/* Caption and Transcript Sentiment */}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px' }}>
+                        {/* Caption Sentiment */}
+                        <div style={{ padding: '15px', backgroundColor: 'white', borderRadius: '4px', border: '1px solid #e0e0e0' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                            <strong style={{ fontSize: '14px' }}>Caption Sentiment:</strong>
                         <span style={{
-                          padding: '3px 8px',
-                          borderRadius: '8px',
-                          fontSize: '11px',
+                              padding: '4px 12px',
+                              borderRadius: '12px',
+                              fontSize: '12px',
                           fontWeight: '600',
-                        backgroundColor: transcriptionData.sentiment.transcript.sentiment === 'positive' ? '#c8e6c9' :
-                                        transcriptionData.sentiment.transcript.sentiment === 'negative' ? '#ffcdd2' : '#e0e0e0',
-                        color: transcriptionData.sentiment.transcript.sentiment === 'positive' ? '#2e7d32' :
-                               transcriptionData.sentiment.transcript.sentiment === 'negative' ? '#c62828' : '#616161'
-                      }}>
-                        {transcriptionData.sentiment.transcript.sentiment}
+                              textTransform: 'uppercase',
+                              backgroundColor: geminiSentiment.caption.sentiment === 'positive' ? '#4caf50' :
+                                              geminiSentiment.caption.sentiment === 'negative' ? '#f44336' : '#9e9e9e',
+                              color: 'white'
+                            }}>
+                              {geminiSentiment.caption.sentiment}
                         </span>
                       </div>
+                          <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>
+                            Confidence: <strong>{(geminiSentiment.caption.confidence * 100).toFixed(1)}%</strong>
+                            {geminiSentiment.caption.language && geminiSentiment.caption.language !== 'unknown' && (
+                              <span style={{ marginLeft: '12px' }}>
+                                Language: <strong style={{ textTransform: 'uppercase' }}>{geminiSentiment.caption.language}</strong>
+                                {geminiSentiment.caption.languageConfidence !== undefined && (
+                                  <span style={{ fontSize: '11px', color: '#999' }}>
+                                    {' '}({(geminiSentiment.caption.languageConfidence * 100).toFixed(0)}%)
+                                  </span>
+                                )}
+                              </span>
+                            )}
+                          </div>
+                          <p style={{ fontSize: '13px', color: '#333', lineHeight: '1.5', margin: 0 }}>
+                            {geminiSentiment.caption.reasoning}
+                          </p>
                     </div>
 
-                    <div style={{ padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
-                      <strong style={{ fontSize: '13px' }}>Caption Sentiment:</strong>
-                      <div style={{ marginTop: '5px' }}>
+                        {/* Transcript Sentiment */}
+                        <div style={{ padding: '15px', backgroundColor: 'white', borderRadius: '4px', border: '1px solid #e0e0e0' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                            <strong style={{ fontSize: '14px' }}>Transcript Sentiment:</strong>
                         <span style={{
-                          padding: '3px 8px',
-                          borderRadius: '8px',
-                          fontSize: '11px',
+                              padding: '4px 12px',
+                              borderRadius: '12px',
+                              fontSize: '12px',
                           fontWeight: '600',
-                        backgroundColor: transcriptionData.sentiment.caption.sentiment === 'positive' ? '#c8e6c9' :
-                                        transcriptionData.sentiment.caption.sentiment === 'negative' ? '#ffcdd2' : '#e0e0e0',
-                        color: transcriptionData.sentiment.caption.sentiment === 'positive' ? '#2e7d32' :
-                               transcriptionData.sentiment.caption.sentiment === 'negative' ? '#c62828' : '#616161'
-                      }}>
-                        {transcriptionData.sentiment.caption.sentiment}
+                              textTransform: 'uppercase',
+                              backgroundColor: geminiSentiment.transcript.sentiment === 'positive' ? '#4caf50' :
+                                              geminiSentiment.transcript.sentiment === 'negative' ? '#f44336' : '#9e9e9e',
+                              color: 'white'
+                            }}>
+                              {geminiSentiment.transcript.sentiment}
                         </span>
                       </div>
+                          <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>
+                            Confidence: <strong>{(geminiSentiment.transcript.confidence * 100).toFixed(1)}%</strong>
+                            {geminiSentiment.transcript.language && geminiSentiment.transcript.language !== 'unknown' && (
+                              <span style={{ marginLeft: '12px' }}>
+                                Language: <strong style={{ textTransform: 'uppercase' }}>{geminiSentiment.transcript.language}</strong>
+                                {geminiSentiment.transcript.languageConfidence !== undefined && (
+                                  <span style={{ fontSize: '11px', color: '#999' }}>
+                                    {' '}({(geminiSentiment.transcript.languageConfidence * 100).toFixed(0)}%)
+                                  </span>
+                                )}
+                              </span>
+                            )}
                     </div>
+                          <p style={{ fontSize: '13px', color: '#333', lineHeight: '1.5', margin: 0 }}>
+                            {geminiSentiment.transcript.reasoning}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div style={{ fontSize: '12px', color: '#666', fontStyle: 'italic' }}>
+                        Processing time: {geminiSentiment.processingTimeMs}ms
                   </div>
               </div>
             )}
           </div>
         )}
+            </div>
+          </div>
+        )}
+
 
         {/* Analysis Results */}
         {analysisData && activeTab === 'analysis' && (
@@ -2053,7 +1786,7 @@ export default function Home() {
                         backgroundColor: analysisData.vision.visualSummary.targetBrandConfirmation.detected ? '#4caf50' : '#f44336',
                           color: 'white'
                         }}>
-                        {analysisData.vision.visualSummary.targetBrandConfirmation.detected ? '✓ DETECTED' : '✗ NOT DETECTED'}
+                        {analysisData.vision.visualSummary.targetBrandConfirmation.detected ? 'DETECTED' : 'NOT DETECTED'}
                         </span>
                       </div>
                     <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#333', fontWeight: '500' }}>

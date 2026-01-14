@@ -164,7 +164,40 @@ export async function POST(request: NextRequest) {
       commentsDisabled: apifyReelData.commentsDisabled,
       coAuthors: apifyReelData.coAuthors,
       mediaDimensions: apifyReelData.mediaDimensions,
-      comments: apifyReelData.comments && apifyReelData.comments.length > 0 ? apifyReelData.comments.slice(0, 200) : [], // Limit to 200 comments (analyzing more for better bot detection)
+      comments: apifyReelData.comments && apifyReelData.comments.length > 0 
+        ? apifyReelData.comments.slice(0, 200).map((comment: any) => {
+            // Ensure owner object is properly mapped (handle both camelCase and snake_case)
+            const mappedComment = { ...comment };
+            if (comment.owner && typeof comment.owner === 'object') {
+              mappedComment.owner = {
+                id: comment.owner.id,
+                username: comment.owner.username,
+                fullName: comment.owner.fullName || comment.owner.full_name || undefined,
+                profilePicUrl: comment.owner.profilePicUrl || comment.owner.profile_pic_url || undefined,
+                isVerified: comment.owner.isVerified !== undefined ? comment.owner.isVerified : (comment.owner.is_verified !== undefined ? comment.owner.is_verified : undefined),
+                isPrivate: comment.owner.isPrivate !== undefined ? comment.owner.isPrivate : (comment.owner.is_private !== undefined ? comment.owner.is_private : undefined),
+              };
+            }
+            // Map replies recursively
+            if (comment.replies && Array.isArray(comment.replies)) {
+              mappedComment.replies = comment.replies.map((reply: any) => {
+                const mappedReply = { ...reply };
+                if (reply.owner && typeof reply.owner === 'object') {
+                  mappedReply.owner = {
+                    id: reply.owner.id,
+                    username: reply.owner.username,
+                    fullName: reply.owner.fullName || reply.owner.full_name || undefined,
+                    profilePicUrl: reply.owner.profilePicUrl || reply.owner.profile_pic_url || undefined,
+                    isVerified: reply.owner.isVerified !== undefined ? reply.owner.isVerified : (reply.owner.is_verified !== undefined ? reply.owner.is_verified : undefined),
+                    isPrivate: reply.owner.isPrivate !== undefined ? reply.owner.isPrivate : (reply.owner.is_private !== undefined ? reply.owner.is_private : undefined),
+                  };
+                }
+                return mappedReply;
+              });
+            }
+            return mappedComment;
+          })
+        : [], // Limit to 200 comments (analyzing more for better bot detection)
       // Additional fields from Post Scraper
       postType: apifyReelData.postType,
       isPinned: apifyReelData.isPinned,

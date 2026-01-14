@@ -32,9 +32,7 @@ export async function connectDatabase(): Promise<void> {
     logger.error({ error }, '❌ Database connection failed');
     throw error;
   }
-}
-
-/**
+}/**
  * Disconnect from database
  */
 export async function disconnectDatabase(): Promise<void> {
@@ -45,9 +43,7 @@ export async function disconnectDatabase(): Promise<void> {
     logger.error({ error }, '❌ Database disconnection failed');
     throw error;
   }
-}
-
-/**
+}/**
  * Health check for database
  */
 export async function checkDatabaseHealth(): Promise<'up' | 'down'> {

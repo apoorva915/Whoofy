@@ -34,42 +34,64 @@ class FrameAnalyzer {
 
     const frameAnalyses: FrameAnalysis[] = [];
 
-    for (let i = 0; i < frames.length; i++) {
-      const framePath = frames[i];
-      const timestamp = Number((i * frameInterval).toFixed(2));
+    // Process frames in parallel with concurrency limit to avoid overwhelming the system
+    const CONCURRENCY_LIMIT = parseInt(process.env.FRAME_ANALYSIS_CONCURRENCY || '3', 10);
+    
+    // Helper function to process frames in batches
+    const processBatch = async (batch: Array<{ path: string; index: number }>) => {
+      return Promise.all(
+        batch.map(async ({ path: framePath, index: i }) => {
+          const timestamp = Number((i * frameInterval).toFixed(2));
 
-      // Skip mock frames
-      if (framePath.startsWith('mock://')) {
-        frameAnalyses.push({
-          timestamp,
-          objects: [],
-          brands: [],
-        });
-        continue;
-      }
+          // Skip mock frames
+          if (framePath.startsWith('mock://')) {
+            return {
+              timestamp,
+              objects: [],
+              brands: [],
+            };
+          }
 
-      try {
-        const analysis = await visionModel.analyzeFrame(
-          framePath,
-          timestamp,
-          targetBrandName,
-          productNames
-        );
-        frameAnalyses.push(analysis);
-      } catch (error: any) {
-        logger.error(
-          {
-            error: error?.message,
-            framePath,
-            timestamp,
-          },
-          'Frame analysis failed'
-        );
-        frameAnalyses.push({
-          timestamp,
-          objects: [],
-          brands: [],
-        });
+          try {
+            const analysis = await visionModel.analyzeFrame(
+              framePath,
+              timestamp,
+              targetBrandName,
+              productNames
+            );
+            return analysis;
+          } catch (error: any) {
+            logger.error(
+              {
+                error: error?.message,
+                framePath,
+                timestamp,
+              },
+              'Frame analysis failed'
+            );
+            return {
+              timestamp,
+              objects: [],
+              brands: [],
+            };
+          }
+        })
+      );
+    };
+
+    // Process frames in batches
+    for (let i = 0; i < frames.length; i += CONCURRENCY_LIMIT) {
+      const batch = frames.slice(i, i + CONCURRENCY_LIMIT).map((path, idx) => ({
+        path,
+        index: i + idx,
+      }));
+      
+      const batchResults = await processBatch(batch);
+      frameAnalyses.push(...batchResults);
+      
+      // Log progress for long-running analyses
+      if (frames.length > CONCURRENCY_LIMIT && (i + CONCURRENCY_LIMIT) % (CONCURRENCY_LIMIT * 3) === 0) {
+        logger.info(`Processed ${Math.min(i + CONCURRENCY_LIMIT, frames.length)}/${frames.length} frames`);
       }
     }
 

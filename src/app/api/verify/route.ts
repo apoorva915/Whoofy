@@ -151,7 +151,7 @@ export async function POST(request: NextRequest) {
       analyzeFrames: true,
       targetBrandName,
       productNames,
-      analyzeSentiment: true,
+      analyzeSentiment: false, // Disabled - keyword-based sentiment analysis removed
       referenceImagePaths: referenceImagePaths.length > 0 ? referenceImagePaths : undefined, // Changed to plural
     });
 
@@ -165,16 +165,9 @@ export async function POST(request: NextRequest) {
       logger.warn({ error }, 'Could not fetch reel metadata');
     }
 
-    // Update sentiment analysis with caption if available
-    let finalSentimentAnalysis = processingResult.sentimentAnalysis;
-    if (finalSentimentAnalysis && reelMetadata?.caption) {
-      const { analyzeSentiment } = await import('@/services/detection/sentiment-analysis');
-      finalSentimentAnalysis = analyzeSentiment(
-        processingResult.transcription?.transcript || null,
-        reelMetadata.caption
-      );
-      logger.info('Sentiment analysis updated with caption');
-    }
+    // Keyword-based sentiment analysis has been removed
+    // Use Gemini sentiment analysis via /api/sentiment/gemini instead
+    let finalSentimentAnalysis = null;
 
     // Get creator profile (if Instagram URL)
     let creatorProfile = null;

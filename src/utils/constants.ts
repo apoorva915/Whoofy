@@ -113,17 +113,13 @@ export const TIMEOUTS = {
   VIDEO_PROCESSING: 600000, // 10 minutes
   AI_DETECTION: 120000, // 2 minutes
   EXTERNAL_API: 30000, // 30 seconds
-} as const;
-
-/**
+} as const;/**
  * File Size Limits (in bytes)
  */
 export const FILE_LIMITS = {
   MAX_VIDEO_SIZE: 100 * 1024 * 1024, // 100 MB
   MAX_IMAGE_SIZE: 10 * 1024 * 1024, // 10 MB
-} as const;
-
-/**
+} as const;/**
  * Supported Video Formats
  */
 export const VIDEO_FORMATS = ['.mp4', '.mov', '.avi', '.mkv', '.webm'] as const;/**

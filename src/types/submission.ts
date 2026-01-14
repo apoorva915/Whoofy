@@ -38,11 +38,7 @@ export const CreateSubmissionSchema = z.object({
   reelUrl: z.string().url(),
   reelId: z.string().nullable().optional(),
   caption: z.string().nullable().optional(),
-});
-
-export type CreateSubmissionInput = z.infer<typeof CreateSubmissionSchema>;
-
-/**
+});export type CreateSubmissionInput = z.infer<typeof CreateSubmissionSchema>;/**
  * Submission Update Input
  */
 export const UpdateSubmissionSchema = z.object({

@@ -69,18 +69,14 @@ export class ExternalApiError extends AppError {
       originalError
     );
   }
-}
-
-/**
+}/**
  * Database Error
  */
 export class DatabaseError extends AppError {
   constructor(message: string, public originalError?: any) {
     super('DATABASE_ERROR', `Database error: ${message}`, 500, originalError);
   }
-}
-
-/**
+}/**
  * Processing Error
  */
 export class ProcessingError extends AppError {

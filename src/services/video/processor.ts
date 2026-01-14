@@ -3,8 +3,13 @@ import { frameExtractor } from './frame-extractor';
 import { externalApiService } from '@/services/external';
 import { frameAnalyzer } from '@/services/vision/frame-analyzer';
 import { audioExtractor } from './audio-extractor';
-import { localWhisperTranscriber, LocalWhisperTranscriptionResult } from '@/services/transcription/local-whisper';
-import type { SentimentAnalysisResult } from '@/services/detection/sentiment-analysis';
+// Whisper transcription and keyword-based sentiment analysis removed
+// import { localWhisperTranscriber, LocalWhisperTranscriptionResult } from '@/services/transcription/local-whisper';
+// import type { SentimentAnalysisResult } from '@/services/detection/sentiment-analysis';
+
+// Placeholder types
+type LocalWhisperTranscriptionResult = null;
+type SentimentAnalysisResult = null;
 import logger from '@/utils/logger';
 import { VisionAnalysisResult } from '@/types/vision';
 
@@ -159,19 +164,8 @@ class VideoProcessor {
       logger.warn('Skipping audio extraction for mock video');
     }
 
-    let transcription: LocalWhisperTranscriptionResult | null = null;
-    if (extractedAudioPath) {
-      try {
-        transcription = await localWhisperTranscriber.transcribe(extractedAudioPath);
-        logger.info('Local Whisper transcription completed');
-      } catch (error: any) {
-        logger.error({
-          error: error.message,
-          stack: error.stack,
-          audioPath: extractedAudioPath,
-        }, 'Local Whisper transcription failed');
-      }
-    }
+    // Whisper transcription removed - use Gemini sentiment analysis instead
+    const transcription: LocalWhisperTranscriptionResult | null = null;
 
     // Step 5: Recognize audio (if requested)
     let audio = null;
@@ -197,26 +191,10 @@ class VideoProcessor {
       logger.warn('Skipping audio recognition for mock video');
     }
 
-    // Step 6: Analyze sentiment (if requested)
-    let sentimentAnalysis: SentimentAnalysisResult | null = null;
-    if (analyzeSentiment) {
-      try {
-        // Dynamic import to avoid module resolution issues
-        const { analyzeSentiment: analyzeSentimentFn } = await import('@/services/detection/sentiment-analysis');
-        if (typeof analyzeSentimentFn !== 'function') {
-          throw new Error('analyzeSentiment is not a function');
-        }
-        const transcriptText = transcription?.transcript || null;
-        // Note: Caption will be added from reel metadata in the API route
-        sentimentAnalysis = analyzeSentimentFn(transcriptText, null);
-        logger.info('Sentiment analysis completed');
-      } catch (error: any) {
-        logger.error({
-          error: error.message,
-          stack: error.stack,
-        }, 'Sentiment analysis failed');
-      }
-    }
+    // Step 6: Sentiment analysis removed
+    // Keyword-based sentiment analysis has been removed
+    // Use Gemini sentiment analysis via /api/sentiment/gemini instead
+    const sentimentAnalysis: SentimentAnalysisResult | null = null;
 
     return {
       videoId,
