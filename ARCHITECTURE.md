@@ -12,32 +12,56 @@ sequenceDiagram
     participant Vision
     participant Gemini
     participant Apify
+    participant Shazam
+    participant AudioExtractor
     participant DB
     
     User->>UI: Enter Reel URL
     UI->>API: POST /api/verify
     
+    Note over API,Apify: Profile & Metadata Scraping
     API->>Apify: Scrape Profile Data
-    Apify-->>API: Profile & Reel Metadata
+    Apify-->>API: Profile & Reel Metadata<br/>(Bio, Posts, Comments, Engagement)
     
-    API->>VideoProc: Download Video
+    Note over API,VideoProc: Video Download & Processing
+    API->>VideoProc: Download Video from URL
+    VideoProc->>VideoProc: Validate Video File
+    VideoProc-->>API: Video Downloaded & Stored
+    
+    Note over VideoProc,AudioExtractor: Audio Extraction
+    VideoProc->>AudioExtractor: Extract Audio from Video
+    AudioExtractor->>AudioExtractor: Convert to MP3<br/>(16kHz, Mono, 128kbps)
+    AudioExtractor-->>VideoProc: Audio File Path
+    
+    Note over VideoProc,Shazam: Audio Recognition
+    VideoProc->>Shazam: Recognize Audio Track
+    Shazam-->>VideoProc: Track Info<br/>(Title, Artist, Album)
+    
+    Note over VideoProc,Vision: Frame Extraction & Analysis
     VideoProc->>VideoProc: Extract Frames (every 2s)
     VideoProc->>Vision: Analyze Frames
     
-    par Parallel Processing
+    par Parallel Frame Processing
         Vision->>Vision: YOLO Object Detection
         Vision->>Vision: OCR Text Detection
         Vision->>Vision: CLIP Visual Similarity
     end
     
-    Vision-->>API: Brand Detection Results
+    Vision->>Vision: Combine Results for Brand Detection
+    Vision-->>API: Brand Detection Results<br/>(Confidence Scores)
     
-    API->>Gemini: Analyze Sentiment
-    Gemini-->>API: Sentiment Analysis
+    Note over API,Gemini: Text Analysis
+    API->>Gemini: Analyze Sentiment<br/>(Caption & Transcript)
+    Gemini-->>API: Sentiment Analysis<br/>(Positive/Negative/Neutral)
     
-    API->>API: Engagement Verification
-    API->>DB: Store Results
+    API->>Gemini: Analyze Niche<br/>(Bio & Latest Posts)
+    Gemini-->>API: Niche Detection<br/>(Multiple Niches with Confidence)
     
+    Note over API: Engagement Verification
+    API->>API: Comment Analysis<br/>(Bot Detection)
+    API->>API: Engagement Pattern Analysis<br/>(Spike Detection, Ratios)
+    
+    API->>DB: Store All Results
     API-->>UI: Complete Verification Results
     UI-->>User: Display Results
 ```
@@ -82,18 +106,43 @@ sequenceDiagram
 ## Verification Flow
 
 1. **User submits reel URL** → Frontend sends request to `/api/verify`
-2. **Profile Scraping** → Apify scrapes Instagram profile and reel metadata
-3. **Video Download** → Video processor downloads video from URL
-4. **Frame Extraction** → Frames extracted every 2 seconds
-5. **Parallel Analysis** → Each frame analyzed with:
+2. **Profile Scraping** → Apify scrapes Instagram:
+   - Profile data (bio, followers, verification status)
+   - Reel metadata (likes, comments, views, caption)
+   - Latest posts (for historical comparison)
+   - Comments data
+3. **Video Download** → Video processor downloads video from URL and validates file
+4. **Audio Extraction** → Audio extracted from video:
+   - Converted to MP3 format
+   - 16kHz sample rate, mono channel, 128kbps bitrate
+   - Saved to local storage
+5. **Audio Recognition** → Shazam API recognizes audio track (title, artist, album)
+6. **Frame Extraction** → Frames extracted every 2 seconds (configurable)
+7. **Parallel Frame Analysis** → Each frame analyzed simultaneously:
    - YOLO for object detection
    - OCR for text extraction
    - CLIP for visual similarity
-6. **Brand Detection** → Results combined to detect brand presence
-7. **Sentiment Analysis** → Gemini analyzes caption and transcript
-8. **Engagement Verification** → Pattern analysis detects fake engagement
-9. **Results Storage** → Results saved to PostgreSQL
-10. **Response** → Complete verification results returned to frontend
+8. **Brand Detection** → Results combined to detect brand presence:
+   - Text matching (OCR)
+   - Object context (YOLO)
+   - Visual similarity (CLIP)
+   - Confidence scoring
+9. **Sentiment Analysis** → Gemini analyzes:
+   - Caption sentiment separately
+   - Transcript sentiment separately
+   - Positive publicity assessment
+10. **Niche Analysis** → Gemini analyzes:
+    - Creator bio
+    - Latest 5 posts (captions, types, engagement)
+    - Returns multiple niches with confidence scores
+11. **Engagement Verification** → Pattern analysis:
+    - Comment analysis (bot detection)
+    - Like-to-view ratio check
+    - Engagement rate check
+    - Like spike detection (Z-score method)
+    - Rapid growth detection
+12. **Results Storage** → All results saved to PostgreSQL
+13. **Response** → Complete verification results returned to frontend
 
 ## Key Features
 
