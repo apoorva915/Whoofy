@@ -1,0 +1,2842 @@
+{
+  "videoId": "DTS3IEFk7Br",
+  "generatedAt": "2026-01-23T07:37:50.295Z",
+  "frameCount": 89,
+  "payload": {
+    "frameAnalyses": [
+      {
+        "timestamp": 0,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.562141478061676,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 2,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.46126633882522583,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 4,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.4160742163658142,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 6,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.47786808013916016,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 8,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.38014063239097595,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 10,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.49279093742370605,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 12,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.5194717645645142,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 14,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.3842887878417969,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 16,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Navigation",
+            "confidence": 0.764
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4852847456932068,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 18,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.401262491941452,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 20,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Navigation",
+            "confidence": 0.721
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.45223596692085266,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 22,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Navigation",
+            "confidence": 0.744
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4346618056297302,
+          "match": true,
+          "confidence": "low",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 24,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.4135189354419708,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 26,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.4528203010559082,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 28,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.44793903827667236,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 30,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Navigation",
+            "confidence": 0.744
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.43514567613601685,
+          "match": true,
+          "confidence": "low",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 32,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.42765799164772034,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 34,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Navigation",
+            "confidence": 0.745
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4362843632698059,
+          "match": true,
+          "confidence": "low",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 36,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Navigation",
+            "confidence": 0.741
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4278484880924225,
+          "match": true,
+          "confidence": "low",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 38,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.37750330567359924,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 40,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.3977261781692505,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 42,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Navigation",
+            "confidence": 0.733
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.40747159719467163,
+          "match": true,
+          "confidence": "low",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 44,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.41325780749320984,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 46,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Navigation",
+            "confidence": 0.743
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4325343370437622,
+          "match": true,
+          "confidence": "low",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 48,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.4075709581375122,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 50,
+        "objects": [
+          "skateboard",
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.40807947516441345,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 52,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Navigation",
+            "confidence": 0.739
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.42234066128730774,
+          "match": true,
+          "confidence": "low",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 54,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Navigation",
+            "confidence": 0.9
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.3566746711730957,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 56,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.3958812952041626,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 58,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Navigation",
+            "confidence": 0.9
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.3728068470954895,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 60,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Navigation",
+            "confidence": 0.735
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4123423397541046,
+          "match": true,
+          "confidence": "low",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 62,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Navigation",
+            "confidence": 0.95
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.3858998417854309,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 64,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Navigation",
+            "confidence": 0.739
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4230113923549652,
+          "match": true,
+          "confidence": "low",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 66,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Navigation",
+            "confidence": 0.744
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.43513035774230957,
+          "match": true,
+          "confidence": "low",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 68,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Navigation",
+            "confidence": 0.733
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4082939922809601,
+          "match": true,
+          "confidence": "low",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 70,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Navigation",
+            "confidence": 0.95
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.38783738017082214,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 72,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Navigation",
+            "confidence": 0.74
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4256850779056549,
+          "match": true,
+          "confidence": "low",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 74,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Navigation",
+            "confidence": 0.765
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4876847565174103,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 76,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Navigation",
+            "confidence": 0.765
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.48869550228118896,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 78,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.47894740104675293,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 80,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Navigation",
+            "confidence": 0.95
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.39568614959716797,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 82,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Navigation",
+            "confidence": 0.737
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.41677728295326233,
+          "match": true,
+          "confidence": "low",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 84,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Navigation",
+            "confidence": 0.741
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4271096885204315,
+          "match": true,
+          "confidence": "low",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 86,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Navigation",
+            "confidence": 0.745
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.43772995471954346,
+          "match": true,
+          "confidence": "low",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 88,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.4224790334701538,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 90,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.4312565326690674,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 92,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.37203943729400635,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 94,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.40228286385536194,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 96,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.35490936040878296,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 98,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.3294452428817749,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 100,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.4418085515499115,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 102,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Navigation",
+            "confidence": 0.722
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4539110064506531,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 104,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.43110471963882446,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 106,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.4586370289325714,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 108,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.42365339398384094,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 110,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Navigation",
+            "confidence": 0.753
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4573476314544678,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 112,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Navigation",
+            "confidence": 0.705
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4130913019180298,
+          "match": true,
+          "confidence": "low",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 114,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.41344425082206726,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 116,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Navigation",
+            "confidence": 0.753
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4575370252132416,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 118,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Navigation",
+            "confidence": 0.76
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.474579781293869,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 120,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Navigation",
+            "confidence": 0.733
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4075925350189209,
+          "match": true,
+          "confidence": "low",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 122,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Navigation",
+            "confidence": 0.95
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.38292163610458374,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 124,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Navigation",
+            "confidence": 0.95
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.3831598162651062,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 126,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Navigation",
+            "confidence": 0.739
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.42194217443466187,
+          "match": true,
+          "confidence": "low",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 128,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Navigation",
+            "confidence": 0.95
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.3875068128108978,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 130,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Navigation",
+            "confidence": 0.95
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.3977605104446411,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 132,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Navigation",
+            "confidence": 0.95
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.37696292996406555,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 134,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Navigation",
+            "confidence": 0.95
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.39079561829566956,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 136,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Navigation",
+            "confidence": 0.73
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4006355106830597,
+          "match": true,
+          "confidence": "low",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 138,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.4101989269256592,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 140,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Navigation",
+            "confidence": 0.733
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4066111743450165,
+          "match": true,
+          "confidence": "low",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 142,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Navigation",
+            "confidence": 0.95
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.3592505156993866,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 144,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Navigation",
+            "confidence": 0.95
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.36537063121795654,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 146,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Navigation",
+            "confidence": 0.95
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.37065792083740234,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 148,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Navigation",
+            "confidence": 0.95
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.3184080719947815,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 150,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Navigation",
+            "confidence": 0.95
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.33878862857818604,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 152,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Navigation",
+            "confidence": 0.95
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.36310142278671265,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 154,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.4164160490036011,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 156,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Navigation",
+            "confidence": 0.95
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.3934903144836426,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 158,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Navigation",
+            "confidence": 0.95
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.35655835270881653,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 160,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Navigation",
+            "confidence": 0.738
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.41963672637939453,
+          "match": true,
+          "confidence": "low",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 162,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.4656168222427368,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 164,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.42953625321388245,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 166,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.41224974393844604,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 168,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.3958244323730469,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 170,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.41749846935272217,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 172,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.4154335856437683,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 174,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.4756483733654022,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 176,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.5287822484970093,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      }
+    ],
+    "visualSummary": {
+      "uniqueObjects": [
+        "person",
+        "skateboard"
+      ],
+      "brandsDetected": [
+        {
+          "name": "Navigation",
+          "confidence": 0.822,
+          "totalFrames": 48,
+          "totalVisibleSeconds": 30
+        }
+      ],
+      "targetBrandConfirmation": {
+        "detected": true,
+        "message": "Yes, it shows Navigation (detected in 48 frames, visible for 30.0s).",
+        "confidence": 0.7079193988164266,
+        "detectedInFrames": 48,
+        "totalVisibleSeconds": 30
+      },
+      "visualSentiment": {
+        "sentiment": "positive",
+        "score": 1,
+        "reasoning": "Target brand \"Navigation\" is prominently shown in 48 frames. Positive visual elements detected (person, food, product) Overall, this reel provides POSITIVE publicity for Navigation - the brand/product is shown favorably with positive visual elements.",
+        "confidence": 0.95
+      },
+      "visualSimilaritySummary": {
+        "averageSimilarity": 0.444,
+        "maxSimilarity": 0.562,
+        "matchedFrames": 32,
+        "totalFrames": 89,
+        "visibleSeconds": 30,
+        "referenceImageCount": 1
+      },
+      "frameAnalyses": [
+        {
+          "timestamp": 0,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.562141478061676,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 2,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.46126633882522583,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 4,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.4160742163658142,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 6,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.47786808013916016,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 8,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.38014063239097595,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 10,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.49279093742370605,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 12,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.5194717645645142,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 14,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.3842887878417969,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 16,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Navigation",
+              "confidence": 0.764
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4852847456932068,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 18,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.401262491941452,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 20,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Navigation",
+              "confidence": 0.721
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.45223596692085266,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 22,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Navigation",
+              "confidence": 0.744
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4346618056297302,
+            "match": true,
+            "confidence": "low",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 24,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.4135189354419708,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 26,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.4528203010559082,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 28,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.44793903827667236,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 30,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Navigation",
+              "confidence": 0.744
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.43514567613601685,
+            "match": true,
+            "confidence": "low",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 32,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.42765799164772034,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 34,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Navigation",
+              "confidence": 0.745
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4362843632698059,
+            "match": true,
+            "confidence": "low",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 36,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Navigation",
+              "confidence": 0.741
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4278484880924225,
+            "match": true,
+            "confidence": "low",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 38,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.37750330567359924,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 40,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.3977261781692505,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 42,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Navigation",
+              "confidence": 0.733
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.40747159719467163,
+            "match": true,
+            "confidence": "low",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 44,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.41325780749320984,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 46,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Navigation",
+              "confidence": 0.743
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4325343370437622,
+            "match": true,
+            "confidence": "low",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 48,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.4075709581375122,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 50,
+          "objects": [
+            "skateboard",
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.40807947516441345,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 52,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Navigation",
+              "confidence": 0.739
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.42234066128730774,
+            "match": true,
+            "confidence": "low",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 54,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Navigation",
+              "confidence": 0.9
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.3566746711730957,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 56,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.3958812952041626,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 58,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Navigation",
+              "confidence": 0.9
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.3728068470954895,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 60,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Navigation",
+              "confidence": 0.735
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4123423397541046,
+            "match": true,
+            "confidence": "low",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 62,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Navigation",
+              "confidence": 0.95
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.3858998417854309,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 64,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Navigation",
+              "confidence": 0.739
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4230113923549652,
+            "match": true,
+            "confidence": "low",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 66,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Navigation",
+              "confidence": 0.744
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.43513035774230957,
+            "match": true,
+            "confidence": "low",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 68,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Navigation",
+              "confidence": 0.733
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4082939922809601,
+            "match": true,
+            "confidence": "low",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 70,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Navigation",
+              "confidence": 0.95
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.38783738017082214,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 72,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Navigation",
+              "confidence": 0.74
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4256850779056549,
+            "match": true,
+            "confidence": "low",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 74,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Navigation",
+              "confidence": 0.765
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4876847565174103,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 76,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Navigation",
+              "confidence": 0.765
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.48869550228118896,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 78,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.47894740104675293,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 80,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Navigation",
+              "confidence": 0.95
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.39568614959716797,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 82,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Navigation",
+              "confidence": 0.737
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.41677728295326233,
+            "match": true,
+            "confidence": "low",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 84,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Navigation",
+              "confidence": 0.741
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4271096885204315,
+            "match": true,
+            "confidence": "low",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 86,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Navigation",
+              "confidence": 0.745
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.43772995471954346,
+            "match": true,
+            "confidence": "low",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 88,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.4224790334701538,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 90,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.4312565326690674,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 92,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.37203943729400635,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 94,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.40228286385536194,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 96,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.35490936040878296,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 98,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.3294452428817749,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 100,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.4418085515499115,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 102,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Navigation",
+              "confidence": 0.722
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4539110064506531,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 104,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.43110471963882446,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 106,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.4586370289325714,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 108,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.42365339398384094,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 110,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Navigation",
+              "confidence": 0.753
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4573476314544678,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 112,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Navigation",
+              "confidence": 0.705
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4130913019180298,
+            "match": true,
+            "confidence": "low",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 114,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.41344425082206726,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 116,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Navigation",
+              "confidence": 0.753
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4575370252132416,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 118,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Navigation",
+              "confidence": 0.76
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.474579781293869,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 120,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Navigation",
+              "confidence": 0.733
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4075925350189209,
+            "match": true,
+            "confidence": "low",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 122,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Navigation",
+              "confidence": 0.95
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.38292163610458374,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 124,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Navigation",
+              "confidence": 0.95
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.3831598162651062,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 126,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Navigation",
+              "confidence": 0.739
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.42194217443466187,
+            "match": true,
+            "confidence": "low",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 128,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Navigation",
+              "confidence": 0.95
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.3875068128108978,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 130,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Navigation",
+              "confidence": 0.95
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.3977605104446411,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 132,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Navigation",
+              "confidence": 0.95
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.37696292996406555,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 134,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Navigation",
+              "confidence": 0.95
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.39079561829566956,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 136,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Navigation",
+              "confidence": 0.73
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4006355106830597,
+            "match": true,
+            "confidence": "low",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 138,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.4101989269256592,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 140,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Navigation",
+              "confidence": 0.733
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4066111743450165,
+            "match": true,
+            "confidence": "low",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 142,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Navigation",
+              "confidence": 0.95
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.3592505156993866,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 144,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Navigation",
+              "confidence": 0.95
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.36537063121795654,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 146,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Navigation",
+              "confidence": 0.95
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.37065792083740234,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 148,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Navigation",
+              "confidence": 0.95
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.3184080719947815,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 150,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Navigation",
+              "confidence": 0.95
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.33878862857818604,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 152,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Navigation",
+              "confidence": 0.95
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.36310142278671265,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 154,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.4164160490036011,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 156,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Navigation",
+              "confidence": 0.95
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.3934903144836426,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 158,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Navigation",
+              "confidence": 0.95
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.35655835270881653,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 160,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Navigation",
+              "confidence": 0.738
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.41963672637939453,
+            "match": true,
+            "confidence": "low",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 162,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.4656168222427368,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 164,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.42953625321388245,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 166,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.41224974393844604,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 168,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.3958244323730469,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 170,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.41749846935272217,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 172,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.4154335856437683,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 174,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.4756483733654022,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 176,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.5287822484970093,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        }
+      ]
+    }
+  }
+}

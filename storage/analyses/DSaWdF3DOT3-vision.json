@@ -1,0 +1,205 @@
+{
+  "videoId": "DSaWdF3DOT3",
+  "generatedAt": "2025-12-21T14:08:11.426Z",
+  "frameCount": 19,
+  "payload": {
+    "frameAnalyses": [
+      {
+        "timestamp": 0,
+        "objects": [],
+        "brands": []
+      },
+      {
+        "timestamp": 2,
+        "objects": [],
+        "brands": []
+      },
+      {
+        "timestamp": 4,
+        "objects": [],
+        "brands": []
+      },
+      {
+        "timestamp": 6,
+        "objects": [],
+        "brands": []
+      },
+      {
+        "timestamp": 8,
+        "objects": [],
+        "brands": []
+      },
+      {
+        "timestamp": 10,
+        "objects": [],
+        "brands": []
+      },
+      {
+        "timestamp": 12,
+        "objects": [],
+        "brands": []
+      },
+      {
+        "timestamp": 14,
+        "objects": [],
+        "brands": []
+      },
+      {
+        "timestamp": 16,
+        "objects": [],
+        "brands": []
+      },
+      {
+        "timestamp": 18,
+        "objects": [],
+        "brands": []
+      },
+      {
+        "timestamp": 20,
+        "objects": [],
+        "brands": []
+      },
+      {
+        "timestamp": 22,
+        "objects": [],
+        "brands": []
+      },
+      {
+        "timestamp": 24,
+        "objects": [],
+        "brands": []
+      },
+      {
+        "timestamp": 26,
+        "objects": [],
+        "brands": []
+      },
+      {
+        "timestamp": 28,
+        "objects": [],
+        "brands": []
+      },
+      {
+        "timestamp": 30,
+        "objects": [],
+        "brands": []
+      },
+      {
+        "timestamp": 32,
+        "objects": [],
+        "brands": []
+      },
+      {
+        "timestamp": 34,
+        "objects": [],
+        "brands": []
+      },
+      {
+        "timestamp": 36,
+        "objects": [],
+        "brands": []
+      }
+    ],
+    "visualSummary": {
+      "uniqueObjects": [],
+      "brandsDetected": [],
+      "frameAnalyses": [
+        {
+          "timestamp": 0,
+          "objects": [],
+          "brands": []
+        },
+        {
+          "timestamp": 2,
+          "objects": [],
+          "brands": []
+        },
+        {
+          "timestamp": 4,
+          "objects": [],
+          "brands": []
+        },
+        {
+          "timestamp": 6,
+          "objects": [],
+          "brands": []
+        },
+        {
+          "timestamp": 8,
+          "objects": [],
+          "brands": []
+        },
+        {
+          "timestamp": 10,
+          "objects": [],
+          "brands": []
+        },
+        {
+          "timestamp": 12,
+          "objects": [],
+          "brands": []
+        },
+        {
+          "timestamp": 14,
+          "objects": [],
+          "brands": []
+        },
+        {
+          "timestamp": 16,
+          "objects": [],
+          "brands": []
+        },
+        {
+          "timestamp": 18,
+          "objects": [],
+          "brands": []
+        },
+        {
+          "timestamp": 20,
+          "objects": [],
+          "brands": []
+        },
+        {
+          "timestamp": 22,
+          "objects": [],
+          "brands": []
+        },
+        {
+          "timestamp": 24,
+          "objects": [],
+          "brands": []
+        },
+        {
+          "timestamp": 26,
+          "objects": [],
+          "brands": []
+        },
+        {
+          "timestamp": 28,
+          "objects": [],
+          "brands": []
+        },
+        {
+          "timestamp": 30,
+          "objects": [],
+          "brands": []
+        },
+        {
+          "timestamp": 32,
+          "objects": [],
+          "brands": []
+        },
+        {
+          "timestamp": 34,
+          "objects": [],
+          "brands": []
+        },
+        {
+          "timestamp": 36,
+          "objects": [],
+          "brands": []
+        }
+      ]
+    }
+  }
+}

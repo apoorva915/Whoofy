@@ -208,13 +208,55 @@ export default function Home() {
   const [productImagePreviews, setProductImagePreviews] = useState<string[]>([]);
   
   // Tab states
-  const [activeTab, setActiveTab] = useState<'data' | 'analysis'>('data');
+  const [activeTab, setActiveTab] = useState<'data' | 'analysis' | 'googleVision'>('data');
   const [loadingData, setLoadingData] = useState(false);
   const [loadingAnalysis, setLoadingAnalysis] = useState(false);
+  const [loadingGoogleVision, setLoadingGoogleVision] = useState(false);
   
   // Results
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
+  const [googleVisionData, setGoogleVisionData] = useState<{
+    reelUrl: string;
+    video: {
+      id: string;
+      duration: number;
+      frameCount: number;
+      frames: string[];
+    };
+    analysis: {
+      frameAnalyses: Array<{
+        timestamp: number;
+        labels: Array<{ description: string; confidence: number }>;
+        text: string;
+        textDetections: Array<{ text: string; confidence?: number }>;
+        logos: Array<{ description: string; confidence: number }>;
+        objects: Array<{ name: string; confidence: number }>;
+        brands: Array<{ name: string; confidence: number; source: 'label' | 'logo' | 'text' }>;
+        visualMatches?: Array<{
+          referenceImageIndex: number;
+          similarity: number;
+          match: boolean;
+          confidence: 'high' | 'medium' | 'low' | 'none';
+          matchingLabels: string[];
+          matchingObjects: string[];
+          matchingLogos: string[];
+        }>;
+      }>;
+      summary: {
+        labels: Array<{ name: string; confidence: number; occurrences: number }>;
+        logos: Array<{ name: string; confidence: number; occurrences: number }>;
+        objects: Array<{ name: string; confidence: number; occurrences: number }>;
+        brands: Array<{ name: string; confidence: number; occurrences: number; sources: string[] }>;
+        allText: string;
+        targetBrandDetection: {
+          detected: boolean;
+          confidence: number;
+          message: string;
+        } | null;
+      };
+    };
+  } | null>(null);
   
   // Gemini Sentiment Analysis
   const [geminiSentiment, setGeminiSentiment] = useState<{
@@ -262,6 +304,12 @@ export default function Home() {
   
   const [error, setError] = useState<string | null>(null);
   const [framesExpanded, setFramesExpanded] = useState(false);
+  
+  // Google Vision specific inputs
+  const [googleVisionProductImages, setGoogleVisionProductImages] = useState<File[]>([]);
+  const [googleVisionProductImagePreviews, setGoogleVisionProductImagePreviews] = useState<string[]>([]);
+  const [googleVisionProductNames, setGoogleVisionProductNames] = useState('');
+  const [googleVisionAdditionalTerms, setGoogleVisionAdditionalTerms] = useState('');
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -286,6 +334,32 @@ export default function Home() {
     const newPreviews = productImagePreviews.filter((_, i) => i !== index);
     setProductImages(newImages);
     setProductImagePreviews(newPreviews);
+  };
+
+  // Google Vision specific image handlers
+  const handleGoogleVisionImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) {
+      setGoogleVisionProductImages(files);
+      const previews: string[] = [];
+      files.forEach((file) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          previews.push(reader.result as string);
+          if (previews.length === files.length) {
+            setGoogleVisionProductImagePreviews(previews);
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  };
+
+  const removeGoogleVisionImage = (index: number) => {
+    const newImages = googleVisionProductImages.filter((_, i) => i !== index);
+    const newPreviews = googleVisionProductImagePreviews.filter((_, i) => i !== index);
+    setGoogleVisionProductImages(newImages);
+    setGoogleVisionProductImagePreviews(newPreviews);
   };
 
   // Data Tab: Profile Scraping
@@ -549,14 +623,87 @@ export default function Home() {
     }
   };
 
+  // Google Vision Analysis
+  const handleGoogleVisionAnalysis = async () => {
+    if (!reelUrl) {
+      setError('Please enter a reel URL first');
+      return;
+    }
+    
+    setLoadingGoogleVision(true);
+    setError(null);
+
+    try {
+      // Parse product names from comma-separated string
+      const productNamesArray = googleVisionProductNames
+        .split(',')
+        .map(name => name.trim())
+        .filter(name => name.length > 0);
+
+      // Parse additional detection terms
+      const additionalTermsArray = googleVisionAdditionalTerms
+        .split(',')
+        .map(term => term.trim())
+        .filter(term => term.length > 0);
+
+      // Convert images to base64 if provided
+      let productImagesBase64: string[] | undefined = undefined;
+      if (googleVisionProductImages.length > 0) {
+        productImagesBase64 = await Promise.all(
+          googleVisionProductImages.map((file) => 
+            new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onloadend = () => resolve(reader.result as string);
+              reader.onerror = reject;
+              reader.readAsDataURL(file);
+            })
+          )
+        );
+      }
+
+      const response = await fetch('/api/analyze/google-vision', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          reelUrl,
+          targetBrandName: targetBrandName.trim() || undefined,
+          productNames: productNamesArray.length > 0 ? productNamesArray : undefined,
+          additionalTerms: additionalTermsArray.length > 0 ? additionalTermsArray : undefined,
+          productImages: productImagesBase64,
+          frameInterval: 2,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error?.message || 'Google Vision analysis failed');
+      }
+
+      setGoogleVisionData(data.data);
+    } catch (err: any) {
+      setError(err.message || 'An error occurred during Google Vision analysis');
+    } finally {
+      setLoadingGoogleVision(false);
+    }
+  };
+
   const resetWorkflow = () => {
     setProfileData(null);
     setAnalysisData(null);
+    setGoogleVisionData(null);
     setGeminiSentiment(null);
     setNicheAnalysis(null);
     setEngagementVerification(null);
     setError(null);
     setReelUrl('');
+    // Reset Google Vision specific inputs
+    setGoogleVisionProductImages([]);
+    setGoogleVisionProductImagePreviews([]);
+    setGoogleVisionProductNames('');
+    setGoogleVisionAdditionalTerms('');
   };
 
   return (
@@ -646,6 +793,35 @@ export default function Home() {
                 }} />
               )}
             </button>
+            <button
+              onClick={() => setActiveTab('googleVision')}
+              style={{
+                flex: 1,
+                padding: '15px 20px',
+                background: activeTab === 'googleVision' ? '#0070f3' : 'transparent',
+                color: activeTab === 'googleVision' ? 'white' : '#666',
+                border: 'none',
+                borderBottom: activeTab === 'googleVision' ? '3px solid #0070f3' : '3px solid transparent',
+                cursor: 'pointer',
+                fontSize: '15px',
+                fontWeight: activeTab === 'googleVision' ? '600' : '400',
+                transition: 'all 0.2s',
+                position: 'relative',
+              }}
+            >
+              Frame Analysis (Google Vision)
+              {googleVisionData && (
+                <span style={{
+                  position: 'absolute',
+                  top: '8px',
+                  right: '8px',
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: '#4caf50',
+                }} />
+              )}
+            </button>
           </div>
 
           {/* Tab Content */}
@@ -673,6 +849,164 @@ export default function Home() {
                     {loadingData ? 'Scraping Data...' : 'Scrape Profile & Reel Data'}
                   </button>
                 </form>
+              </div>
+            )}
+
+            {/* Google Vision Tab */}
+            {activeTab === 'googleVision' && (
+              <div>
+                <h2 style={{ marginTop: 0, marginBottom: '20px', color: '#333' }}>Frame Analysis using Google Vision</h2>
+                
+                <div style={{ marginBottom: '15px' }}>
+                  <label htmlFor="targetBrandNameGV" style={{ display: 'block', marginBottom: '5px', fontWeight: '600' }}>
+                    Target Brand Name (Optional)
+                  </label>
+                  <input
+                    id="targetBrandNameGV"
+                    type="text"
+                    value={targetBrandName}
+                    onChange={(e) => setTargetBrandName(e.target.value)}
+                    placeholder="e.g., Cadbury, Nike, Pepsi"
+                    disabled={loadingGoogleVision}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontSize: '14px',
+                    }}
+                  />
+                </div>
+
+                <div style={{ marginBottom: '15px' }}>
+                  <label htmlFor="productNamesGV" style={{ display: 'block', marginBottom: '5px', fontWeight: '600' }}>
+                    Target Product Names (Optional - comma-separated)
+                  </label>
+                  <input
+                    id="productNamesGV"
+                    type="text"
+                    value={googleVisionProductNames}
+                    onChange={(e) => setGoogleVisionProductNames(e.target.value)}
+                    placeholder="e.g., Dairy Milk, Silk Brownie, Oreo"
+                    disabled={loadingGoogleVision}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontSize: '14px',
+                    }}
+                  />
+                  <p style={{ marginTop: '5px', fontSize: '12px', color: '#666' }}>
+                    Enter product names to specifically detect in the video frames
+                  </p>
+                </div>
+
+                <div style={{ marginBottom: '15px' }}>
+                  <label htmlFor="additionalTermsGV" style={{ display: 'block', marginBottom: '5px', fontWeight: '600' }}>
+                    Additional Detection Terms (Optional - comma-separated)
+                  </label>
+                  <input
+                    id="additionalTermsGV"
+                    type="text"
+                    value={googleVisionAdditionalTerms}
+                    onChange={(e) => setGoogleVisionAdditionalTerms(e.target.value)}
+                    placeholder="e.g., chocolate, snack, beverage, logo"
+                    disabled={loadingGoogleVision}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontSize: '14px',
+                    }}
+                  />
+                  <p style={{ marginTop: '5px', fontSize: '12px', color: '#666' }}>
+                    Enter additional keywords or terms to detect (will be searched in labels, text, and objects)
+                  </p>
+                </div>
+
+                <div style={{ marginBottom: '20px' }}>
+                  <label htmlFor="productImagesGV" style={{ display: 'block', marginBottom: '5px', fontWeight: '600' }}>
+                    Product Reference Images (Optional)
+                  </label>
+                  <input
+                    id="productImagesGV"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleGoogleVisionImageChange}
+                    disabled={loadingGoogleVision}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontSize: '14px',
+                    }}
+                  />
+                  <p style={{ marginTop: '5px', fontSize: '12px', color: '#666' }}>
+                    Upload reference images of products to help with visual matching and brand detection
+                  </p>
+                  {googleVisionProductImagePreviews.length > 0 && (
+                    <div style={{ marginTop: '10px', display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                      {googleVisionProductImagePreviews.map((preview, index) => (
+                        <div key={index} style={{ position: 'relative', display: 'inline-block' }}>
+                          <img 
+                            src={preview} 
+                            alt={`Product preview ${index + 1}`} 
+                            style={{ 
+                              maxWidth: '150px', 
+                              maxHeight: '150px', 
+                              borderRadius: '4px',
+                              border: '1px solid #ddd',
+                              objectFit: 'cover'
+                            }} 
+                          />
+                          <button
+                            onClick={() => removeGoogleVisionImage(index)}
+                            style={{
+                              position: 'absolute',
+                              top: '4px',
+                              right: '4px',
+                              background: '#f44336',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '50%',
+                              width: '24px',
+                              height: '24px',
+                              cursor: 'pointer',
+                              fontSize: '14px',
+                              fontWeight: 'bold',
+                            }}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  onClick={handleGoogleVisionAnalysis}
+                  disabled={loadingGoogleVision || !reelUrl}
+                  style={{
+                    padding: '12px 24px',
+                    background: (loadingGoogleVision || !reelUrl) ? '#ccc' : '#4285f4',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: (loadingGoogleVision || !reelUrl) ? 'not-allowed' : 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                  }}
+                >
+                  {loadingGoogleVision ? 'Analyzing with Google Vision...' : 'Start Google Vision Analysis'}
+                </button>
+                <p style={{ marginTop: '10px', fontSize: '13px', color: '#666' }}>
+                  Uses Google Cloud Vision API for label detection, text detection (OCR), logo detection, and brand detection
+                </p>
               </div>
             )}
 
@@ -1729,6 +2063,334 @@ export default function Home() {
           </div>
         )}
 
+
+        {/* Google Vision Results */}
+        {googleVisionData && activeTab === 'googleVision' && (
+          <div style={{ background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2 style={{ marginTop: 0, marginBottom: 0, color: '#333' }}>Google Vision Analysis Results</h2>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginBottom: '20px' }}>
+              <div style={{ border: '1px solid #ddd', padding: '15px', borderRadius: '4px' }}>
+                <h3 style={{ marginTop: 0, fontSize: '16px' }}>Video Information</h3>
+                <p><strong>Duration:</strong> {googleVisionData.video.duration.toFixed(1)}s</p>
+                <p><strong>Frames Analyzed:</strong> {googleVisionData.video.frameCount}</p>
+              </div>
+            </div>
+
+            {/* Target Brand Detection */}
+            {googleVisionData.analysis.summary.targetBrandDetection && (
+              <div style={{ 
+                marginBottom: '20px', 
+                padding: '15px', 
+                borderRadius: '4px',
+                backgroundColor: googleVisionData.analysis.summary.targetBrandDetection.detected ? '#e8f5e9' : '#ffebee',
+                border: `2px solid ${googleVisionData.analysis.summary.targetBrandDetection.detected ? '#4caf50' : '#f44336'}`
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                  <strong style={{ fontSize: '15px', color: '#333' }}>
+                    Target Brand Detection:
+                  </strong>
+                  <span style={{
+                    padding: '4px 12px',
+                    borderRadius: '12px',
+                    fontSize: '12px',
+                    fontWeight: '600',
+                    backgroundColor: googleVisionData.analysis.summary.targetBrandDetection.detected ? '#4caf50' : '#f44336',
+                    color: 'white'
+                  }}>
+                    {googleVisionData.analysis.summary.targetBrandDetection.detected ? 'DETECTED' : 'NOT DETECTED'}
+                  </span>
+                  {googleVisionData.analysis.summary.targetBrandDetection.detected && (
+                    <span style={{
+                      padding: '4px 12px',
+                      borderRadius: '12px',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      backgroundColor: '#fff',
+                      color: '#333'
+                    }}>
+                      {(googleVisionData.analysis.summary.targetBrandDetection.confidence * 100).toFixed(1)}% confidence
+                    </span>
+                  )}
+                </div>
+                <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#333', fontWeight: '500' }}>
+                  {googleVisionData.analysis.summary.targetBrandDetection.message}
+                </p>
+              </div>
+            )}
+
+            {/* Labels Summary */}
+            {googleVisionData.analysis.summary.labels.length > 0 && (
+              <div style={{ marginBottom: '20px', border: '1px solid #ddd', padding: '15px', borderRadius: '4px' }}>
+                <h3 style={{ marginTop: 0, fontSize: '16px' }}>Labels Detected ({googleVisionData.analysis.summary.labels.length})</h3>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '10px' }}>
+                  {googleVisionData.analysis.summary.labels.slice(0, 20).map((label, idx) => (
+                    <div key={idx} style={{
+                      padding: '6px 12px',
+                      borderRadius: '16px',
+                      fontSize: '12px',
+                      backgroundColor: '#e3f2fd',
+                      color: '#1976d2',
+                      fontWeight: '500',
+                    }}>
+                      {label.name} ({(label.confidence * 100).toFixed(0)}%)
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Logos Summary */}
+            {googleVisionData.analysis.summary.logos.length > 0 && (
+              <div style={{ marginBottom: '20px', border: '1px solid #ddd', padding: '15px', borderRadius: '4px' }}>
+                <h3 style={{ marginTop: 0, fontSize: '16px' }}>Logos Detected ({googleVisionData.analysis.summary.logos.length})</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '10px' }}>
+                  {googleVisionData.analysis.summary.logos.map((logo, idx) => (
+                    <div key={idx} style={{
+                      padding: '10px',
+                      borderRadius: '4px',
+                      backgroundColor: '#f5f5f5',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}>
+                      <div>
+                        <strong style={{ fontSize: '13px' }}>{logo.name}</strong>
+                        <div style={{ fontSize: '12px', color: '#666', marginTop: '2px' }}>
+                          Detected in {logo.occurrences} frame{logo.occurrences !== 1 ? 's' : ''}
+                        </div>
+                      </div>
+                      <div style={{
+                        padding: '4px 10px',
+                        borderRadius: '12px',
+                        fontSize: '11px',
+                        fontWeight: '600',
+                        backgroundColor: logo.confidence >= 0.7 ? '#c8e6c9' : logo.confidence >= 0.4 ? '#fff9c4' : '#ffcdd2',
+                        color: logo.confidence >= 0.7 ? '#2e7d32' : logo.confidence >= 0.4 ? '#f57f17' : '#c62828',
+                      }}>
+                        {(logo.confidence * 100).toFixed(0)}% confidence
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Objects Summary */}
+            {googleVisionData.analysis.summary.objects.length > 0 && (
+              <div style={{ marginBottom: '20px', border: '1px solid #ddd', padding: '15px', borderRadius: '4px' }}>
+                <h3 style={{ marginTop: 0, fontSize: '16px' }}>Objects Detected ({googleVisionData.analysis.summary.objects.length})</h3>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '10px' }}>
+                  {googleVisionData.analysis.summary.objects.slice(0, 20).map((obj, idx) => (
+                    <div key={idx} style={{
+                      padding: '6px 12px',
+                      borderRadius: '16px',
+                      fontSize: '12px',
+                      backgroundColor: '#fff3e0',
+                      color: '#e65100',
+                      fontWeight: '500',
+                    }}>
+                      {obj.name} ({(obj.confidence * 100).toFixed(0)}%)
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Brands Summary */}
+            {googleVisionData.analysis.summary.brands.length > 0 && (
+              <div style={{ marginBottom: '20px', border: '1px solid #ddd', padding: '15px', borderRadius: '4px' }}>
+                <h3 style={{ marginTop: 0, fontSize: '16px' }}>Brands Detected ({googleVisionData.analysis.summary.brands.length})</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '10px' }}>
+                  {googleVisionData.analysis.summary.brands.map((brand, idx) => (
+                    <div key={idx} style={{
+                      padding: '10px',
+                      borderRadius: '4px',
+                      backgroundColor: '#f5f5f5',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}>
+                      <div>
+                        <strong style={{ fontSize: '13px' }}>{brand.name}</strong>
+                        <div style={{ fontSize: '12px', color: '#666', marginTop: '2px' }}>
+                          Detected in {brand.occurrences} frame{brand.occurrences !== 1 ? 's' : ''} via {brand.sources.join(', ')}
+                        </div>
+                      </div>
+                      <div style={{
+                        padding: '4px 10px',
+                        borderRadius: '12px',
+                        fontSize: '11px',
+                        fontWeight: '600',
+                        backgroundColor: brand.confidence >= 0.7 ? '#c8e6c9' : brand.confidence >= 0.4 ? '#fff9c4' : '#ffcdd2',
+                        color: brand.confidence >= 0.7 ? '#2e7d32' : brand.confidence >= 0.4 ? '#f57f17' : '#c62828',
+                      }}>
+                        {(brand.confidence * 100).toFixed(0)}% confidence
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Text Summary */}
+            {googleVisionData.analysis.summary.allText && (
+              <div style={{ marginBottom: '20px', border: '1px solid #ddd', padding: '15px', borderRadius: '4px' }}>
+                <h3 style={{ marginTop: 0, fontSize: '16px' }}>Text Detected (OCR)</h3>
+                <div style={{ marginTop: '10px', padding: '10px', background: '#f5f5f5', borderRadius: '4px', maxHeight: '200px', overflowY: 'auto' }}>
+                  <p style={{ fontSize: '13px', color: '#333', whiteSpace: 'pre-wrap', margin: 0 }}>
+                    {googleVisionData.analysis.summary.allText || 'No text detected'}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Visual Matches Summary */}
+            {googleVisionData.analysis.frameAnalyses.some(f => f.visualMatches && f.visualMatches.length > 0) && (
+              <div style={{ marginBottom: '20px', border: '1px solid #ddd', padding: '15px', borderRadius: '4px' }}>
+                <h3 style={{ marginTop: 0, fontSize: '16px' }}>Reference Image Matches</h3>
+                <p style={{ fontSize: '13px', color: '#666', marginBottom: '15px' }}>
+                  Frames that visually match your uploaded reference images based on labels, objects, and logos
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {googleVisionData.analysis.frameAnalyses
+                    .filter(f => f.visualMatches && f.visualMatches.length > 0 && f.visualMatches.some(m => m.match))
+                    .map((frameAnalysis, frameIdx) => {
+                      const frameNumber = googleVisionData.video.frames.findIndex((_, idx) => 
+                        googleVisionData.analysis.frameAnalyses[idx] === frameAnalysis
+                      );
+                      return (
+                        <div key={frameIdx} style={{ 
+                          padding: '12px', 
+                          background: '#f5f5f5', 
+                          borderRadius: '4px',
+                          border: '1px solid #e0e0e0'
+                        }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                            <strong style={{ fontSize: '13px' }}>
+                              Frame at {frameAnalysis.timestamp.toFixed(1)}s
+                            </strong>
+                            {frameNumber >= 0 && (
+                              <img
+                                src={`/api/frames?path=${encodeURIComponent(googleVisionData.video.frames[frameNumber])}`}
+                                alt={`Frame ${frameNumber + 1}`}
+                                style={{ 
+                                  width: '80px', 
+                                  height: '80px', 
+                                  objectFit: 'cover',
+                                  borderRadius: '4px',
+                                  border: '1px solid #ddd'
+                                }}
+                              />
+                            )}
+                          </div>
+                          {frameAnalysis.visualMatches?.filter(m => m.match).map((match, matchIdx) => (
+                            <div key={matchIdx} style={{ 
+                              marginTop: '8px', 
+                              padding: '10px', 
+                              background: 'white', 
+                              borderRadius: '4px',
+                              border: `2px solid ${
+                                match.confidence === 'high' ? '#4caf50' :
+                                match.confidence === 'medium' ? '#ff9800' : '#9e9e9e'
+                              }`
+                            }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                                <span style={{ fontSize: '12px', fontWeight: '600' }}>
+                                  Reference Image #{match.referenceImageIndex + 1}
+                                </span>
+                                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                  <span style={{
+                                    padding: '4px 10px',
+                                    borderRadius: '12px',
+                                    fontSize: '11px',
+                                    fontWeight: '600',
+                                    backgroundColor: match.confidence === 'high' ? '#c8e6c9' :
+                                                    match.confidence === 'medium' ? '#ffe0b2' : '#e0e0e0',
+                                    color: match.confidence === 'high' ? '#2e7d32' :
+                                           match.confidence === 'medium' ? '#e65100' : '#616161',
+                                  }}>
+                                    {(match.similarity * 100).toFixed(0)}% match ({match.confidence})
+                                  </span>
+                                </div>
+                              </div>
+                              {(match.matchingLabels.length > 0 || match.matchingObjects.length > 0 || match.matchingLogos.length > 0) && (
+                                <div style={{ fontSize: '11px', color: '#666', marginTop: '6px' }}>
+                                  {match.matchingLogos.length > 0 && (
+                                    <div style={{ marginBottom: '4px' }}>
+                                      <strong>Matching Logos:</strong> {match.matchingLogos.join(', ')}
+                                    </div>
+                                  )}
+                                  {match.matchingObjects.length > 0 && (
+                                    <div style={{ marginBottom: '4px' }}>
+                                      <strong>Matching Objects:</strong> {match.matchingObjects.join(', ')}
+                                    </div>
+                                  )}
+                                  {match.matchingLabels.length > 0 && (
+                                    <div>
+                                      <strong>Matching Labels:</strong> {match.matchingLabels.join(', ')}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
+            )}
+
+            {/* Frames */}
+            {googleVisionData.video.frames.length > 0 && (
+              <div style={{ marginTop: '20px' }}>
+                <h3 style={{ fontSize: '16px' }}>Extracted Frames ({googleVisionData.video.frames.length})</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '10px', marginTop: '10px' }}>
+                  {googleVisionData.video.frames.map((frame, idx) => {
+                    const frameAnalysis = googleVisionData.analysis.frameAnalyses[idx];
+                    const hasMatch = frameAnalysis?.visualMatches?.some(m => m.match);
+                    return (
+                      <div key={idx} style={{ 
+                        border: `2px solid ${hasMatch ? '#4caf50' : '#ddd'}`, 
+                        borderRadius: '4px', 
+                        overflow: 'hidden',
+                        position: 'relative'
+                      }}>
+                        <img
+                          src={`/api/frames?path=${encodeURIComponent(frame)}`}
+                          alt={`Frame ${idx + 1}`}
+                          style={{ width: '100%', height: 'auto', display: 'block' }}
+                          onError={(e) => {
+                            console.error('Frame load error:', frame);
+                            (e.target as HTMLImageElement).style.display = 'none';
+                          }}
+                        />
+                        {hasMatch && (
+                          <div style={{
+                            position: 'absolute',
+                            top: '4px',
+                            right: '4px',
+                            background: '#4caf50',
+                            color: 'white',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            fontSize: '10px',
+                            fontWeight: '600',
+                          }}>
+                            MATCH
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Analysis Results */}
         {analysisData && activeTab === 'analysis' && (

@@ -10,9 +10,7 @@ export enum SubmissionStatus {
   REJECTED = 'rejected',
   NEEDS_REVISION = 'needs_revision',
   FAILED = 'failed',
-}
-
-/**
+}/**
  * Submission Entity
  */
 export interface Submission {
@@ -27,9 +25,7 @@ export interface Submission {
   verifiedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
-}
-
-/**
+}/**
  * Submission Creation Input
  */
 export const CreateSubmissionSchema = z.object({

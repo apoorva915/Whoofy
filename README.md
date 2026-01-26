@@ -24,8 +24,64 @@ The server will start on `http://localhost:3000`
 ### YOLO Object Detection & OCR
 
 1. Install Python dependencies from `yolo/requirements.txt`
-2. Install Tesseract OCR engine (system package manager)
+2. Install Tesseract OCR engine (see instructions below)
 3. YOLO Model automatically downloads on first use (~6MB)
+
+#### Tesseract OCR Installation
+
+Tesseract is required for the optional local OCR functionality. If you're using Google Cloud Vision API for OCR, Tesseract is not required.
+
+**Automatic Installation (Recommended):**
+
+Run the automated installation script:
+```bash
+npm run install:tesseract
+```
+
+This script will:
+- Detect your operating system (Windows/macOS/Linux)
+- Check for available package managers (Chocolatey/Homebrew/apt/dnf)
+- Automatically install Tesseract
+- Verify the installation
+
+**Manual Installation:**
+
+If automatic installation doesn't work, follow the manual instructions below:
+
+**Windows:**
+1. Download the installer from [GitHub Releases](https://github.com/UB-Mannheim/tesseract/wiki) or use [chocolatey](https://chocolatey.org/):
+   ```powershell
+   choco install tesseract
+   ```
+2. Add Tesseract to your PATH (usually installed to `C:\Program Files\Tesseract-OCR`)
+3. Verify installation:
+   ```powershell
+   tesseract --version
+   ```
+
+**macOS:**
+```bash
+brew install tesseract
+```
+
+**Linux (Ubuntu/Debian):**
+```bash
+sudo apt-get update
+sudo apt-get install tesseract-ocr
+```
+
+**Linux (Fedora/RHEL):**
+```bash
+sudo dnf install tesseract
+```
+
+**Verify Installation:**
+After installation, verify Tesseract is accessible:
+```bash
+tesseract --version
+```
+
+**Note:** If Tesseract is not in your PATH, you may need to configure `pytesseract` to point to the Tesseract executable location. The Python `pytesseract` package (installed via `requirements.txt`) is a wrapper that requires the Tesseract binary to be installed separately.
 
 ### CLIP Visual Similarity
 
@@ -46,6 +102,10 @@ DATABASE_URL=postgresql://postgres:password@localhost:5432/database_name
 
 # AI Services - Google Gemini
 GEMINI_API_KEY=your_gemini_api_key_here
+
+# AI Services - Google Cloud Vision (for Frame Analysis tab)
+GOOGLE_CLOUD_PROJECT_ID=your-google-cloud-project-id
+GOOGLE_CLOUD_VISION_API_KEY=your-google-cloud-vision-api-key
 ```
 
 # Apify
@@ -81,6 +141,35 @@ API_BASE_URL=http://localhost:3000
 3. Click "Create API Key"
 4. Copy the key (should be ~39 characters, starts with "AIza...")
 5. Add to `.env` file: `GEMINI_API_KEY=your_api_key_here`
+
+### Google Cloud Vision API Key (For Frame Analysis)
+
+To use the **Frame Analysis using Google Vision** tab, you need to set up Google Cloud Vision API:
+
+1. **Create a Google Cloud Project** (if you don't have one):
+   - Go to [Google Cloud Console](https://console.cloud.google.com/)
+   - Create a new project or select an existing one
+   - Note your **Project ID** (you'll need this)
+
+2. **Enable Cloud Vision API**:
+   - In the Google Cloud Console, go to **APIs & Services** > **Library**
+   - Search for "Cloud Vision API"
+   - Click on it and click **Enable**
+
+3. **Create an API Key**:
+   - Go to **APIs & Services** > **Credentials**
+   - Click **Create Credentials** > **API Key**
+   - Copy the API key (it will look like: `AIzaSy...`)
+   - (Optional but recommended) Click **Restrict Key** and restrict it to "Cloud Vision API" only
+
+4. **Add to `.env` file**:
+   ```env
+   # Google Cloud Vision API (for Frame Analysis tab)
+   GOOGLE_CLOUD_PROJECT_ID=your-project-id-here
+   GOOGLE_CLOUD_VISION_API_KEY=your-api-key-here
+   ```
+
+**Note**: The Google Cloud Vision API has usage limits and may incur costs. Check [Google Cloud Vision API Pricing](https://cloud.google.com/vision/pricing) for details.
 
 ### Other API Keys
 

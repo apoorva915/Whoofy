@@ -1,0 +1,2920 @@
+{
+  "videoId": "DOz_dxAjA9v",
+  "generatedAt": "2026-01-12T10:55:10.802Z",
+  "frameCount": 83,
+  "payload": {
+    "frameAnalyses": [
+      {
+        "timestamp": 0,
+        "objects": [],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.744
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.5106765031814575,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 2,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.736
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.49102315306663513,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 4,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.738
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4947236180305481,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 6,
+        "objects": [],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.744
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.5108839869499207,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 8,
+        "objects": [
+          "truck",
+          "car"
+        ],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.732
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4793374836444855,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 10,
+        "objects": [],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.734
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4851081073284149,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 12,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.72
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.44875043630599976,
+          "match": true,
+          "confidence": "low",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 14,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.733
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.48163551092147827,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 16,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.737
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4913365840911865,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 18,
+        "objects": [
+          "person",
+          "clock"
+        ],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.724
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.45903486013412476,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 20,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.716
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4401795566082001,
+          "match": true,
+          "confidence": "low",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 22,
+        "objects": [],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.731
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.47696882486343384,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 24,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.72
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4511818587779999,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 26,
+        "objects": [],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.73
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4749568700790405,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 28,
+        "objects": [],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.727
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4676400423049927,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 30,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.738
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4960170388221741,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 32,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.738
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4944961667060852,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 34,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.723
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4584854245185852,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 36,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.725
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.46182170510292053,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 38,
+        "objects": [
+          "person",
+          "car"
+        ],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.739
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.49863293766975403,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 40,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.744
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.5112435817718506,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 42,
+        "objects": [],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.736
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4911755919456482,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 44,
+        "objects": [],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.713
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.43354642391204834,
+          "match": true,
+          "confidence": "low",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 46,
+        "objects": [],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.743
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.5066882371902466,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 48,
+        "objects": [],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.716
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.44058239459991455,
+          "match": true,
+          "confidence": "low",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 50,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.733
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.48326846957206726,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 52,
+        "objects": [],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.715
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4386240839958191,
+          "match": true,
+          "confidence": "low",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 54,
+        "objects": [],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.732
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.47910261154174805,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 56,
+        "objects": [],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.729
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4719400405883789,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 58,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.722
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4553811550140381,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 60,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.726
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4641864001750946,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 62,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.724
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4596277177333832,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 64,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.724
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4588671624660492,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 66,
+        "objects": [
+          "person",
+          "car"
+        ],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.727
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4671168625354767,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 68,
+        "objects": [],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.723
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.45828312635421753,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 70,
+        "objects": [],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.73
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.47378411889076233,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 72,
+        "objects": [],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.734
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.48512253165245056,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 74,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.723
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.45794057846069336,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 76,
+        "objects": [],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.737
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4925979971885681,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 78,
+        "objects": [],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.743
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.5079589486122131,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 80,
+        "objects": [],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.737
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.49186915159225464,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 82,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.743
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.507525622844696,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 84,
+        "objects": [],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.741
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.5022079348564148,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 86,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.4458966553211212,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 88,
+        "objects": [],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.714
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.43486398458480835,
+          "match": true,
+          "confidence": "low",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 90,
+        "objects": [],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.725
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4616672992706299,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 92,
+        "objects": [],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.734
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.48495909571647644,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 94,
+        "objects": [],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.76
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.5497291684150696,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 96,
+        "objects": [],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.754
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.5342594981193542,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 98,
+        "objects": [],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.723
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4579485058784485,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 100,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.75
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.5240927338600159,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 102,
+        "objects": [],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.77
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.5761027932167053,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 104,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.749
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.5236819386482239,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 106,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.757
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.5420227646827698,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 108,
+        "objects": [],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.743
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.5067276954650879,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 110,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.724
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4608005881309509,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 112,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.734
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4841882884502411,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 114,
+        "objects": [],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.742
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.5041688084602356,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 116,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.73
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4749132990837097,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 118,
+        "objects": [],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.754
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.5357971787452698,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 120,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.729
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4729904234409332,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 122,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.725
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.46374720335006714,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 124,
+        "objects": [],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.718
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4454507827758789,
+          "match": true,
+          "confidence": "low",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 126,
+        "objects": [],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.751
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.527180552482605,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 128,
+        "objects": [
+          "person",
+          "potted plant",
+          "car"
+        ],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.733
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4834044277667999,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 130,
+        "objects": [
+          "person",
+          "car"
+        ],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.724
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4598974287509918,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 132,
+        "objects": [
+          "person",
+          "car"
+        ],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.723
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4578687846660614,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 134,
+        "objects": [
+          "person",
+          "car"
+        ],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.721
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4526748061180115,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 136,
+        "objects": [
+          "bicycle",
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.728
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4689503312110901,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 138,
+        "objects": [
+          "person",
+          "bicycle"
+        ],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.727
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4685092270374298,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 140,
+        "objects": [],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.732
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.47989583015441895,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 142,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.737
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4924280345439911,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 144,
+        "objects": [],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.749
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.5223296880722046,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 146,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.724
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.45921462774276733,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 148,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.739
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.49689775705337524,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 150,
+        "objects": [],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.711
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.42800095677375793,
+          "match": true,
+          "confidence": "low",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 152,
+        "objects": [],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.747
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.5174314975738525,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 154,
+        "objects": [],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.752
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.5289311408996582,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 156,
+        "objects": [],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.757
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.5415232181549072,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 158,
+        "objects": [],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.791
+          },
+          {
+            "name": "DonateLife",
+            "confidence": 0.641
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.6286426186561584,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 160,
+        "objects": [],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.792
+          },
+          {
+            "name": "DonateLife",
+            "confidence": 0.642
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.6305278539657593,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 162,
+        "objects": [],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.861
+          },
+          {
+            "name": "DonateLife",
+            "confidence": 0.711
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.8027944564819336,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 164,
+        "objects": [],
+        "brands": [
+          {
+            "name": "GoodAdsMatter",
+            "confidence": 0.862
+          },
+          {
+            "name": "DonateLife",
+            "confidence": 0.712
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.8044745922088623,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      }
+    ],
+    "visualSummary": {
+      "uniqueObjects": [
+        "person",
+        "truck",
+        "car",
+        "clock",
+        "potted plant",
+        "bicycle"
+      ],
+      "brandsDetected": [
+        {
+          "name": "GoodAdsMatter",
+          "confidence": 0.738,
+          "totalFrames": 82,
+          "totalVisibleSeconds": 30
+        },
+        {
+          "name": "DonateLife",
+          "confidence": 0.676,
+          "totalFrames": 4,
+          "totalVisibleSeconds": 8
+        }
+      ],
+      "targetBrandConfirmation": {
+        "detected": true,
+        "message": "Yes, it shows GoodAdsMatter (detected in 82 frames, visible for 30.0s).",
+        "confidence": 0.6645216482162476,
+        "detectedInFrames": 82,
+        "totalVisibleSeconds": 30
+      },
+      "visualSentiment": {
+        "sentiment": "positive",
+        "score": 0.554,
+        "reasoning": "Target brand \"GoodAdsMatter\" is prominently shown in 82 frames. Positive visual elements detected (person, food, product) Overall, this reel provides POSITIVE publicity for GoodAdsMatter - the brand/product is shown favorably with positive visual elements.",
+        "confidence": 0.643
+      },
+      "visualSimilaritySummary": {
+        "averageSimilarity": 0.495,
+        "maxSimilarity": 0.804,
+        "matchedFrames": 82,
+        "totalFrames": 83,
+        "visibleSeconds": 30,
+        "referenceImageCount": 1
+      },
+      "frameAnalyses": [
+        {
+          "timestamp": 0,
+          "objects": [],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.744
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.5106765031814575,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 2,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.736
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.49102315306663513,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 4,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.738
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4947236180305481,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 6,
+          "objects": [],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.744
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.5108839869499207,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 8,
+          "objects": [
+            "truck",
+            "car"
+          ],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.732
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4793374836444855,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 10,
+          "objects": [],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.734
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4851081073284149,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 12,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.72
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.44875043630599976,
+            "match": true,
+            "confidence": "low",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 14,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.733
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.48163551092147827,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 16,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.737
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4913365840911865,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 18,
+          "objects": [
+            "person",
+            "clock"
+          ],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.724
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.45903486013412476,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 20,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.716
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4401795566082001,
+            "match": true,
+            "confidence": "low",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 22,
+          "objects": [],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.731
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.47696882486343384,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 24,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.72
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4511818587779999,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 26,
+          "objects": [],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.73
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4749568700790405,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 28,
+          "objects": [],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.727
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4676400423049927,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 30,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.738
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4960170388221741,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 32,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.738
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4944961667060852,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 34,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.723
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4584854245185852,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 36,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.725
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.46182170510292053,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 38,
+          "objects": [
+            "person",
+            "car"
+          ],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.739
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.49863293766975403,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 40,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.744
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.5112435817718506,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 42,
+          "objects": [],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.736
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4911755919456482,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 44,
+          "objects": [],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.713
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.43354642391204834,
+            "match": true,
+            "confidence": "low",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 46,
+          "objects": [],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.743
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.5066882371902466,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 48,
+          "objects": [],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.716
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.44058239459991455,
+            "match": true,
+            "confidence": "low",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 50,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.733
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.48326846957206726,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 52,
+          "objects": [],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.715
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4386240839958191,
+            "match": true,
+            "confidence": "low",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 54,
+          "objects": [],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.732
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.47910261154174805,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 56,
+          "objects": [],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.729
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4719400405883789,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 58,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.722
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4553811550140381,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 60,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.726
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4641864001750946,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 62,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.724
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4596277177333832,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 64,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.724
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4588671624660492,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 66,
+          "objects": [
+            "person",
+            "car"
+          ],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.727
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4671168625354767,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 68,
+          "objects": [],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.723
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.45828312635421753,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 70,
+          "objects": [],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.73
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.47378411889076233,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 72,
+          "objects": [],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.734
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.48512253165245056,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 74,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.723
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.45794057846069336,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 76,
+          "objects": [],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.737
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4925979971885681,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 78,
+          "objects": [],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.743
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.5079589486122131,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 80,
+          "objects": [],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.737
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.49186915159225464,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 82,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.743
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.507525622844696,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 84,
+          "objects": [],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.741
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.5022079348564148,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 86,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.4458966553211212,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 88,
+          "objects": [],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.714
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.43486398458480835,
+            "match": true,
+            "confidence": "low",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 90,
+          "objects": [],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.725
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4616672992706299,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 92,
+          "objects": [],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.734
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.48495909571647644,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 94,
+          "objects": [],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.76
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.5497291684150696,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 96,
+          "objects": [],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.754
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.5342594981193542,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 98,
+          "objects": [],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.723
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4579485058784485,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 100,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.75
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.5240927338600159,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 102,
+          "objects": [],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.77
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.5761027932167053,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 104,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.749
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.5236819386482239,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 106,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.757
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.5420227646827698,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 108,
+          "objects": [],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.743
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.5067276954650879,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 110,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.724
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4608005881309509,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 112,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.734
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4841882884502411,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 114,
+          "objects": [],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.742
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.5041688084602356,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 116,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.73
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4749132990837097,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 118,
+          "objects": [],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.754
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.5357971787452698,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 120,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.729
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4729904234409332,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 122,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.725
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.46374720335006714,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 124,
+          "objects": [],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.718
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4454507827758789,
+            "match": true,
+            "confidence": "low",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 126,
+          "objects": [],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.751
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.527180552482605,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 128,
+          "objects": [
+            "person",
+            "potted plant",
+            "car"
+          ],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.733
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4834044277667999,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 130,
+          "objects": [
+            "person",
+            "car"
+          ],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.724
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4598974287509918,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 132,
+          "objects": [
+            "person",
+            "car"
+          ],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.723
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4578687846660614,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 134,
+          "objects": [
+            "person",
+            "car"
+          ],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.721
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4526748061180115,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 136,
+          "objects": [
+            "bicycle",
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.728
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4689503312110901,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 138,
+          "objects": [
+            "person",
+            "bicycle"
+          ],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.727
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4685092270374298,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 140,
+          "objects": [],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.732
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.47989583015441895,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 142,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.737
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4924280345439911,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 144,
+          "objects": [],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.749
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.5223296880722046,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 146,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.724
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.45921462774276733,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 148,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.739
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.49689775705337524,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 150,
+          "objects": [],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.711
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.42800095677375793,
+            "match": true,
+            "confidence": "low",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 152,
+          "objects": [],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.747
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.5174314975738525,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 154,
+          "objects": [],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.752
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.5289311408996582,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 156,
+          "objects": [],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.757
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.5415232181549072,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 158,
+          "objects": [],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.791
+            },
+            {
+              "name": "DonateLife",
+              "confidence": 0.641
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.6286426186561584,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 160,
+          "objects": [],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.792
+            },
+            {
+              "name": "DonateLife",
+              "confidence": 0.642
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.6305278539657593,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 162,
+          "objects": [],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.861
+            },
+            {
+              "name": "DonateLife",
+              "confidence": 0.711
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.8027944564819336,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 164,
+          "objects": [],
+          "brands": [
+            {
+              "name": "GoodAdsMatter",
+              "confidence": 0.862
+            },
+            {
+              "name": "DonateLife",
+              "confidence": 0.712
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.8044745922088623,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        }
+      ]
+    }
+  }
+}

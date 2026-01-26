@@ -1,0 +1,78 @@
+{
+  "videoId": "video-1767376868570",
+  "generatedAt": "2026-01-02T18:01:24.809Z",
+  "frameCount": 5,
+  "payload": {
+    "frameAnalyses": [
+      {
+        "timestamp": 0,
+        "objects": [],
+        "brands": []
+      },
+      {
+        "timestamp": 2,
+        "objects": [],
+        "brands": []
+      },
+      {
+        "timestamp": 4,
+        "objects": [],
+        "brands": []
+      },
+      {
+        "timestamp": 6,
+        "objects": [],
+        "brands": []
+      },
+      {
+        "timestamp": 8,
+        "objects": [],
+        "brands": []
+      }
+    ],
+    "visualSummary": {
+      "uniqueObjects": [],
+      "brandsDetected": [],
+      "targetBrandConfirmation": {
+        "detected": false,
+        "message": "No, Dairy Milk, Cadbury, Cadbury Dairy Milk was not detected in the video frames.",
+        "confidence": 0,
+        "detectedInFrames": 0,
+        "totalVisibleSeconds": 0
+      },
+      "visualSentiment": {
+        "sentiment": "neutral",
+        "score": -0.1,
+        "reasoning": "Target brand \"Dairy Milk, Cadbury, Cadbury Dairy Milk\" is not clearly visible in frames Overall, this reel provides NEUTRAL publicity for Dairy Milk, Cadbury, Cadbury Dairy Milk - neither strongly positive nor negative visual indicators.",
+        "confidence": 0.5
+      },
+      "frameAnalyses": [
+        {
+          "timestamp": 0,
+          "objects": [],
+          "brands": []
+        },
+        {
+          "timestamp": 2,
+          "objects": [],
+          "brands": []
+        },
+        {
+          "timestamp": 4,
+          "objects": [],
+          "brands": []
+        },
+        {
+          "timestamp": 6,
+          "objects": [],
+          "brands": []
+        },
+        {
+          "timestamp": 8,
+          "objects": [],
+          "brands": []
+        }
+      ]
+    }
+  }
+}

@@ -44,4 +44,6 @@ next-env.d.ts
 /cache
 
 # storage (videos and frames)
-/storage
+/storage# Google service account (contains sensitive credentials)
+google-service-account.json
+*-service-account.json

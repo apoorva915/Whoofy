@@ -1,0 +1,431 @@
+{
+  "videoId": "DKexGcJxeKT",
+  "generatedAt": "2026-01-13T17:20:22.877Z",
+  "frameCount": 15,
+  "payload": {
+    "frameAnalyses": [
+      {
+        "timestamp": 0,
+        "objects": [
+          "suitcase",
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.4603509306907654,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 2,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.483572393655777,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 4,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.45872727036476135,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 6,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.5555780529975891,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 8,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.622986912727356,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 10,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.5565376877784729,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 12,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.49127450585365295,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 14,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.5346634387969971,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 16,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.5477949380874634,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 18,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.6156700253486633,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 20,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.5383424758911133,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 22,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.5415933132171631,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 24,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.5371814370155334,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 26,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.5223037004470825,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 28,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.5523841381072998,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      }
+    ],
+    "visualSummary": {
+      "uniqueObjects": [
+        "suitcase",
+        "person"
+      ],
+      "brandsDetected": [],
+      "targetBrandConfirmation": {
+        "detected": true,
+        "message": "Yes, it shows Flipkart (detected in 11 frames, visible for 22.0s via visual similarity).",
+        "confidence": 0.6,
+        "detectedInFrames": 11,
+        "totalVisibleSeconds": 22
+      },
+      "visualSentiment": {
+        "sentiment": "positive",
+        "score": 1,
+        "reasoning": "Target brand \"Flipkart\" is not clearly visible in frames. Positive visual elements detected (person, food, product) Overall, this reel provides POSITIVE publicity for Flipkart - the brand/product is shown favorably with positive visual elements.",
+        "confidence": 0.95
+      },
+      "visualSimilaritySummary": {
+        "averageSimilarity": 0.557,
+        "maxSimilarity": 0.623,
+        "matchedFrames": 11,
+        "totalFrames": 15,
+        "visibleSeconds": 22,
+        "referenceImageCount": 1
+      },
+      "frameAnalyses": [
+        {
+          "timestamp": 0,
+          "objects": [
+            "suitcase",
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.4603509306907654,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 2,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.483572393655777,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 4,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.45872727036476135,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 6,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.5555780529975891,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 8,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.622986912727356,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 10,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.5565376877784729,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 12,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.49127450585365295,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 14,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.5346634387969971,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 16,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.5477949380874634,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 18,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.6156700253486633,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 20,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.5383424758911133,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 22,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.5415933132171631,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 24,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.5371814370155334,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 26,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.5223037004470825,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 28,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.5523841381072998,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        }
+      ]
+    }
+  }
+}

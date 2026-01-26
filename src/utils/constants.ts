@@ -84,18 +84,14 @@ export const HTTP_STATUS = {
   INTERNAL_SERVER_ERROR: 500,
   BAD_GATEWAY: 502,
   SERVICE_UNAVAILABLE: 503,
-} as const;
-
-/**
+} as const;/**
  * Pagination Defaults
  */
 export const PAGINATION = {
   DEFAULT_PAGE: 1,
   DEFAULT_LIMIT: 20,
   MAX_LIMIT: 100,
-} as const;
-
-/**
+} as const;/**
  * Verification Scoring Weights
  */
 export const VERIFICATION_WEIGHTS = {
@@ -103,9 +99,7 @@ export const VERIFICATION_WEIGHTS = {
   CONTENT_AUTHENTICITY: 0.25,
   BRAND_INTEGRATION: 0.30,
   CAMPAIGN_RULES: 0.20,
-} as const;
-
-/**
+} as const;/**
  * Processing Timeouts (in milliseconds)
  */
 export const TIMEOUTS = {

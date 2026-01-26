@@ -16,9 +16,7 @@ export enum CreatorNiche {
   LIFESTYLE = 'Lifestyle',
   KIDS = 'Kids',
   OTHER = 'Other',
-}
-
-/**
+}/**
  * Creator Gender
  */
 export enum CreatorGender {
@@ -47,9 +45,7 @@ export interface Creator {
   isVerified: boolean;
   createdAt: Date;
   updatedAt: Date;
-}
-
-/**
+}/**
  * Creator Creation Input
  */
 export const CreateCreatorSchema = z.object({

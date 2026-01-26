@@ -47,6 +47,8 @@ const EnvSchema = z.object({
   // AI Services - Google Cloud (alternative)
   GOOGLE_CLOUD_PROJECT_ID: z.string().optional(),
   GOOGLE_CLOUD_VISION_API_KEY: z.string().optional(),
+  // Service Account (alternative to API key - more secure)
+  GOOGLE_APPLICATION_CREDENTIALS: z.string().optional(),
   
   // Storage
   STORAGE_TYPE: z.enum(['local', 's3', 'cloudinary']).default('local'),

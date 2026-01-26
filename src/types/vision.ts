@@ -9,6 +9,17 @@ export interface VisualSimilarity {
 }
 
 /**
+ * Person Demographics
+ */
+export interface PersonDemographics {
+  gender: 'male' | 'female' | 'unknown';
+  genderConfidence: number;
+  ageBracket: 'child' | 'young' | 'middle_age' | 'old' | 'unknown';
+  ageConfidence: number;
+  faceConfidence: number;
+}
+
+/**
  * Frame Analysis Result
  * Result of analyzing a single frame
  */
@@ -19,6 +30,7 @@ export interface FrameAnalysis {
     name: string;
     confidence: number; // 0–1
   }[];
+  people?: PersonDemographics[]; // People detected in frame with demographics
   visualSimilarity?: VisualSimilarity; // CLIP similarity if reference image provided
 }
 

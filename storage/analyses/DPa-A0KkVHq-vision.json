@@ -1,0 +1,497 @@
+{
+  "videoId": "DPa-A0KkVHq",
+  "generatedAt": "2026-01-12T11:02:57.787Z",
+  "frameCount": 19,
+  "payload": {
+    "frameAnalyses": [
+      {
+        "timestamp": 0,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.4043133556842804,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 1
+        }
+      },
+      {
+        "timestamp": 2,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.4081364572048187,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 4,
+        "objects": [],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.4179134666919708,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 6,
+        "objects": [],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.45188629627227783,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 8,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.37011629343032837,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 10,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.39023423194885254,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 1
+        }
+      },
+      {
+        "timestamp": 12,
+        "objects": [],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.40940114855766296,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 1
+        }
+      },
+      {
+        "timestamp": 14,
+        "objects": [],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.44105932116508484,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 1
+        }
+      },
+      {
+        "timestamp": 16,
+        "objects": [],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.4182586967945099,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 18,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.39431920647621155,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 20,
+        "objects": [],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.434266060590744,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 22,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.3725564479827881,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 1
+        }
+      },
+      {
+        "timestamp": 24,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.39011532068252563,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 1
+        }
+      },
+      {
+        "timestamp": 26,
+        "objects": [
+          "fire hydrant"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.4171764850616455,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 1
+        }
+      },
+      {
+        "timestamp": 28,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.3976254165172577,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 30,
+        "objects": [],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.41591042280197144,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 32,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.3496040105819702,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 34,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.3654356300830841,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 36,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.3495410978794098,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 1
+        }
+      }
+    ],
+    "visualSummary": {
+      "uniqueObjects": [
+        "person",
+        "fire hydrant"
+      ],
+      "brandsDetected": [],
+      "targetBrandConfirmation": {
+        "detected": false,
+        "message": "No, Cadbury, Dairy Milk was not detected in the video frames.",
+        "confidence": 0,
+        "detectedInFrames": 0,
+        "totalVisibleSeconds": 0
+      },
+      "visualSentiment": {
+        "sentiment": "positive",
+        "score": 0.632,
+        "reasoning": "Target brand \"Cadbury, Dairy Milk\" is not clearly visible in frames. Positive visual elements detected (person, food, product) Overall, this reel provides POSITIVE publicity for Cadbury, Dairy Milk - the brand/product is shown favorably with positive visual elements.",
+        "confidence": 0.705
+      },
+      "frameAnalyses": [
+        {
+          "timestamp": 0,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.4043133556842804,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 1
+          }
+        },
+        {
+          "timestamp": 2,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.4081364572048187,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 4,
+          "objects": [],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.4179134666919708,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 6,
+          "objects": [],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.45188629627227783,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 8,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.37011629343032837,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 10,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.39023423194885254,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 1
+          }
+        },
+        {
+          "timestamp": 12,
+          "objects": [],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.40940114855766296,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 1
+          }
+        },
+        {
+          "timestamp": 14,
+          "objects": [],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.44105932116508484,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 1
+          }
+        },
+        {
+          "timestamp": 16,
+          "objects": [],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.4182586967945099,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 18,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.39431920647621155,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 20,
+          "objects": [],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.434266060590744,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 22,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.3725564479827881,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 1
+          }
+        },
+        {
+          "timestamp": 24,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.39011532068252563,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 1
+          }
+        },
+        {
+          "timestamp": 26,
+          "objects": [
+            "fire hydrant"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.4171764850616455,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 1
+          }
+        },
+        {
+          "timestamp": 28,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.3976254165172577,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 30,
+          "objects": [],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.41591042280197144,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 32,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.3496040105819702,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 34,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.3654356300830841,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 36,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.3495410978794098,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 1
+          }
+        }
+      ]
+    }
+  }
+}

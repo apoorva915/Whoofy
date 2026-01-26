@@ -1,0 +1,980 @@
+{
+  "videoId": "DRZN4egihHx",
+  "generatedAt": "2026-01-25T20:21:52.153Z",
+  "frameCount": 15,
+  "payload": {
+    "frameAnalyses": [
+      {
+        "timestamp": 0,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "people": [
+          {
+            "gender": "male",
+            "genderConfidence": 0.75,
+            "ageBracket": "young",
+            "ageConfidence": 0.6,
+            "faceConfidence": 0.7,
+            "boundingBox": {
+              "x": 211,
+              "y": 430,
+              "width": 181,
+              "height": 181
+            }
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.2757507562637329,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 2,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "people": [
+          {
+            "gender": "male",
+            "genderConfidence": 0.75,
+            "ageBracket": "middle_age",
+            "ageConfidence": 0.6,
+            "faceConfidence": 0.7,
+            "boundingBox": {
+              "x": 122,
+              "y": 308,
+              "width": 368,
+              "height": 368
+            }
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.3042857050895691,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 4,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "people": [
+          {
+            "gender": "male",
+            "genderConfidence": 0.75,
+            "ageBracket": "young",
+            "ageConfidence": 0.7,
+            "faceConfidence": 0.7,
+            "boundingBox": {
+              "x": 182,
+              "y": 342,
+              "width": 264,
+              "height": 264
+            }
+          },
+          {
+            "gender": "male",
+            "genderConfidence": 0.75,
+            "ageBracket": "young",
+            "ageConfidence": 0.7,
+            "faceConfidence": 0.7,
+            "boundingBox": {
+              "x": 278,
+              "y": 350,
+              "width": 264,
+              "height": 264
+            }
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.5017565488815308,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 6,
+        "objects": [
+          "person",
+          "bottle"
+        ],
+        "brands": [
+          {
+            "name": "Garnier",
+            "confidence": 0.571
+          }
+        ],
+        "people": [
+          {
+            "gender": "male",
+            "genderConfidence": 0.75,
+            "ageBracket": "child",
+            "ageConfidence": 0.65,
+            "faceConfidence": 0.7,
+            "boundingBox": {
+              "x": 376,
+              "y": 742,
+              "width": 59,
+              "height": 59
+            }
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.7132866382598877,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 8,
+        "objects": [
+          "person",
+          "bottle"
+        ],
+        "brands": [
+          {
+            "name": "Brightening",
+            "confidence": 0.617
+          }
+        ],
+        "people": [
+          {
+            "gender": "male",
+            "genderConfidence": 0.75,
+            "ageBracket": "middle_age",
+            "ageConfidence": 0.6,
+            "faceConfidence": 0.7,
+            "boundingBox": {
+              "x": 81,
+              "y": 173,
+              "width": 358,
+              "height": 358
+            }
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.41796812415122986,
+          "match": true,
+          "confidence": "low",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 10,
+        "objects": [],
+        "brands": [],
+        "people": [
+          {
+            "gender": "male",
+            "genderConfidence": 0.75,
+            "ageBracket": "child",
+            "ageConfidence": 0.65,
+            "faceConfidence": 0.7,
+            "boundingBox": {
+              "x": 429,
+              "y": 636,
+              "width": 105,
+              "height": 105
+            }
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.328642874956131,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 12,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "people": [
+          {
+            "gender": "male",
+            "genderConfidence": 0.75,
+            "ageBracket": "middle_age",
+            "ageConfidence": 0.6,
+            "faceConfidence": 0.7,
+            "boundingBox": {
+              "x": 89,
+              "y": 298,
+              "width": 341,
+              "height": 341
+            }
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.26734432578086853,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 14,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "people": [
+          {
+            "gender": "male",
+            "genderConfidence": 0.75,
+            "ageBracket": "young",
+            "ageConfidence": 0.7,
+            "faceConfidence": 0.7,
+            "boundingBox": {
+              "x": 197,
+              "y": 373,
+              "width": 210,
+              "height": 210
+            }
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.2777360677719116,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 16,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "people": [
+          {
+            "gender": "male",
+            "genderConfidence": 0.75,
+            "ageBracket": "young",
+            "ageConfidence": 0.7,
+            "faceConfidence": 0.7,
+            "boundingBox": {
+              "x": 205,
+              "y": 377,
+              "width": 204,
+              "height": 204
+            }
+          },
+          {
+            "gender": "male",
+            "genderConfidence": 0.75,
+            "ageBracket": "child",
+            "ageConfidence": 0.65,
+            "faceConfidence": 0.7,
+            "boundingBox": {
+              "x": 142,
+              "y": 630,
+              "width": 79,
+              "height": 79
+            }
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.2786104679107666,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 18,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "people": [
+          {
+            "gender": "male",
+            "genderConfidence": 0.75,
+            "ageBracket": "middle_age",
+            "ageConfidence": 0.6,
+            "faceConfidence": 0.7,
+            "boundingBox": {
+              "x": 140,
+              "y": 281,
+              "width": 370,
+              "height": 370
+            }
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.28199779987335205,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 20,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "people": [
+          {
+            "gender": "male",
+            "genderConfidence": 0.75,
+            "ageBracket": "middle_age",
+            "ageConfidence": 0.65,
+            "faceConfidence": 0.7,
+            "boundingBox": {
+              "x": 156,
+              "y": 316,
+              "width": 330,
+              "height": 330
+            }
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.2596551775932312,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 22,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "people": [
+          {
+            "gender": "male",
+            "genderConfidence": 0.75,
+            "ageBracket": "middle_age",
+            "ageConfidence": 0.65,
+            "faceConfidence": 0.7,
+            "boundingBox": {
+              "x": 90,
+              "y": 295,
+              "width": 312,
+              "height": 312
+            }
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.25729671120643616,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 24,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "people": [
+          {
+            "gender": "male",
+            "genderConfidence": 0.75,
+            "ageBracket": "young",
+            "ageConfidence": 0.6,
+            "faceConfidence": 0.7,
+            "boundingBox": {
+              "x": 212,
+              "y": 426,
+              "width": 155,
+              "height": 155
+            }
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.28240329027175903,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 26,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "people": [
+          {
+            "gender": "male",
+            "genderConfidence": 0.75,
+            "ageBracket": "young",
+            "ageConfidence": 0.6,
+            "faceConfidence": 0.7,
+            "boundingBox": {
+              "x": 235,
+              "y": 452,
+              "width": 152,
+              "height": 152
+            }
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.2429482489824295,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 28,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "people": [
+          {
+            "gender": "male",
+            "genderConfidence": 0.75,
+            "ageBracket": "young",
+            "ageConfidence": 0.7,
+            "faceConfidence": 0.7,
+            "boundingBox": {
+              "x": 116,
+              "y": 523,
+              "width": 231,
+              "height": 231
+            }
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.6590021252632141,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      }
+    ],
+    "visualSummary": {
+      "uniqueObjects": [
+        "person",
+        "bottle"
+      ],
+      "brandsDetected": [
+        {
+          "name": "Garnier",
+          "confidence": 0.571,
+          "totalFrames": 1,
+          "totalVisibleSeconds": 2
+        },
+        {
+          "name": "Brightening",
+          "confidence": 0.617,
+          "totalFrames": 1,
+          "totalVisibleSeconds": 2
+        }
+      ],
+      "targetBrandConfirmation": {
+        "detected": true,
+        "message": "Yes, it shows Brightening (detected in 3 frames, visible for 6.0s).",
+        "confidence": 0.6200727083206177,
+        "detectedInFrames": 3,
+        "totalVisibleSeconds": 6
+      },
+      "visualSentiment": {
+        "sentiment": "positive",
+        "score": 1,
+        "reasoning": "Target brand \"Garnier\" is prominently shown in 2 frames. Positive visual elements detected (person, food, product) Overall, this reel provides POSITIVE publicity for Garnier - the brand/product is shown favorably with positive visual elements.",
+        "confidence": 0.95
+      },
+      "visualSimilaritySummary": {
+        "averageSimilarity": 0.573,
+        "maxSimilarity": 0.713,
+        "matchedFrames": 4,
+        "totalFrames": 15,
+        "visibleSeconds": 8,
+        "referenceImageCount": 1
+      },
+      "frameAnalyses": [
+        {
+          "timestamp": 0,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "people": [
+            {
+              "gender": "male",
+              "genderConfidence": 0.75,
+              "ageBracket": "young",
+              "ageConfidence": 0.6,
+              "faceConfidence": 0.7,
+              "boundingBox": {
+                "x": 211,
+                "y": 430,
+                "width": 181,
+                "height": 181
+              }
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.2757507562637329,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 2,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "people": [
+            {
+              "gender": "male",
+              "genderConfidence": 0.75,
+              "ageBracket": "middle_age",
+              "ageConfidence": 0.6,
+              "faceConfidence": 0.7,
+              "boundingBox": {
+                "x": 122,
+                "y": 308,
+                "width": 368,
+                "height": 368
+              }
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.3042857050895691,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 4,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "people": [
+            {
+              "gender": "male",
+              "genderConfidence": 0.75,
+              "ageBracket": "young",
+              "ageConfidence": 0.7,
+              "faceConfidence": 0.7,
+              "boundingBox": {
+                "x": 182,
+                "y": 342,
+                "width": 264,
+                "height": 264
+              }
+            },
+            {
+              "gender": "male",
+              "genderConfidence": 0.75,
+              "ageBracket": "young",
+              "ageConfidence": 0.7,
+              "faceConfidence": 0.7,
+              "boundingBox": {
+                "x": 278,
+                "y": 350,
+                "width": 264,
+                "height": 264
+              }
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.5017565488815308,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 6,
+          "objects": [
+            "person",
+            "bottle"
+          ],
+          "brands": [
+            {
+              "name": "Garnier",
+              "confidence": 0.571
+            }
+          ],
+          "people": [
+            {
+              "gender": "male",
+              "genderConfidence": 0.75,
+              "ageBracket": "child",
+              "ageConfidence": 0.65,
+              "faceConfidence": 0.7,
+              "boundingBox": {
+                "x": 376,
+                "y": 742,
+                "width": 59,
+                "height": 59
+              }
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.7132866382598877,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 8,
+          "objects": [
+            "person",
+            "bottle"
+          ],
+          "brands": [
+            {
+              "name": "Brightening",
+              "confidence": 0.617
+            }
+          ],
+          "people": [
+            {
+              "gender": "male",
+              "genderConfidence": 0.75,
+              "ageBracket": "middle_age",
+              "ageConfidence": 0.6,
+              "faceConfidence": 0.7,
+              "boundingBox": {
+                "x": 81,
+                "y": 173,
+                "width": 358,
+                "height": 358
+              }
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.41796812415122986,
+            "match": true,
+            "confidence": "low",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 10,
+          "objects": [],
+          "brands": [],
+          "people": [
+            {
+              "gender": "male",
+              "genderConfidence": 0.75,
+              "ageBracket": "child",
+              "ageConfidence": 0.65,
+              "faceConfidence": 0.7,
+              "boundingBox": {
+                "x": 429,
+                "y": 636,
+                "width": 105,
+                "height": 105
+              }
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.328642874956131,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 12,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "people": [
+            {
+              "gender": "male",
+              "genderConfidence": 0.75,
+              "ageBracket": "middle_age",
+              "ageConfidence": 0.6,
+              "faceConfidence": 0.7,
+              "boundingBox": {
+                "x": 89,
+                "y": 298,
+                "width": 341,
+                "height": 341
+              }
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.26734432578086853,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 14,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "people": [
+            {
+              "gender": "male",
+              "genderConfidence": 0.75,
+              "ageBracket": "young",
+              "ageConfidence": 0.7,
+              "faceConfidence": 0.7,
+              "boundingBox": {
+                "x": 197,
+                "y": 373,
+                "width": 210,
+                "height": 210
+              }
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.2777360677719116,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 16,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "people": [
+            {
+              "gender": "male",
+              "genderConfidence": 0.75,
+              "ageBracket": "young",
+              "ageConfidence": 0.7,
+              "faceConfidence": 0.7,
+              "boundingBox": {
+                "x": 205,
+                "y": 377,
+                "width": 204,
+                "height": 204
+              }
+            },
+            {
+              "gender": "male",
+              "genderConfidence": 0.75,
+              "ageBracket": "child",
+              "ageConfidence": 0.65,
+              "faceConfidence": 0.7,
+              "boundingBox": {
+                "x": 142,
+                "y": 630,
+                "width": 79,
+                "height": 79
+              }
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.2786104679107666,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 18,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "people": [
+            {
+              "gender": "male",
+              "genderConfidence": 0.75,
+              "ageBracket": "middle_age",
+              "ageConfidence": 0.6,
+              "faceConfidence": 0.7,
+              "boundingBox": {
+                "x": 140,
+                "y": 281,
+                "width": 370,
+                "height": 370
+              }
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.28199779987335205,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 20,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "people": [
+            {
+              "gender": "male",
+              "genderConfidence": 0.75,
+              "ageBracket": "middle_age",
+              "ageConfidence": 0.65,
+              "faceConfidence": 0.7,
+              "boundingBox": {
+                "x": 156,
+                "y": 316,
+                "width": 330,
+                "height": 330
+              }
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.2596551775932312,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 22,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "people": [
+            {
+              "gender": "male",
+              "genderConfidence": 0.75,
+              "ageBracket": "middle_age",
+              "ageConfidence": 0.65,
+              "faceConfidence": 0.7,
+              "boundingBox": {
+                "x": 90,
+                "y": 295,
+                "width": 312,
+                "height": 312
+              }
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.25729671120643616,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 24,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "people": [
+            {
+              "gender": "male",
+              "genderConfidence": 0.75,
+              "ageBracket": "young",
+              "ageConfidence": 0.6,
+              "faceConfidence": 0.7,
+              "boundingBox": {
+                "x": 212,
+                "y": 426,
+                "width": 155,
+                "height": 155
+              }
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.28240329027175903,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 26,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "people": [
+            {
+              "gender": "male",
+              "genderConfidence": 0.75,
+              "ageBracket": "young",
+              "ageConfidence": 0.6,
+              "faceConfidence": 0.7,
+              "boundingBox": {
+                "x": 235,
+                "y": 452,
+                "width": 152,
+                "height": 152
+              }
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.2429482489824295,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 28,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "people": [
+            {
+              "gender": "male",
+              "genderConfidence": 0.75,
+              "ageBracket": "young",
+              "ageConfidence": 0.7,
+              "faceConfidence": 0.7,
+              "boundingBox": {
+                "x": 116,
+                "y": 523,
+                "width": 231,
+                "height": 231
+              }
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.6590021252632141,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        }
+      ],
+      "peopleSummary": {
+        "totalPeople": 17,
+        "genderDistribution": {
+          "male": 17,
+          "female": 0,
+          "unknown": 0
+        },
+        "ageDistribution": {
+          "child": 3,
+          "young": 8,
+          "middle_age": 6,
+          "old": 0,
+          "unknown": 0
+        },
+        "averageConfidence": 0.6999999999999998
+      }
+    }
+  }
+}

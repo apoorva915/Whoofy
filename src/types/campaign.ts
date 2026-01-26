@@ -17,11 +17,7 @@ export const CampaignRequirementsSchema = z.object({
   contentFormat: z.enum(['UGC', 'Tutorial', 'Testimonial', 'Unboxing', 'Any']).optional(),
   script: z.string().optional(), // Brand-provided script
   additionalInstructions: z.string().optional(),
-});
-
-export type CampaignRequirements = z.infer<typeof CampaignRequirementsSchema>;
-
-/**
+});export type CampaignRequirements = z.infer<typeof CampaignRequirementsSchema>;/**
  * Campaign Status
  */
 export enum CampaignStatus {
@@ -30,9 +26,7 @@ export enum CampaignStatus {
   PAUSED = 'paused',
   COMPLETED = 'completed',
   ARCHIVED = 'archived',
-}
-
-/**
+}/**
  * Campaign Entity
  */
 export interface Campaign {

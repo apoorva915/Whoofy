@@ -1,0 +1,758 @@
+{
+  "videoId": "DQwYrHgiX1n",
+  "generatedAt": "2026-01-12T10:30:25.118Z",
+  "frameCount": 18,
+  "payload": {
+    "frameAnalyses": [
+      {
+        "timestamp": 0,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Silk Brownie",
+            "confidence": 0.644
+          },
+          {
+            "name": "Brownie",
+            "confidence": 0.584
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.6350287795066833,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 2,
+        "objects": [
+          "cell phone",
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.49445241689682007,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 4,
+        "objects": [
+          "cell phone",
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.4828298091888428,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 6,
+        "objects": [
+          "person",
+          "cell phone"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.559694766998291,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 8,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.46786174178123474,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 10,
+        "objects": [
+          "person"
+        ],
+        "brands": [
+          {
+            "name": "Cadbury",
+            "confidence": 0.771
+          },
+          {
+            "name": "Dairy",
+            "confidence": 0.771
+          },
+          {
+            "name": "Brownie",
+            "confidence": 0.771
+          },
+          {
+            "name": "Dairy Milk",
+            "confidence": 0.741
+          },
+          {
+            "name": "Milk",
+            "confidence": 0.741
+          },
+          {
+            "name": "Silk",
+            "confidence": 0.741
+          },
+          {
+            "name": "Dairy Milk, Cadbury, Cadbury Dairy Milk",
+            "confidence": 0.711
+          },
+          {
+            "name": "Silk Brownie",
+            "confidence": 0.681
+          },
+          {
+            "name": "Cadbury Dairy Milk",
+            "confidence": 0.621
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.7287485599517822,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 12,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.4527635872364044,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 14,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.4146152436733246,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 16,
+        "objects": [],
+        "brands": [
+          {
+            "name": "Brownie",
+            "confidence": 0.674
+          },
+          {
+            "name": "Silk Brownie",
+            "confidence": 0.614
+          },
+          {
+            "name": "Silk",
+            "confidence": 0.554
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.5594322085380554,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 18,
+        "objects": [],
+        "brands": [
+          {
+            "name": "Brownie",
+            "confidence": 0.681
+          },
+          {
+            "name": "Silk Brownie",
+            "confidence": 0.621
+          },
+          {
+            "name": "Silk",
+            "confidence": 0.561
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.5766251087188721,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 20,
+        "objects": [],
+        "brands": [
+          {
+            "name": "Brownie",
+            "confidence": 0.67
+          },
+          {
+            "name": "Silk Brownie",
+            "confidence": 0.61
+          },
+          {
+            "name": "Silk",
+            "confidence": 0.55
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.5500382781028748,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 22,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.4136519432067871,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 24,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.413519948720932,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 26,
+        "objects": [],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.6478602886199951,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 28,
+        "objects": [],
+        "brands": [
+          {
+            "name": "Silk",
+            "confidence": 0.677
+          },
+          {
+            "name": "Silk Brownie",
+            "confidence": 0.617
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.5685216784477234,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 30,
+        "objects": [],
+        "brands": [
+          {
+            "name": "Brownie",
+            "confidence": 0.649
+          },
+          {
+            "name": "Silk Brownie",
+            "confidence": 0.589
+          },
+          {
+            "name": "Silk",
+            "confidence": 0.529
+          }
+        ],
+        "visualSimilarity": {
+          "similarity": 0.4982959032058716,
+          "match": true,
+          "confidence": "medium",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 32,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.4989548921585083,
+          "match": false,
+          "confidence": "none",
+          "referenceImageIndex": 0
+        }
+      },
+      {
+        "timestamp": 34,
+        "objects": [
+          "person"
+        ],
+        "brands": [],
+        "visualSimilarity": {
+          "similarity": 0.5104315876960754,
+          "match": true,
+          "confidence": "high",
+          "referenceImageIndex": 0
+        }
+      }
+    ],
+    "visualSummary": {
+      "uniqueObjects": [
+        "person",
+        "cell phone"
+      ],
+      "brandsDetected": [
+        {
+          "name": "Silk Brownie",
+          "confidence": 0.625,
+          "totalFrames": 7,
+          "totalVisibleSeconds": 14
+        },
+        {
+          "name": "Brownie",
+          "confidence": 0.671,
+          "totalFrames": 6,
+          "totalVisibleSeconds": 12
+        },
+        {
+          "name": "Cadbury",
+          "confidence": 0.771,
+          "totalFrames": 1,
+          "totalVisibleSeconds": 2
+        },
+        {
+          "name": "Dairy",
+          "confidence": 0.771,
+          "totalFrames": 1,
+          "totalVisibleSeconds": 2
+        },
+        {
+          "name": "Dairy Milk",
+          "confidence": 0.741,
+          "totalFrames": 1,
+          "totalVisibleSeconds": 2
+        },
+        {
+          "name": "Milk",
+          "confidence": 0.741,
+          "totalFrames": 1,
+          "totalVisibleSeconds": 2
+        },
+        {
+          "name": "Silk",
+          "confidence": 0.602,
+          "totalFrames": 6,
+          "totalVisibleSeconds": 12
+        },
+        {
+          "name": "Dairy Milk, Cadbury, Cadbury Dairy Milk",
+          "confidence": 0.711,
+          "totalFrames": 1,
+          "totalVisibleSeconds": 2
+        },
+        {
+          "name": "Cadbury Dairy Milk",
+          "confidence": 0.621,
+          "totalFrames": 1,
+          "totalVisibleSeconds": 2
+        }
+      ],
+      "targetBrandConfirmation": {
+        "detected": true,
+        "message": "Yes, it shows Cadbury (detected in 9 frames, visible for 18.0s).",
+        "confidence": 0.6997725002924602,
+        "detectedInFrames": 9,
+        "totalVisibleSeconds": 18
+      },
+      "visualSentiment": {
+        "sentiment": "positive",
+        "score": 1,
+        "reasoning": "Target brand \"Dairy Milk, Cadbury, Cadbury Dairy Milk\" is prominently shown in 7 frames. Positive visual elements detected (person, food, product) Overall, this reel provides POSITIVE publicity for Dairy Milk, Cadbury, Cadbury Dairy Milk - the brand/product is shown favorably with positive visual elements.",
+        "confidence": 0.95
+      },
+      "visualSimilaritySummary": {
+        "averageSimilarity": 0.583,
+        "maxSimilarity": 0.729,
+        "matchedFrames": 10,
+        "totalFrames": 18,
+        "visibleSeconds": 20,
+        "referenceImageCount": 1
+      },
+      "frameAnalyses": [
+        {
+          "timestamp": 0,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Silk Brownie",
+              "confidence": 0.644
+            },
+            {
+              "name": "Brownie",
+              "confidence": 0.584
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.6350287795066833,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 2,
+          "objects": [
+            "cell phone",
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.49445241689682007,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 4,
+          "objects": [
+            "cell phone",
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.4828298091888428,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 6,
+          "objects": [
+            "person",
+            "cell phone"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.559694766998291,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 8,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.46786174178123474,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 10,
+          "objects": [
+            "person"
+          ],
+          "brands": [
+            {
+              "name": "Cadbury",
+              "confidence": 0.771
+            },
+            {
+              "name": "Dairy",
+              "confidence": 0.771
+            },
+            {
+              "name": "Brownie",
+              "confidence": 0.771
+            },
+            {
+              "name": "Dairy Milk",
+              "confidence": 0.741
+            },
+            {
+              "name": "Milk",
+              "confidence": 0.741
+            },
+            {
+              "name": "Silk",
+              "confidence": 0.741
+            },
+            {
+              "name": "Dairy Milk, Cadbury, Cadbury Dairy Milk",
+              "confidence": 0.711
+            },
+            {
+              "name": "Silk Brownie",
+              "confidence": 0.681
+            },
+            {
+              "name": "Cadbury Dairy Milk",
+              "confidence": 0.621
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.7287485599517822,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 12,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.4527635872364044,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 14,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.4146152436733246,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 16,
+          "objects": [],
+          "brands": [
+            {
+              "name": "Brownie",
+              "confidence": 0.674
+            },
+            {
+              "name": "Silk Brownie",
+              "confidence": 0.614
+            },
+            {
+              "name": "Silk",
+              "confidence": 0.554
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.5594322085380554,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 18,
+          "objects": [],
+          "brands": [
+            {
+              "name": "Brownie",
+              "confidence": 0.681
+            },
+            {
+              "name": "Silk Brownie",
+              "confidence": 0.621
+            },
+            {
+              "name": "Silk",
+              "confidence": 0.561
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.5766251087188721,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 20,
+          "objects": [],
+          "brands": [
+            {
+              "name": "Brownie",
+              "confidence": 0.67
+            },
+            {
+              "name": "Silk Brownie",
+              "confidence": 0.61
+            },
+            {
+              "name": "Silk",
+              "confidence": 0.55
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.5500382781028748,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 22,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.4136519432067871,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 24,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.413519948720932,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 26,
+          "objects": [],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.6478602886199951,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 28,
+          "objects": [],
+          "brands": [
+            {
+              "name": "Silk",
+              "confidence": 0.677
+            },
+            {
+              "name": "Silk Brownie",
+              "confidence": 0.617
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.5685216784477234,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 30,
+          "objects": [],
+          "brands": [
+            {
+              "name": "Brownie",
+              "confidence": 0.649
+            },
+            {
+              "name": "Silk Brownie",
+              "confidence": 0.589
+            },
+            {
+              "name": "Silk",
+              "confidence": 0.529
+            }
+          ],
+          "visualSimilarity": {
+            "similarity": 0.4982959032058716,
+            "match": true,
+            "confidence": "medium",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 32,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.4989548921585083,
+            "match": false,
+            "confidence": "none",
+            "referenceImageIndex": 0
+          }
+        },
+        {
+          "timestamp": 34,
+          "objects": [
+            "person"
+          ],
+          "brands": [],
+          "visualSimilarity": {
+            "similarity": 0.5104315876960754,
+            "match": true,
+            "confidence": "high",
+            "referenceImageIndex": 0
+          }
+        }
+      ]
+    }
+  }
+}

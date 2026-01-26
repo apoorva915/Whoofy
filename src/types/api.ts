@@ -14,17 +14,13 @@ export interface ApiResponse<T> {
     details?: any;
   };
   timestamp: string;
-}
-
-/**
+}/**
  * Pagination Params
  */
 export interface PaginationParams {
   page: number;
   limit: number;
-}
-
-/**
+}/**
  * Paginated Response
  */
 export interface PaginatedResponse<T> {
@@ -45,9 +41,7 @@ export const VerifyReelRequestSchema = z.object({
   reelUrl: z.string().url(),
   campaignId: z.string().optional(),
   creatorId: z.string().optional(),
-});
-
-export type VerifyReelRequest = z.infer<typeof VerifyReelRequestSchema>;/**
+});export type VerifyReelRequest = z.infer<typeof VerifyReelRequestSchema>;/**
  * Verify Reel Response
  */
 export interface VerifyReelResponse {

@@ -1,0 +1,484 @@
+{
+  "videoId": "DP8ZhUxDoJ9",
+  "generatedAt": "2025-12-26T13:37:31.789Z",
+  "frameCount": 33,
+  "payload": {
+    "frameAnalyses": [
+      {
+        "timestamp": 0,
+        "objects": [
+          "person"
+        ],
+        "brands": []
+      },
+      {
+        "timestamp": 2,
+        "objects": [
+          "person"
+        ],
+        "brands": []
+      },
+      {
+        "timestamp": 4,
+        "objects": [
+          "person"
+        ],
+        "brands": []
+      },
+      {
+        "timestamp": 6,
+        "objects": [
+          "person"
+        ],
+        "brands": []
+      },
+      {
+        "timestamp": 8,
+        "objects": [
+          "person"
+        ],
+        "brands": []
+      },
+      {
+        "timestamp": 10,
+        "objects": [
+          "person"
+        ],
+        "brands": []
+      },
+      {
+        "timestamp": 12,
+        "objects": [
+          "person"
+        ],
+        "brands": []
+      },
+      {
+        "timestamp": 14,
+        "objects": [],
+        "brands": []
+      },
+      {
+        "timestamp": 16,
+        "objects": [
+          "person"
+        ],
+        "brands": []
+      },
+      {
+        "timestamp": 18,
+        "objects": [
+          "person"
+        ],
+        "brands": []
+      },
+      {
+        "timestamp": 20,
+        "objects": [
+          "person"
+        ],
+        "brands": []
+      },
+      {
+        "timestamp": 22,
+        "objects": [
+          "person"
+        ],
+        "brands": []
+      },
+      {
+        "timestamp": 24,
+        "objects": [
+          "person"
+        ],
+        "brands": []
+      },
+      {
+        "timestamp": 26,
+        "objects": [
+          "person"
+        ],
+        "brands": []
+      },
+      {
+        "timestamp": 28,
+        "objects": [
+          "person"
+        ],
+        "brands": []
+      },
+      {
+        "timestamp": 30,
+        "objects": [
+          "person"
+        ],
+        "brands": []
+      },
+      {
+        "timestamp": 32,
+        "objects": [
+          "person"
+        ],
+        "brands": []
+      },
+      {
+        "timestamp": 34,
+        "objects": [
+          "person"
+        ],
+        "brands": []
+      },
+      {
+        "timestamp": 36,
+        "objects": [
+          "person"
+        ],
+        "brands": []
+      },
+      {
+        "timestamp": 38,
+        "objects": [],
+        "brands": []
+      },
+      {
+        "timestamp": 40,
+        "objects": [
+          "person"
+        ],
+        "brands": []
+      },
+      {
+        "timestamp": 42,
+        "objects": [
+          "person"
+        ],
+        "brands": []
+      },
+      {
+        "timestamp": 44,
+        "objects": [
+          "person"
+        ],
+        "brands": []
+      },
+      {
+        "timestamp": 46,
+        "objects": [
+          "person"
+        ],
+        "brands": []
+      },
+      {
+        "timestamp": 48,
+        "objects": [
+          "person"
+        ],
+        "brands": []
+      },
+      {
+        "timestamp": 50,
+        "objects": [
+          "person"
+        ],
+        "brands": []
+      },
+      {
+        "timestamp": 52,
+        "objects": [
+          "person"
+        ],
+        "brands": []
+      },
+      {
+        "timestamp": 54,
+        "objects": [
+          "person"
+        ],
+        "brands": []
+      },
+      {
+        "timestamp": 56,
+        "objects": [
+          "person"
+        ],
+        "brands": []
+      },
+      {
+        "timestamp": 58,
+        "objects": [
+          "person"
+        ],
+        "brands": []
+      },
+      {
+        "timestamp": 60,
+        "objects": [
+          "person"
+        ],
+        "brands": []
+      },
+      {
+        "timestamp": 62,
+        "objects": [
+          "person"
+        ],
+        "brands": []
+      },
+      {
+        "timestamp": 64,
+        "objects": [
+          "person"
+        ],
+        "brands": []
+      }
+    ],
+    "visualSummary": {
+      "uniqueObjects": [
+        "person"
+      ],
+      "brandsDetected": [],
+      "targetBrandConfirmation": {
+        "detected": false,
+        "message": "No, L’Oréal Paris, Blinkit was not detected in the video frames.",
+        "confidence": 0,
+        "detectedInFrames": 0,
+        "totalVisibleSeconds": 0
+      },
+      "visualSentiment": {
+        "sentiment": "positive",
+        "score": 0.97,
+        "reasoning": "Target brand \"L’Oréal Paris, Blinkit\" is not clearly visible in frames. Positive visual elements detected (person, food, product) Overall, this reel provides POSITIVE publicity for L’Oréal Paris, Blinkit - the brand/product is shown favorably with positive visual elements.",
+        "confidence": 0.95
+      },
+      "frameAnalyses": [
+        {
+          "timestamp": 0,
+          "objects": [
+            "person"
+          ],
+          "brands": []
+        },
+        {
+          "timestamp": 2,
+          "objects": [
+            "person"
+          ],
+          "brands": []
+        },
+        {
+          "timestamp": 4,
+          "objects": [
+            "person"
+          ],
+          "brands": []
+        },
+        {
+          "timestamp": 6,
+          "objects": [
+            "person"
+          ],
+          "brands": []
+        },
+        {
+          "timestamp": 8,
+          "objects": [
+            "person"
+          ],
+          "brands": []
+        },
+        {
+          "timestamp": 10,
+          "objects": [
+            "person"
+          ],
+          "brands": []
+        },
+        {
+          "timestamp": 12,
+          "objects": [
+            "person"
+          ],
+          "brands": []
+        },
+        {
+          "timestamp": 14,
+          "objects": [],
+          "brands": []
+        },
+        {
+          "timestamp": 16,
+          "objects": [
+            "person"
+          ],
+          "brands": []
+        },
+        {
+          "timestamp": 18,
+          "objects": [
+            "person"
+          ],
+          "brands": []
+        },
+        {
+          "timestamp": 20,
+          "objects": [
+            "person"
+          ],
+          "brands": []
+        },
+        {
+          "timestamp": 22,
+          "objects": [
+            "person"
+          ],
+          "brands": []
+        },
+        {
+          "timestamp": 24,
+          "objects": [
+            "person"
+          ],
+          "brands": []
+        },
+        {
+          "timestamp": 26,
+          "objects": [
+            "person"
+          ],
+          "brands": []
+        },
+        {
+          "timestamp": 28,
+          "objects": [
+            "person"
+          ],
+          "brands": []
+        },
+        {
+          "timestamp": 30,
+          "objects": [
+            "person"
+          ],
+          "brands": []
+        },
+        {
+          "timestamp": 32,
+          "objects": [
+            "person"
+          ],
+          "brands": []
+        },
+        {
+          "timestamp": 34,
+          "objects": [
+            "person"
+          ],
+          "brands": []
+        },
+        {
+          "timestamp": 36,
+          "objects": [
+            "person"
+          ],
+          "brands": []
+        },
+        {
+          "timestamp": 38,
+          "objects": [],
+          "brands": []
+        },
+        {
+          "timestamp": 40,
+          "objects": [
+            "person"
+          ],
+          "brands": []
+        },
+        {
+          "timestamp": 42,
+          "objects": [
+            "person"
+          ],
+          "brands": []
+        },
+        {
+          "timestamp": 44,
+          "objects": [
+            "person"
+          ],
+          "brands": []
+        },
+        {
+          "timestamp": 46,
+          "objects": [
+            "person"
+          ],
+          "brands": []
+        },
+        {
+          "timestamp": 48,
+          "objects": [
+            "person"
+          ],
+          "brands": []
+        },
+        {
+          "timestamp": 50,
+          "objects": [
+            "person"
+          ],
+          "brands": []
+        },
+        {
+          "timestamp": 52,
+          "objects": [
+            "person"
+          ],
+          "brands": []
+        },
+        {
+          "timestamp": 54,
+          "objects": [
+            "person"
+          ],
+          "brands": []
+        },
+        {
+          "timestamp": 56,
+          "objects": [
+            "person"
+          ],
+          "brands": []
+        },
+        {
+          "timestamp": 58,
+          "objects": [
+            "person"
+          ],
+          "brands": []
+        },
+        {
+          "timestamp": 60,
+          "objects": [
+            "person"
+          ],
+          "brands": []
+        },
+        {
+          "timestamp": 62,
+          "objects": [
+            "person"
+          ],
+          "brands": []
+        },
+        {
+          "timestamp": 64,
+          "objects": [
+            "person"
+          ],
+          "brands": []
+        }
+      ]
+    }
+  }
+}

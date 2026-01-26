@@ -82,9 +82,7 @@ export const SubmissionModel = {
       const where: any = {};
       if (campaignId) where.campaignId = campaignId;
       if (creatorId) where.creatorId = creatorId;
-      if (status) where.status = status;
-
-      const [submissions, total] = await Promise.all([
+      if (status) where.status = status;      const [submissions, total] = await Promise.all([
         prisma.submission.findMany({
           where,
           skip,
@@ -96,9 +94,7 @@ export const SubmissionModel = {
           },
         }),
         prisma.submission.count({ where }),
-      ]);
-
-      return {
+      ]);      return {
         submissions: submissions.map(this.mapToSubmission),
         total,
       };
@@ -106,9 +102,7 @@ export const SubmissionModel = {
       logger.error({ error }, 'Error finding submissions:', error);
       throw new DatabaseError('Failed to find submissions', error);
     }
-  },
-
-  /**
+  },  /**
    * Update submission
    */
   async update(id: string, data: UpdateSubmissionInput): Promise<Submission> {
