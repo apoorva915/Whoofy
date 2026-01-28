@@ -27,6 +27,15 @@ The server will start on `http://localhost:3000`
 2. Install Tesseract OCR engine (see instructions below)
 3. YOLO Model automatically downloads on first use (~6MB)
 
+### Age & Gender Detection
+
+The face detection script uses OpenCV DNN with pre-trained Caffe models for age and gender estimation. The models will be automatically downloaded on first use (~40MB total) to the `yolo/models/` directory:
+- `gender_net.caffemodel` - Gender classification model
+- `age_net.caffemodel` - Age estimation model
+- Corresponding `.prototxt` files for model configuration
+
+If model download fails, the system will fall back to basic face detection without age/gender estimation.
+
 #### Tesseract OCR Installation
 
 Tesseract is required for the optional local OCR functionality. If you're using Google Cloud Vision API for OCR, Tesseract is not required.

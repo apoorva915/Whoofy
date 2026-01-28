@@ -15,6 +15,11 @@ const EnvSchema = z.object({
   // Database
   DATABASE_URL: z.string().url(),
   
+  // Supabase
+  SUPABASE_URL: z.string().url().optional(),
+  SUPABASE_ANON_KEY: z.string().optional(),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
+  
   // Redis (for BullMQ)
   REDIS_HOST: z.string().default('localhost'),
   REDIS_PORT: z.string().transform(Number).default('6379'),

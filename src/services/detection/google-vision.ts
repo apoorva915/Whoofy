@@ -1,9 +1,11 @@
 import axios from 'axios';
 import * as fs from 'fs-extra';
 import path from 'path';
+import { spawn } from 'child_process';
 import logger from '@/utils/logger';
 import { externalApiConfig, isApiConfigured } from '@/config/external-apis';
 import env from '@/config/env';
+import { PersonDemographics } from '@/types/vision';
 
 /**
  * Google Cloud Vision API Feature Types
@@ -13,6 +15,7 @@ export enum VisionFeatureType {
   TEXT_DETECTION = 'TEXT_DETECTION',
   LOGO_DETECTION = 'LOGO_DETECTION',
   OBJECT_LOCALIZATION = 'OBJECT_LOCALIZATION',
+  FACE_DETECTION = 'FACE_DETECTION',
 }
 
 /**
@@ -48,11 +51,37 @@ export interface GoogleVisionObject {
   };
 }
 
+export interface GoogleVisionFace {
+  boundingPoly?: {
+    vertices: Array<{ x?: number; y?: number }>;
+  };
+  fdBoundingPoly?: {
+    vertices: Array<{ x?: number; y?: number }>;
+  };
+  landmarks?: Array<{
+    type: string;
+    position: { x?: number; y?: number; z?: number };
+  }>;
+  rollAngle?: number;
+  panAngle?: number;
+  tiltAngle?: number;
+  detectionConfidence?: number;
+  landmarkingConfidence?: number;
+  joyLikelihood?: 'UNKNOWN' | 'VERY_UNLIKELY' | 'UNLIKELY' | 'POSSIBLE' | 'LIKELY' | 'VERY_LIKELY';
+  sorrowLikelihood?: 'UNKNOWN' | 'VERY_UNLIKELY' | 'UNLIKELY' | 'POSSIBLE' | 'LIKELY' | 'VERY_LIKELY';
+  angerLikelihood?: 'UNKNOWN' | 'VERY_UNLIKELY' | 'UNLIKELY' | 'POSSIBLE' | 'LIKELY' | 'VERY_LIKELY';
+  surpriseLikelihood?: 'UNKNOWN' | 'VERY_UNLIKELY' | 'UNLIKELY' | 'POSSIBLE' | 'LIKELY' | 'VERY_LIKELY';
+  underExposedLikelihood?: 'UNKNOWN' | 'VERY_UNLIKELY' | 'UNLIKELY' | 'POSSIBLE' | 'LIKELY' | 'VERY_LIKELY';
+  blurredLikelihood?: 'UNKNOWN' | 'VERY_UNLIKELY' | 'UNLIKELY' | 'POSSIBLE' | 'LIKELY' | 'VERY_LIKELY';
+  headwearLikelihood?: 'UNKNOWN' | 'VERY_UNLIKELY' | 'UNLIKELY' | 'POSSIBLE' | 'LIKELY' | 'VERY_LIKELY';
+}
+
 export interface GoogleVisionResponse {
   labelAnnotations?: GoogleVisionLabel[];
   textAnnotations?: GoogleVisionTextAnnotation[];
   logoAnnotations?: GoogleVisionLogo[];
   localizedObjectAnnotations?: GoogleVisionObject[];
+  faceAnnotations?: GoogleVisionFace[];
   fullTextAnnotation?: {
     text: string;
     pages?: Array<{
@@ -70,6 +99,7 @@ export interface FrameAnalysisResult {
   logos: Array<{ description: string; confidence: number }>;
   objects: Array<{ name: string; confidence: number }>;
   brands: Array<{ name: string; confidence: number; source: 'label' | 'logo' | 'text' }>;
+  people?: PersonDemographics[];
   visualMatches?: Array<{
     referenceImageIndex: number;
     similarity: number;
@@ -92,13 +122,22 @@ class GoogleVisionService {
   private isConfiguredFlag: boolean | null = null;
   private accessToken: string | null = null;
   private tokenExpiry: number = 0;
+  private pythonCommand: string;
+  private faceDetectionScriptPath: string;
+  private faceDetectionAvailable: boolean | null = null;
 
   constructor() {
     this.apiKey = externalApiConfig.googleCloud.visionApiKey;
     this.serviceAccountPath = env.GOOGLE_APPLICATION_CREDENTIALS;
-    // Use the correct endpoint format: https://vision.googleapis.com/v1/images:annotate
     this.baseUrl = 'https://vision.googleapis.com/v1';
     this.isConfiguredFlag = this.checkConfiguration();
+    
+    this.pythonCommand = process.env.PYTHON_COMMAND || 
+      (process.platform === 'win32' 
+        ? path.join(process.cwd(), '.venv', 'Scripts', 'python.exe')
+        : path.join(process.cwd(), '.venv', 'bin', 'python'));
+    
+    this.faceDetectionScriptPath = path.join(process.cwd(), 'yolo', 'face_detection.py');
   }
 
   /**
@@ -196,10 +235,15 @@ class GoogleVisionService {
         }
       );
 
-      this.accessToken = response.data.access_token;
+      const accessToken = response.data.access_token;
+      if (!accessToken || typeof accessToken !== 'string') {
+        throw new Error('Failed to obtain access token from service account');
+      }
+      
+      this.accessToken = accessToken;
       this.tokenExpiry = Date.now() + (response.data.expires_in * 1000) - 60000; // Refresh 1 minute before expiry
       
-      return this.accessToken;
+      return accessToken;
     } catch (error: any) {
       logger.error({ error: error?.message }, 'Failed to get access token from service account');
       throw new Error(`Failed to authenticate with service account: ${error?.message}`);
@@ -271,6 +315,25 @@ class GoogleVisionService {
           throw new Error(`Google Vision API error: ${result.error.message || 'Unknown error'}`);
         }
 
+        // Log face detection results for debugging
+        if (result.faceAnnotations) {
+          logger.debug(
+            {
+              faceCount: result.faceAnnotations.length,
+              features: features.map(f => f),
+            },
+            'Google Vision API returned face annotations'
+          );
+        } else if (features.includes(VisionFeatureType.FACE_DETECTION)) {
+          logger.debug(
+            {
+              features: features.map(f => f),
+              responseKeys: Object.keys(result),
+            },
+            'Google Vision API did not return face annotations (face detection was requested)'
+          );
+        }
+
         return result;
       }
 
@@ -309,6 +372,7 @@ class GoogleVisionService {
         logos: [],
         objects: [],
         brands: [],
+        people: [],
       };
     }
 
@@ -322,6 +386,7 @@ class GoogleVisionService {
         VisionFeatureType.TEXT_DETECTION,
         VisionFeatureType.LOGO_DETECTION,
         VisionFeatureType.OBJECT_LOCALIZATION,
+        VisionFeatureType.FACE_DETECTION,
       ];
 
       const visionResponse = await this.callVisionAPI(imageBase64, features);
@@ -395,6 +460,20 @@ class GoogleVisionService {
         objects // Include objects for better context
       );
 
+      // Extract people demographics using OpenCV face detection (same as local analysis)
+      const people = await this.detectFacesWithOpenCV(framePath);
+      
+      if (people.length > 0) {
+        logger.info(
+          {
+            framePath: path.basename(framePath),
+            peopleCount: people.length,
+            demographics: people.map(p => `${p.gender}/${p.ageBracket}`),
+          },
+          'Extracted people demographics from frame'
+        );
+      }
+
       // Compare with reference images if provided
       const visualMatches = referenceImagePaths.length > 0
         ? await this.compareWithReferenceImages(
@@ -411,6 +490,7 @@ class GoogleVisionService {
         logos,
         objects,
         brands,
+        people,
         visualMatches,
       };
     } catch (error: any) {
@@ -429,6 +509,7 @@ class GoogleVisionService {
         logos: [],
         objects: [],
         brands: [],
+        people: [],
       };
     }
   }
@@ -611,6 +692,143 @@ class GoogleVisionService {
     }
 
     return matches;
+  }
+
+  /**
+   * Detect faces and estimate age/gender using OpenCV DNN models (same as local analysis)
+   * @param framePath Path to the frame image
+   */
+  private async detectFacesWithOpenCV(
+    framePath: string
+  ): Promise<PersonDemographics[]> {
+    if (!(await fs.pathExists(this.faceDetectionScriptPath))) {
+      if (this.faceDetectionAvailable === null) {
+        logger.warn('Face detection script not found');
+        this.faceDetectionAvailable = false;
+      }
+      return [];
+    }
+
+    try {
+      const absolutePath = path.isAbsolute(framePath) 
+        ? framePath 
+        : path.resolve(process.cwd(), framePath);
+
+      if (!(await fs.pathExists(absolutePath))) {
+        logger.warn({ framePath: absolutePath }, 'Face detection: Frame file does not exist');
+        return [];
+      }
+
+      const detectedFaces = await this.runFaceDetectionCommand([absolutePath]);
+      
+      if (this.faceDetectionAvailable !== true) {
+        this.faceDetectionAvailable = true;
+        logger.info('OpenCV face detection is working correctly for Google Vision');
+      }
+
+      if (detectedFaces.length > 0) {
+        logger.debug(
+          {
+            framePath: path.basename(framePath),
+            facesDetected: detectedFaces.length,
+            demographics: detectedFaces.map(p => `${p.gender}(${p.genderConfidence})/${p.ageBracket}(${p.ageConfidence})`),
+          },
+          'OpenCV face detection with demographics for Google Vision'
+        );
+      }
+
+      return detectedFaces;
+    } catch (error: any) {
+      const errorMsg = error?.message || '';
+      
+      if (this.faceDetectionAvailable === null || this.faceDetectionAvailable === true) {
+        this.faceDetectionAvailable = false;
+        logger.debug({ error: errorMsg, framePath }, 'OpenCV face detection failed');
+      }
+      
+      return [];
+    }
+  }
+
+  /**
+   * Run face detection via Python subprocess
+   */
+  private async runFaceDetectionCommand(args: string[]): Promise<PersonDemographics[]> {
+    return new Promise((resolve, reject) => {
+      const scriptArgs = [this.faceDetectionScriptPath, ...args];
+      
+      const child = spawn(this.pythonCommand, scriptArgs, {
+        cwd: process.cwd(),
+        env: process.env,
+        shell: process.platform === 'win32',
+      });
+
+      let stdout = '';
+      let stderr = '';
+
+      child.stdout.on('data', (chunk) => {
+        stdout += chunk.toString();
+      });
+
+      child.stderr.on('data', (chunk) => {
+        const stderrChunk = chunk.toString();
+        stderr += stderrChunk;
+        if (stderrChunk.includes('ERROR') || stderrChunk.includes('WARNING') || stderrChunk.includes('Downloading')) {
+          logger.debug({ stderr: stderrChunk.trim() }, 'Face detection stderr output');
+        }
+      });
+
+      child.on('error', (error) => {
+        reject(new Error(`Face detection process failed: ${error.message}`));
+      });
+
+      child.on('close', (code) => {
+        if (code !== 0) {
+          logger.error({ code, stderr, stdout }, 'Face detection process exited with error');
+          reject(new Error(`Face detection exited with code ${code}: ${stderr || stdout}`));
+          return;
+        }
+
+        if (stderr && (stderr.includes('ERROR') || stderr.includes('WARNING'))) {
+          logger.warn({ stderr: stderr.trim() }, 'Face detection warnings/errors in stderr');
+        }
+
+        try {
+          const cleanOutput = stdout
+            .replace(/\u001b\[[0-9;]*m/g, '')
+            .replace(/\u001b\[K/g, '')
+            .replace(/\r/g, '')
+            .trim();
+          
+          const jsonMatch = cleanOutput.match(/\{[\s\S]*\}/);
+          const jsonString = jsonMatch ? jsonMatch[0] : cleanOutput;
+          
+          const result = JSON.parse(jsonString);
+          if (result.error) {
+            if (result.error.includes('not found') || result.error.includes('No face')) {
+              resolve([]);
+            } else {
+              logger.error({ error: result.error }, 'Face detection script returned error');
+              reject(new Error(result.error));
+            }
+            return;
+          }
+
+          if (result.people && Array.isArray(result.people)) {
+            const hasUnknown = result.people.some((p: any) => p.gender === 'unknown' || p.ageBracket === 'unknown');
+            if (hasUnknown && stderr) {
+              logger.warn({ stderr: stderr.trim(), peopleCount: result.people.length }, 'Some people have unknown gender/age - check if models loaded correctly');
+            }
+            resolve(result.people);
+          } else {
+            resolve([]);
+          }
+        } catch (parseError: any) {
+          logger.error({ parseError: parseError.message, stdout, stderr }, 'Failed to parse face detection output');
+          reject(new Error(`Failed to parse face detection output: ${parseError.message}`));
+        }
+      });
+    });
   }
 
   /**
@@ -802,6 +1020,7 @@ class GoogleVisionService {
               logos: [],
               objects: [],
               brands: [],
+              people: [],
             },
           };
         }

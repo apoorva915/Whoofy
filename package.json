@@ -11,12 +11,16 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
+    "db:setup-supabase": "tsx scripts/setup-supabase.ts",
+    "db:create-aimodule-tables": "tsx scripts/create-aimodule-tables-simple.ts",
+    "db:test": "tsx scripts/test-db-connection.ts",
     "test:phase2": "tsx test-phase2.ts",
     "install:tesseract": "tsx scripts/install-tesseract.ts"
   },
   "dependencies": {
     "@google/genai": "^1.34.0",
     "@prisma/client": "^5.20.0",
+    "@supabase/supabase-js": "^2.93.1",
     "@types/fluent-ffmpeg": "^2.1.28",
     "@types/react": "^19.2.7",
     "@types/uuid": "^10.0.0",

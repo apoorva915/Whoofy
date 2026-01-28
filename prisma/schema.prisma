@@ -1,141 +1,728 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  schemas  = ["aimodule", "public"]
 }
 
-model Campaign {
-  id          String   @id @default(cuid())
-  brandId     String
-  brandName   String
-  title       String
-  description String?
-  
-  // Requirements stored as JSON
-  requirements Json
-  
-  status    String   @default("draft") // draft, active, paused, completed, archived
-  startDate DateTime
-  endDate   DateTime
-  
-  // Relations
-  submissions Submission[]
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  @@index([brandId])
+model accounts {
+  id           String       @id
+  userId       String
+  providerId   String
+  providerType ProviderType
+  accessToken  String?
+  refreshToken String?
+  expiresAt    DateTime?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime
+  users        users        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, providerType])
+  @@schema("public")
+}
+
+model admin_config {
+  id                  String   @id
+  maxAutoPayoutAmount Decimal  @default(10000.00) @db.Decimal(12, 2)
+  minWithdrawalAmount Decimal  @default(100.00) @db.Decimal(12, 2)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime
+
+  @@schema("public")
+}
+
+model audience_demographics {
+  id                 String          @id
+  socialProfileId    String          @unique
+  topCountries       Json?
+  topCities          Json?
+  genderDistribution Json?
+  ageDistribution    Json?
+  lastUpdatedAt      DateTime
+  social_profiles    social_profiles @relation(fields: [socialProfileId], references: [id], onDelete: Cascade)
+
+  @@schema("public")
+}
+
+model audiosync_campaign_details {
+  id           String    @id
+  campaignId   String    @unique
+  songName     String
+  songLanguage String
+  songType     String
+  musicLink    String
+  campaigns    campaigns @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@schema("public")
+}
+
+model brand_profiles {
+  id                    String              @id
+  userId                String              @unique
+  companyName           String
+  website               String?
+  contactPersonName     String?
+  contactEmail          String?
+  companyDescription    String?
+  averageCampaignBudget Decimal?            @db.Decimal(10, 2)
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime
+  stripeCustomerId      String?             @unique
+  users                 users               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  custom_categories     custom_categories[] @relation("BrandCustomIndustries")
+  categories            categories[]        @relation("BrandIndustries")
+
+  @@schema("public")
+}
+
+model campaign_assignments {
+  id             String                   @id
+  campaignId     String
+  creatorId      String
+  status         CampaignAssignmentStatus @default(APPLIED)
+  proposedReward Decimal?                 @db.Decimal(10, 2)
+  acceptedReward Decimal?                 @db.Decimal(10, 2)
+  createdAt      DateTime                 @default(now())
+  updatedAt      DateTime
+  campaigns      campaigns                @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  users          users                    @relation(fields: [creatorId], references: [id])
+
+  @@unique([campaignId, creatorId])
+  @@schema("public")
+}
+
+model campaign_comments {
+  id                      String              @id
+  campaignId              String
+  userId                  String
+  content                 String
+  parentId                String?
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime
+  isDeleted               Boolean             @default(false)
+  campaigns               campaigns           @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaign_comments       campaign_comments?  @relation("campaign_commentsTocampaign_comments", fields: [parentId], references: [id])
+  other_campaign_comments campaign_comments[] @relation("campaign_commentsTocampaign_comments")
+  users                   users               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@schema("public")
+}
+
+model campaign_rules {
+  id                         String             @id
+  campaignId                 String             @unique
+  minFollowerCount           Int?
+  requiredPlatforms          CampaignPlatform[] @default([])
+  requiredCreatorGender      String?
+  requiredNiches             String[]           @default([])
+  minViewCount               Int?
+  minLikeCount               Int?
+  minCommentCount            Int?
+  requiredHashtags           String[]           @default([])
+  requiredMentions           String[]           @default([])
+  requiresAudienceMatch      Boolean            @default(false)
+  requiredAudienceAgeGroup   String?
+  minAudienceMatchPercentage Decimal?           @db.Decimal(3, 2)
+  createdAt                  DateTime           @default(now())
+  updatedAt                  DateTime
+  campaigns                  campaigns          @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@schema("public")
+}
+
+model campaigns {
+  id                         String                      @id
+  title                      String
+  description                String
+  budget                     Decimal                     @db.Decimal(10, 2)
+  startDate                  DateTime
+  endDate                    DateTime
+  status                     CampaignStatus              @default(Draft)
+  callToAction               String?
+  createdAt                  DateTime                    @default(now())
+  keyPerformanceIndicators   String[]                    @default([])
+  targetAudience             String?
+  updatedAt                  DateTime
+  brandId                    String
+  platforms                  CampaignPlatform[]
+  sourcePostId               String?
+  type                       CampaignType
+  visibility                 CampaignVisibility          @default(PUBLIC)
+  audiosync_campaign_details audiosync_campaign_details?
+  campaign_assignments       campaign_assignments[]
+  campaign_comments          campaign_comments[]
+  campaign_rules             campaign_rules?
+  users                      users                       @relation(fields: [brandId], references: [id])
+  instagram_posts            instagram_posts?            @relation(fields: [sourcePostId], references: [id])
+  clipping_campaign_details  clipping_campaign_details?
+  logo_campaign_details      logo_campaign_details?
+  media_assets               media_assets[]
+  payout_requests            payout_requests[]
+  ratings                    ratings[]
+  reel_submissions           reel_submissions[]
+  ugc_campaign_details       ugc_campaign_details?
+  youtube_submissions        youtube_submissions[]
+
+  @@schema("public")
+}
+
+model categories {
+  id               String             @id
+  name             String             @unique
+  description      String?
+  type             CategoryType
+  iconUrl          String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime
+  brand_profiles   brand_profiles[]   @relation("BrandIndustries")
+  creator_profiles creator_profiles[] @relation("CreatorNiches")
+
+  @@schema("public")
+}
+
+model clipping_campaign_details {
+  id                 String    @id
+  campaignId         String    @unique
+  objective          String
+  youtubeChannelName String
+  niche              String
+  campaigns          campaigns @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@schema("public")
+}
+
+model creator_payout_accounts {
+  id            String       @id
+  userId        String       @unique
+  type          PayoutMethod
+  upiId         String?
+  accountNumber String?
+  ifsc          String?
+  holderName    String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime
+  commissionId  String?
+  users         users        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@schema("public")
+}
+
+model creator_profiles {
+  id                    String              @id
+  userId                String              @unique
+  averageEngagementRate Decimal?            @db.Decimal(5, 2)
+  bio                   String?
+  links                 String[]            @default([])
+  creatorRating         Decimal?            @db.Decimal(3, 2)
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime
+  users                 users               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payment_accounts      payment_accounts[]
+  custom_categories     custom_categories[] @relation("CreatorCustomNiches")
+  categories            categories[]        @relation("CreatorNiches")
+
+  @@schema("public")
+}
+
+model custom_categories {
+  id               String             @id
+  name             String
+  description      String?
+  type             CategoryType
+  createdByUserId  String
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime
+  users            users              @relation(fields: [createdByUserId], references: [id])
+  brand_profiles   brand_profiles[]   @relation("BrandCustomIndustries")
+  creator_profiles creator_profiles[] @relation("CreatorCustomNiches")
+
+  @@schema("public")
+}
+
+model instagram_posts {
+  id                 String          @id
+  socialProfileId    String
+  instagram_media_id String          @unique
+  caption            String?
+  permalink          String
+  mediaType          MediaType
+  mediaUrl           String
+  thumbnailUrl       String?
+  likeCount          Int             @default(0)
+  commentCount       Int             @default(0)
+  createdAt          DateTime
+  viewCount          Int?            @default(0)
+  playCount          Int?            @default(0)
+  shareCount         Int?            @default(0)
+  dimensionsHeight   Int?
+  dimensionsWidth    Int?
+  hashtags           String?
+  isCommentsDisabled Boolean?
+  isSponsored        Boolean?
+  latestComments     Json?
+  mentions           String?
+  musicInfo          Json?
+  productType        String?
+  shortCode          String?
+  taggedUsers        Json?
+  videoDownloadUrl   String?
+  videoDuration      Float?
+  campaigns          campaigns[]
+  social_profiles    social_profiles @relation(fields: [socialProfileId], references: [id], onDelete: Cascade)
+
+  @@schema("public")
+}
+
+model instagram_verifications {
+  id               String   @id
+  userId           String   @unique
+  username         String
+  verificationCode String
+  createdAt        DateTime @default(now())
+  expiresAt        DateTime
+
+  @@schema("public")
+}
+
+model logo_campaign_details {
+  id          String    @id
+  campaignId  String    @unique
+  objective   String
+  companyName String
+  category    String
+  campaigns   campaigns @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@schema("public")
+}
+
+model media_assets {
+  id           String     @id
+  campaignId   String?
+  type         MediaType
+  url          String
+  uploadedById String
+  approved     Boolean    @default(false)
+  tags         String[]   @default([])
+  createdAt    DateTime   @default(now())
+  metadata     Json?
+  publicId     String?
+  updatedAt    DateTime
+  campaigns    campaigns? @relation(fields: [campaignId], references: [id])
+  users        users      @relation(fields: [uploadedById], references: [id])
+
+  @@schema("public")
+}
+
+model notifications {
+  id          String           @id
+  recipientId String
+  type        NotificationType
+  message     String
+  link        String?
+  contextData Json?
+  read        Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime
+  users       users            @relation(fields: [recipientId], references: [id])
+
+  @@schema("public")
+}
+
+model payment_accounts {
+  id                String           @id
+  creatorId         String
+  providerName      String
+  providerAccountId String           @unique
+  accessToken       String?
+  refreshToken      String?
+  metadata          Json?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime
+  creator_profiles  creator_profiles @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+
+  @@schema("public")
+}
+
+model payout_requests {
+  id                  String               @id
+  campaignId          String?
+  amount              Decimal              @db.Decimal(12, 2)
+  status              PayoutRequestStatus  @default(Pending)
+  requestedAt         DateTime             @default(now())
+  paidAt              DateTime?
+  approvedAt          DateTime?
+  createdAt           DateTime             @default(now())
+  notes               String?
+  updatedAt           DateTime
+  failedAt            DateTime?
+  fundAccountId       String?
+  method              PayoutMethod
+  payoutId            String?
+  userId              String
+  campaigns           campaigns?           @relation(fields: [campaignId], references: [id])
+  users               users                @relation(fields: [userId], references: [id])
+  wallet_transactions wallet_transactions?
+
   @@index([status])
+  @@index([userId])
+  @@schema("public")
 }
 
-model Creator {
-  id              String   @id @default(cuid())
-  instagramHandle String   @unique
-  instagramId     String   @unique
-  displayName     String
-  followerCount   Int      @default(0)
-  followingCount  Int      @default(0)
-  postCount       Int      @default(0)
-  
-  // Stored as JSON array
-  niche Json // Array of niche strings
-  
-  gender            String? // male, female, other, prefer_not_to_say
-  age               Int?
-  location          String?
-  language          Json    @default("[]") // Array of language codes
-  profilePictureUrl String?
-  bio               String?
-  isVerified        Boolean @default(false)
-  
-  // Relations
-  submissions Submission[]
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  @@index([instagramHandle])
-  @@index([followerCount])
+model ratings {
+  id                           String     @id
+  raterId                      String
+  rateeId                      String
+  score                        Decimal    @db.Decimal(3, 2)
+  comment                      String?
+  campaignId                   String?
+  createdAt                    DateTime   @default(now())
+  updatedAt                    DateTime
+  campaigns                    campaigns? @relation(fields: [campaignId], references: [id])
+  users_ratings_rateeIdTousers users      @relation("ratings_rateeIdTousers", fields: [rateeId], references: [id])
+  users_ratings_raterIdTousers users      @relation("ratings_raterIdTousers", fields: [raterId], references: [id])
+
+  @@schema("public")
 }
 
-model Submission {
-  id         String   @id @default(cuid())
-  campaignId String
-  creatorId  String
-  reelUrl    String
-  reelId     String?
-  caption    String?
-  
-  status      String   @default("pending") // pending, processing, verified, rejected, needs_revision, failed
-  submittedAt DateTime @default(now())
-  verifiedAt  DateTime?
-  
-  // Relations
-  campaign           Campaign           @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  creator            Creator            @relation(fields: [creatorId], references: [id], onDelete: Cascade)
-  verificationResult VerificationResult?
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
+model reel_submissions {
+  id                  String                @id
+  campaignId          String
+  reelUrl             String
+  submittedAt         DateTime              @default(now())
+  createdAt           DateTime              @default(now())
+  feedback            String?
+  performanceMetrics  Json?
+  updatedAt           DateTime
+  aiAlignmentReason   String?
+  aiAlignmentStatus   Boolean?
+  aiAnalysisTimestamp DateTime?
+  reviewStatus        ReelReviewStatus      @default(PENDING)
+  creatorId           String
+  campaigns           campaigns             @relation(fields: [campaignId], references: [id])
+  users               users                 @relation(fields: [creatorId], references: [id])
+  wallet_transactions wallet_transactions[]
+
   @@index([campaignId])
   @@index([creatorId])
-  @@index([status])
-  @@index([reelUrl])
+  @@schema("public")
 }
 
-model VerificationResult {
-  id        String   @id @default(cuid())
-  submissionId String @unique
-  
-  status       String @default("pending") // approved, needs_revision, rejected
-  overallScore Int    @default(0) // 0-100
-  
-  // Detection results stored as JSON
-  detectionResults Json
-  
-  // Verification checks stored as JSON
-  creatorEligibility  Json
-  contentAuthenticity  Json
-  brandIntegration    Json
-  campaignRules        Json
-  
-  // Metadata
-  processingTimeMs Int
-  errorMessage      String?
-  
-  // Relations
-  submission Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  @@index([submissionId])
-  @@index([status])
-  @@index([overallScore])
+model social_profiles {
+  id                    String                 @id
+  userId                String
+  ownerType             SocialProfileOwnerType
+  platform              CampaignPlatform
+  username              String
+  provider_profile_id   String                 @unique
+  followerCount         Int                    @default(0)
+  bio                   String?
+  profileImageUrl       String?
+  accessToken           String
+  refreshToken          String?
+  tokenExpiresAt        DateTime?
+  lastSyncAt            DateTime?
+  audience_demographics audience_demographics?
+  instagram_posts       instagram_posts[]
+  users                 users                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  youtube_videos        youtube_videos[]
+
+  @@unique([userId, platform])
+  @@schema("public")
 }
 
+model ugc_campaign_details {
+  id             String    @id
+  campaignId     String    @unique
+  objective      String
+  brandName      String
+  productName    String?
+  serviceName    String?
+  placeName      String?
+  movieTitle     String?
+  campaignTheme  String?
+  awarenessTopic String?
+  category       String
+  campaigns      campaigns @relation(fields: [campaignId], references: [id], onDelete: Cascade)
 
+  @@schema("public")
+}
 
+model users {
+  id                             String                   @id
+  name                           String
+  email                          String                   @unique
+  role                           UserRole
+  profileImage                   String?
+  password                       String?
+  createdAt                      DateTime                 @default(now())
+  updatedAt                      DateTime
+  contactNumber                  String?
+  accounts                       accounts[]
+  brand_profiles                 brand_profiles?
+  campaign_assignments           campaign_assignments[]
+  campaign_comments              campaign_comments[]
+  campaigns                      campaigns[]
+  creator_payout_accounts        creator_payout_accounts?
+  creator_profiles               creator_profiles?
+  custom_categories              custom_categories[]
+  media_assets                   media_assets[]
+  notifications                  notifications[]
+  payout_requests                payout_requests[]
+  ratings_ratings_rateeIdTousers ratings[]                @relation("ratings_rateeIdTousers")
+  ratings_ratings_raterIdTousers ratings[]                @relation("ratings_raterIdTousers")
+  reel_submissions               reel_submissions[]
+  social_profiles                social_profiles[]
+  wallets                        wallets?
+  youtube_submissions            youtube_submissions[]
 
+  @@schema("public")
+}
 
+model wallet_transactions {
+  id               String            @id
+  type             TransactionType
+  amount           Decimal           @db.Decimal(12, 2)
+  description      String?
+  campaignId       String?
+  reelSubmissionId String?
+  walletId         String
+  createdAt        DateTime          @default(now())
+  payoutRequestId  String?           @unique
+  updatedAt        DateTime
+  payout_requests  payout_requests?  @relation(fields: [payoutRequestId], references: [id])
+  reel_submissions reel_submissions? @relation(fields: [reelSubmissionId], references: [id])
+  wallets          wallets           @relation(fields: [walletId], references: [id])
 
+  @@index([campaignId])
+  @@index([createdAt])
+  @@index([walletId])
+  @@schema("public")
+}
 
+model wallets {
+  id                  String                @id
+  userId              String                @unique
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime
+  availableBalance    Decimal               @default(0.00) @db.Decimal(12, 2)
+  currency            String                @default("INR")
+  lockedBalance       Decimal?              @default(0.00) @db.Decimal(12, 2)
+  pendingBalance      Decimal?              @default(0.00) @db.Decimal(12, 2)
+  wallet_transactions wallet_transactions[]
+  users               users                 @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@schema("public")
+}
 
+model youtube_submissions {
+  id                  String           @id
+  campaignId          String
+  creatorId           String
+  videoUrl            String
+  videoTitle          String?
+  videoDescription    String?
+  videoThumbnail      String?
+  videoId             String?
+  videoDuration       Float?
+  submittedAt         DateTime         @default(now())
+  reviewStatus        ReelReviewStatus @default(PENDING)
+  feedback            String?
+  performanceMetrics  Json?
+  aiAlignmentStatus   String?
+  aiAlignmentReason   String?
+  aiAnalysisTimestamp DateTime?
+  campaigns           campaigns        @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  users               users            @relation(fields: [creatorId], references: [id], onDelete: Cascade)
 
+  @@schema("public")
+}
 
+model youtube_verifications {
+  id               String   @id
+  userId           String   @unique
+  username         String
+  verificationCode String
+  createdAt        DateTime @default(now())
+  expiresAt        DateTime
 
+  @@schema("public")
+}
 
+model youtube_videos {
+  id               String          @id
+  socialProfileId  String
+  youtube_media_id String          @unique
+  caption          String?
+  mediaType        MediaType
+  mediaUrl         String
+  thumbnailUrl     String?
+  likeCount        Int             @default(0)
+  commentCount     Int             @default(0)
+  createdAt        DateTime
+  viewCount        Int?            @default(0)
+  playCount        Int?            @default(0)
+  shareCount       Int?            @default(0)
+  videoDuration    Float?
+  dimensionsHeight Int?
+  dimensionsWidth  Int?
+  isSponsored      Boolean?
+  hashtags         String?
+  taggedUsers      Json?
+  latestComments   Json?
+  social_profiles  social_profiles @relation(fields: [socialProfileId], references: [id], onDelete: Cascade)
 
+  @@schema("public")
+}
 
+enum CampaignAssignmentStatus {
+  APPLIED
+  INVITED
+  ACCEPTED
+  REJECTED
+  COMPLETED
+  CANCELLED
 
+  @@schema("public")
+}
 
+enum CampaignPlatform {
+  Instagram
+  YouTube
+  TikTok
+  Facebook
+  Twitter
+  Other
 
+  @@schema("public")
+}
 
+enum CampaignStatus {
+  Draft
+  Active
+  Completed
+  Cancelled
+  PendingApproval
+  Rejected
+  Approved
+
+  @@schema("public")
+}
+
+enum CampaignType {
+  UGC
+  CLIPPING
+  AUDIOSYNC
+  LOGO
+
+  @@schema("public")
+}
+
+enum CampaignVisibility {
+  PUBLIC
+  PRIVATE
+
+  @@schema("public")
+}
+
+enum CategoryType {
+  CREATOR_NICHE
+  BRAND_INDUSTRY
+
+  @@schema("public")
+}
+
+enum MediaType {
+  Image
+  Video
+  Audio
+  Poster
+
+  @@schema("public")
+}
+
+enum NotificationType {
+  CAMPAIGN_STATUS_UPDATE
+  REEL_SUBMISSION_APPROVED
+  REEL_SUBMISSION_REJECTED
+  PAYOUT_REQUEST_STATUS_UPDATE
+  WALLET_DEPOSIT
+  WALLET_DEDUCTION
+  NEW_ASSIGNMENT
+  SYSTEM_MESSAGE
+  ASSIGNMENT_STATUS_UPDATE
+  NEW_RATING
+  YOUTUBE_SUBMISSION_RECEIVED
+  YOUTUBE_SUBMISSION_APPROVED
+  YOUTUBE_SUBMISSION_REJECTED
+
+  @@schema("public")
+}
+
+enum PayoutMethod {
+  UPI
+  BANK
+
+  @@schema("public")
+}
+
+enum PayoutRequestStatus {
+  Pending
+  Approved
+  Rejected
+  Paid
+  Failed
+  AutoApproved
+  WaitingAdmin
+
+  @@schema("public")
+}
+
+enum ProviderType {
+  Google
+  Facebook
+  Apple
+  Email
+  Instagram
+
+  @@schema("public")
+}
+
+enum ReelReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+
+  @@schema("public")
+}
+
+enum SocialProfileOwnerType {
+  BRAND
+  CREATOR
+
+  @@schema("public")
+}
+
+enum TransactionType {
+  EARNING
+  AVAILABLE_TRANSFER
+  WITHDRAWAL
+  BRAND_DEPOSIT
+  BRAND_SPEND_LOCK
+  BRAND_SPEND_UNLOCK
+  CAMPAIGN_SPEND
+  ADMIN_ADJUSTMENT
+
+  @@schema("public")
+}
+
+enum UserRole {
+  BRAND
+  CREATOR
+  ADMIN
+
+  @@schema("public")
+}

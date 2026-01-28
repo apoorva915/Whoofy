@@ -44,6 +44,11 @@ next-env.d.ts
 /cache
 
 # storage (videos and frames)
-/storage# Google service account (contains sensitive credentials)
+/storage
+
+# ML models (downloaded automatically)
+/yolo/models/
+
+# Google service account (contains sensitive credentials)
 google-service-account.json
 *-service-account.json

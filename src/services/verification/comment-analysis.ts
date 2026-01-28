@@ -188,7 +188,21 @@ class CommentAnalysisService {
     // Analyze each comment
     comments.forEach((comment, index) => {
       const text = comment.text.trim();
-      const author = comment.ownerUsername || comment.author;
+      // Safely extract author as string - handle cases where ownerUsername or author might be an object
+      let author: string;
+      if (typeof comment.ownerUsername === 'string') {
+        author = comment.ownerUsername;
+      } else if (typeof comment.author === 'string') {
+        author = comment.author;
+      } else if (comment.ownerUsername && typeof comment.ownerUsername === 'object') {
+        // If ownerUsername is an object, extract username
+        author = (comment.ownerUsername as any).username || (comment.ownerUsername as any).ownerUsername || 'unknown';
+      } else if (comment.author && typeof comment.author === 'object') {
+        // If author is an object, extract username
+        author = (comment.author as any).username || (comment.author as any).ownerUsername || 'unknown';
+      } else {
+        author = 'unknown';
+      }
       
       if (!text) return;
 

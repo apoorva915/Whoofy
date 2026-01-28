@@ -189,6 +189,13 @@ interface AnalysisData {
           name: string;
           confidence: number;
         }>;
+        people?: Array<{
+          gender: 'male' | 'female' | 'unknown';
+          genderConfidence: number;
+          ageBracket: 'child' | 'young' | 'middle_age' | 'old' | 'unknown';
+          ageConfidence: number;
+          faceConfidence: number;
+        }>;
         visualSimilarity?: {
           similarity: number;
           match: boolean;
@@ -267,6 +274,44 @@ export default function Home() {
     processingTimeMs: number;
   } | null>(null);
   const [loadingGeminiSentiment, setLoadingGeminiSentiment] = useState(false);
+  
+  // Language and Region Analysis
+  const [languageRegionAnalysis, setLanguageRegionAnalysis] = useState<{
+    caption: { language: string; languageConfidence?: number };
+    transcript: { language: string; languageConfidence?: number };
+    comments: {
+      totalAnalyzed: number;
+      languageDistribution: Array<{
+        language: string;
+        languageName: string;
+        count: number;
+        percentage: number;
+        examples: string[];
+      }>;
+      topLanguages: Array<{
+        language: string;
+        languageName: string;
+        count: number;
+        percentage: number;
+      }>;
+    };
+    regions: Array<{
+      region: string;
+      country?: string;
+      confidence: number;
+      reasoning: string;
+      primaryLanguages: string[];
+      languagePercentage: number;
+    }>;
+    primaryRegion: {
+      region: string;
+      country?: string;
+      confidence: number;
+      reasoning: string;
+    } | null;
+    processingTimeMs: number;
+  } | null>(null);
+  const [loadingLanguageRegion, setLoadingLanguageRegion] = useState(false);
   
   // Niche Analysis
   const [nicheAnalysis, setNicheAnalysis] = useState<{
@@ -368,6 +413,7 @@ export default function Home() {
     setLoadingData(true);
     setError(null);
     setGeminiSentiment(null); // Reset sentiment when scraping new data
+    setLanguageRegionAnalysis(null); // Reset language region analysis when scraping new data
     setNicheAnalysis(null); // Reset niche analysis when scraping new data
     setEngagementVerification(null); // Reset engagement verification when scraping new data
 
@@ -435,6 +481,59 @@ export default function Home() {
       setError(err.message || 'An error occurred during sentiment analysis');
     } finally {
       setLoadingGeminiSentiment(false);
+    }
+  };
+
+  // Language and Region Analysis
+  const handleLanguageRegionAnalysis = async () => {
+    if (!profileData?.metadata) {
+      setError('Please scrape data first');
+      return;
+    }
+
+    const caption = profileData.metadata.caption;
+    const transcript = profileData.metadata.transcript;
+    const comments = profileData.metadata.comments || [];
+
+    // Get top comments (sorted by likes if available, otherwise just top 30)
+    const topComments = comments
+      .filter(c => c?.text?.trim())
+      .sort((a, b) => (b.likes || b.likesCount || 0) - (a.likes || a.likesCount || 0))
+      .slice(0, 30)
+      .map(c => ({ text: c.text.trim() }));
+
+    if (!caption && !transcript && topComments.length === 0) {
+      setError('No caption, transcript, or comments available for language and region analysis');
+      return;
+    }
+
+    setLoadingLanguageRegion(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/language-region/analyze', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          caption: caption || null,
+          transcript: transcript || null,
+          comments: topComments,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error?.message || 'Language and region analysis failed');
+      }
+
+      setLanguageRegionAnalysis(data.data);
+    } catch (err: any) {
+      setError(err.message || 'An error occurred during language and region analysis');
+    } finally {
+      setLoadingLanguageRegion(false);
     }
   };
 
@@ -695,6 +794,7 @@ export default function Home() {
     setAnalysisData(null);
     setGoogleVisionData(null);
     setGeminiSentiment(null);
+    setLanguageRegionAnalysis(null);
     setNicheAnalysis(null);
     setEngagementVerification(null);
     setError(null);
@@ -1628,7 +1728,7 @@ export default function Home() {
                   )}
 
                   {/* Analysis Buttons */}
-                  {profileData?.metadata && (profileData.metadata.caption || profileData.metadata.transcript) && (
+                  {profileData?.metadata && (profileData.metadata.caption || profileData.metadata.transcript || (profileData.metadata.comments && profileData.metadata.comments.length > 0)) && (
                     <div style={{ marginTop: '30px', paddingTop: '20px', borderTop: '2px solid #e0e0e0' }}>
                       <h3 style={{ marginTop: 0, marginBottom: '20px', color: '#333' }}>Analysis</h3>
                       <div style={{ marginBottom: '20px' }}>
@@ -1651,6 +1751,28 @@ export default function Home() {
                         </button>
                         <p style={{ marginTop: '10px', fontSize: '13px', color: '#666' }}>
                           Analyze sentiment of caption and transcript using Google Gemini AI
+                        </p>
+                      </div>
+                      <div style={{ marginBottom: '20px' }}>
+                        <button
+                          onClick={handleLanguageRegionAnalysis}
+                          disabled={loadingLanguageRegion}
+                          style={{
+                            padding: '12px 24px',
+                            background: loadingLanguageRegion ? '#ccc' : '#2196f3',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: loadingLanguageRegion ? 'not-allowed' : 'pointer',
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            marginRight: '10px',
+                          }}
+                        >
+                          {loadingLanguageRegion ? 'Analyzing Language & Region...' : 'Analyze Language & Region'}
+                        </button>
+                        <p style={{ marginTop: '10px', fontSize: '13px', color: '#666' }}>
+                          Detect language of caption, transcript, and top comments. Determine geographic region based on detected languages using Google Gemini AI
                         </p>
                       </div>
                     </div>
@@ -1834,7 +1956,11 @@ export default function Home() {
                               <strong style={{ fontSize: '13px' }}>Duplicate Comments:</strong> {engagementVerification.commentAnalysis.issues.duplicateComments.count} found
                               {engagementVerification.commentAnalysis.issues.duplicateComments.examples.length > 0 && (
                                 <div style={{ marginTop: '5px', fontSize: '12px', color: '#666' }}>
-                                  Examples: {engagementVerification.commentAnalysis.issues.duplicateComments.examples.slice(0, 3).map(ex => `"${ex.text.substring(0, 30)}..." (${ex.count}x)`).join(', ')}
+                                  Examples: {engagementVerification.commentAnalysis.issues.duplicateComments.examples.slice(0, 3).map((ex, idx) => {
+                                    const text = typeof ex.text === 'string' ? ex.text : String(ex.text || '');
+                                    const count = typeof ex.count === 'number' ? ex.count : 0;
+                                    return `"${text.substring(0, 30)}${text.length > 30 ? '...' : ''}" (${count}x)`;
+                                  }).join(', ')}
                   </div>
                               )}
                 </div>
@@ -2057,6 +2183,169 @@ export default function Home() {
                   </div>
               </div>
             )}
+
+                  {/* Language and Region Analysis Results */}
+                  {languageRegionAnalysis && (
+                    <div style={{ marginTop: '20px', padding: '15px', background: '#e3f2fd', borderRadius: '4px', border: '2px solid #2196f3' }}>
+                      <h3 style={{ marginTop: 0, fontSize: '16px', color: '#1976d2' }}>
+                        Language and Region Analysis
+                      </h3>
+                      
+                      {/* Caption and Transcript Languages */}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '20px' }}>
+                        {/* Caption Language */}
+                        <div style={{ padding: '15px', backgroundColor: 'white', borderRadius: '4px', border: '1px solid #e0e0e0' }}>
+                          <div style={{ marginBottom: '10px' }}>
+                            <strong style={{ fontSize: '14px' }}>Caption Language:</strong>
+                          </div>
+                          <div style={{ fontSize: '16px', fontWeight: '600', color: '#333', marginBottom: '8px' }}>
+                            {languageRegionAnalysis.caption.language !== 'unknown' ? (
+                              <>
+                                <span style={{ textTransform: 'uppercase' }}>{languageRegionAnalysis.caption.language}</span>
+                                {languageRegionAnalysis.caption.languageConfidence !== undefined && (
+                                  <span style={{ fontSize: '12px', color: '#666', marginLeft: '8px' }}>
+                                    ({(languageRegionAnalysis.caption.languageConfidence * 100).toFixed(0)}% confidence)
+                                  </span>
+                                )}
+                              </>
+                            ) : (
+                              <span style={{ color: '#999' }}>Unknown</span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Transcript Language */}
+                        <div style={{ padding: '15px', backgroundColor: 'white', borderRadius: '4px', border: '1px solid #e0e0e0' }}>
+                          <div style={{ marginBottom: '10px' }}>
+                            <strong style={{ fontSize: '14px' }}>Transcript Language:</strong>
+                          </div>
+                          <div style={{ fontSize: '16px', fontWeight: '600', color: '#333', marginBottom: '8px' }}>
+                            {languageRegionAnalysis.transcript.language !== 'unknown' ? (
+                              <>
+                                <span style={{ textTransform: 'uppercase' }}>{languageRegionAnalysis.transcript.language}</span>
+                                {languageRegionAnalysis.transcript.languageConfidence !== undefined && (
+                                  <span style={{ fontSize: '12px', color: '#666', marginLeft: '8px' }}>
+                                    ({(languageRegionAnalysis.transcript.languageConfidence * 100).toFixed(0)}% confidence)
+                                  </span>
+                                )}
+                              </>
+                            ) : (
+                              <span style={{ color: '#999' }}>Unknown</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Comments Language Distribution */}
+                      {languageRegionAnalysis.comments.totalAnalyzed > 0 && (
+                        <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: 'white', borderRadius: '4px', border: '1px solid #e0e0e0' }}>
+                          <div style={{ marginBottom: '15px' }}>
+                            <strong style={{ fontSize: '15px' }}>Comments Language Distribution</strong>
+                            <span style={{ fontSize: '13px', color: '#666', marginLeft: '10px' }}>
+                              (Analyzed {languageRegionAnalysis.comments.totalAnalyzed} top comments)
+                            </span>
+                          </div>
+                          
+                          {languageRegionAnalysis.comments.languageDistribution.length > 0 ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                              {languageRegionAnalysis.comments.languageDistribution.map((lang, idx) => (
+                                <div key={idx} style={{ padding: '12px', background: '#f5f5f5', borderRadius: '4px' }}>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                    <div>
+                                      <strong style={{ fontSize: '14px' }}>{lang.languageName}</strong>
+                                      <span style={{ fontSize: '12px', color: '#666', marginLeft: '8px' }}>
+                                        ({lang.language.toUpperCase()})
+                                      </span>
+                                    </div>
+                                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#2196f3' }}>
+                                      {lang.count} comments ({lang.percentage.toFixed(1)}%)
+                                    </div>
+                                  </div>
+                                  {lang.examples.length > 0 && (
+                                    <div style={{ fontSize: '12px', color: '#666', fontStyle: 'italic', marginTop: '6px' }}>
+                                      Examples: {lang.examples.slice(0, 2).map(ex => `"${ex.substring(0, 50)}${ex.length > 50 ? '...' : ''}"`).join(', ')}
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div style={{ fontSize: '13px', color: '#666' }}>No language distribution data available</div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Primary Region */}
+                      {languageRegionAnalysis.primaryRegion && (
+                        <div style={{ 
+                          marginBottom: '20px', 
+                          padding: '15px', 
+                          borderRadius: '4px',
+                          backgroundColor: '#e8f5e9',
+                          border: `2px solid #4caf50`
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                            <strong style={{ fontSize: '15px', color: '#333' }}>
+                              Primary Region:
+                            </strong>
+                            <span style={{
+                              padding: '6px 16px',
+                              borderRadius: '16px',
+                              fontSize: '13px',
+                              fontWeight: '600',
+                              backgroundColor: '#4caf50',
+                              color: 'white'
+                            }}>
+                              {languageRegionAnalysis.primaryRegion.region}
+                              {languageRegionAnalysis.primaryRegion.country && `, ${languageRegionAnalysis.primaryRegion.country}`}
+                            </span>
+                            <span style={{ fontSize: '12px', color: '#666' }}>
+                              ({(languageRegionAnalysis.primaryRegion.confidence * 100).toFixed(0)}% confidence)
+                            </span>
+                          </div>
+                          <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#333', lineHeight: '1.6' }}>
+                            {languageRegionAnalysis.primaryRegion.reasoning}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* All Detected Regions */}
+                      {languageRegionAnalysis.regions.length > 0 && (
+                        <div style={{ marginBottom: '15px' }}>
+                          <strong style={{ fontSize: '14px', marginBottom: '10px', display: 'block' }}>All Detected Regions:</strong>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                            {languageRegionAnalysis.regions.map((region, idx) => (
+                              <div key={idx} style={{ padding: '12px', backgroundColor: 'white', borderRadius: '4px', border: '1px solid #e0e0e0' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                                  <div>
+                                    <strong style={{ fontSize: '13px' }}>{region.region}</strong>
+                                    {region.country && (
+                                      <span style={{ fontSize: '12px', color: '#666', marginLeft: '6px' }}>
+                                        ({region.country})
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div style={{ fontSize: '12px', color: '#666' }}>
+                                    {(region.confidence * 100).toFixed(0)}% confidence
+                                  </div>
+                                </div>
+                                <div style={{ fontSize: '12px', color: '#666', marginBottom: '6px' }}>
+                                  Languages: {region.primaryLanguages.map(l => l.toUpperCase()).join(', ')} ({region.languagePercentage.toFixed(1)}%)
+                                </div>
+                                <p style={{ fontSize: '12px', color: '#333', margin: 0, lineHeight: '1.5' }}>
+                                  {region.reasoning}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      <div style={{ fontSize: '12px', color: '#666', fontStyle: 'italic' }}>
+                        Processing time: {languageRegionAnalysis.processingTimeMs}ms
+                      </div>
+                    </div>
+                  )}
           </div>
         )}
             </div>
@@ -2389,6 +2678,128 @@ export default function Home() {
                 </div>
               </div>
             )}
+
+            {/* People Demographics */}
+            {googleVisionData.analysis.frameAnalyses.some(f => f.people && f.people.length > 0) && (
+              <div style={{ marginTop: '20px', border: '1px solid #ddd', padding: '15px', borderRadius: '4px' }}>
+                <h3 style={{ fontSize: '16px', marginTop: 0 }}>People Detected</h3>
+                <p style={{ fontSize: '13px', color: '#666', marginBottom: '15px' }}>
+                  Gender and age bracket detection from video frames
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {googleVisionData.analysis.frameAnalyses
+                    .filter(f => f.people && f.people.length > 0)
+                    .map((frameAnalysis, frameIdx) => {
+                      const formatGender = (gender: string) => {
+                        if (gender === 'unknown') return 'Unknown';
+                        return gender.charAt(0).toUpperCase() + gender.slice(1);
+                      };
+                      
+                      const formatAgeBracket = (ageBracket: string) => {
+                        if (ageBracket === 'unknown') return 'Unknown';
+                        return ageBracket.split('_').map(word => 
+                          word.charAt(0).toUpperCase() + word.slice(1)
+                        ).join(' ');
+                      };
+                      
+                      const getConfidenceColor = (confidence: number) => {
+                        if (confidence >= 0.7) return '#4caf50';
+                        if (confidence >= 0.5) return '#ff9800';
+                        return '#f44336';
+                      };
+                      
+                      const frameNumber = googleVisionData.video.frames.findIndex((_, idx) => 
+                        googleVisionData.analysis.frameAnalyses[idx] === frameAnalysis
+                      );
+                      return (
+                        <div key={frameIdx} style={{ 
+                          padding: '12px', 
+                          background: '#f5f5f5', 
+                          borderRadius: '4px',
+                          border: '1px solid #e0e0e0'
+                        }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                            <strong style={{ fontSize: '13px' }}>
+                              Frame at {frameAnalysis.timestamp?.toFixed(1) || frameIdx * 2}s
+                            </strong>
+                            {frameNumber >= 0 && (
+                              <img
+                                src={`/api/frames?path=${encodeURIComponent(googleVisionData.video.frames[frameNumber])}`}
+                                alt={`Frame ${frameNumber + 1}`}
+                                style={{ 
+                                  width: '80px', 
+                                  height: '80px', 
+                                  objectFit: 'cover',
+                                  borderRadius: '4px',
+                                  border: '1px solid #ddd'
+                                }}
+                              />
+                            )}
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            {frameAnalysis.people?.map((person, personIdx) => (
+                              <div key={personIdx} style={{
+                                padding: '12px',
+                                background: 'white',
+                                borderRadius: '6px',
+                                border: '1px solid #e0e0e0',
+                                fontSize: '13px'
+                              }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px', alignItems: 'center' }}>
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    <span style={{ fontSize: '11px', color: '#666', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Gender</span>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                      <span style={{ fontWeight: '600', color: '#333' }}>
+                                        {formatGender(person.gender)}
+                                      </span>
+                                      {person.genderConfidence > 0.3 && (
+                                        <span style={{ 
+                                          color: getConfidenceColor(person.genderConfidence),
+                                          fontSize: '11px',
+                                          fontWeight: '500'
+                                        }}>
+                                          {(person.genderConfidence * 100).toFixed(0)}%
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    <span style={{ fontSize: '11px', color: '#666', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Age Bracket</span>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                      <span style={{ fontWeight: '600', color: '#333' }}>
+                                        {formatAgeBracket(person.ageBracket)}
+                                      </span>
+                                      {person.ageConfidence > 0.3 && (
+                                        <span style={{ 
+                                          color: getConfidenceColor(person.ageConfidence),
+                                          fontSize: '11px',
+                                          fontWeight: '500'
+                                        }}>
+                                          {(person.ageConfidence * 100).toFixed(0)}%
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    <span style={{ fontSize: '11px', color: '#666', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Face Detection</span>
+                                    <span style={{ 
+                                      fontWeight: '600', 
+                                      color: getConfidenceColor(person.faceConfidence),
+                                      fontSize: '13px'
+                                    }}>
+                                      {(person.faceConfidence * 100).toFixed(0)}%
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -2525,6 +2936,128 @@ export default function Home() {
                   )}
                     </div>
                   )}
+
+            {/* People Detected - Local Analysis */}
+            {analysisData.vision?.visualSummary.frameAnalyses.some(f => f.people && f.people.length > 0) && (
+              <div style={{ marginTop: '20px', border: '1px solid #ddd', padding: '15px', borderRadius: '4px' }}>
+                <h3 style={{ fontSize: '16px', marginTop: 0 }}>People Detected</h3>
+                <p style={{ fontSize: '13px', color: '#666', marginBottom: '15px' }}>
+                  Gender and age bracket detection from video frames (Local Analysis)
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {analysisData.vision.visualSummary.frameAnalyses
+                    .filter(f => f.people && f.people.length > 0)
+                    .map((frameAnalysis, frameIdx) => {
+                      const formatGender = (gender: string) => {
+                        if (gender === 'unknown') return 'Unknown';
+                        return gender.charAt(0).toUpperCase() + gender.slice(1);
+                      };
+                      
+                      const formatAgeBracket = (ageBracket: string) => {
+                        if (ageBracket === 'unknown') return 'Unknown';
+                        return ageBracket.split('_').map(word => 
+                          word.charAt(0).toUpperCase() + word.slice(1)
+                        ).join(' ');
+                      };
+                      
+                      const getConfidenceColor = (confidence: number) => {
+                        if (confidence >= 0.7) return '#4caf50';
+                        if (confidence >= 0.5) return '#ff9800';
+                        return '#f44336';
+                      };
+                      
+                      const frameNumber = analysisData.video.frames.findIndex((_, idx) => 
+                        analysisData.vision?.visualSummary.frameAnalyses[idx] === frameAnalysis
+                      );
+                      return (
+                        <div key={frameIdx} style={{ 
+                          padding: '12px', 
+                          background: '#f5f5f5', 
+                          borderRadius: '4px',
+                          border: '1px solid #e0e0e0'
+                        }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                            <strong style={{ fontSize: '13px' }}>
+                              Frame at {frameAnalysis.timestamp?.toFixed(1) || frameIdx * 2}s
+                            </strong>
+                            {frameNumber >= 0 && (
+                              <img
+                                src={`/api/frames?path=${encodeURIComponent(analysisData.video.frames[frameNumber])}`}
+                                alt={`Frame ${frameNumber + 1}`}
+                                style={{ 
+                                  width: '80px', 
+                                  height: '80px', 
+                                  objectFit: 'cover',
+                                  borderRadius: '4px',
+                                  border: '1px solid #ddd'
+                                }}
+                              />
+                            )}
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            {frameAnalysis.people?.map((person, personIdx) => (
+                              <div key={personIdx} style={{
+                                padding: '12px',
+                                background: 'white',
+                                borderRadius: '6px',
+                                border: '1px solid #e0e0e0',
+                                fontSize: '13px'
+                              }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px', alignItems: 'center' }}>
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    <span style={{ fontSize: '11px', color: '#666', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Gender</span>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                      <span style={{ fontWeight: '600', color: '#333' }}>
+                                        {formatGender(person.gender)}
+                                      </span>
+                                      {person.genderConfidence > 0.3 && (
+                                        <span style={{ 
+                                          color: getConfidenceColor(person.genderConfidence),
+                                          fontSize: '11px',
+                                          fontWeight: '500'
+                                        }}>
+                                          {(person.genderConfidence * 100).toFixed(0)}%
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    <span style={{ fontSize: '11px', color: '#666', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Age Bracket</span>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                      <span style={{ fontWeight: '600', color: '#333' }}>
+                                        {formatAgeBracket(person.ageBracket)}
+                                      </span>
+                                      {person.ageConfidence > 0.3 && (
+                                        <span style={{ 
+                                          color: getConfidenceColor(person.ageConfidence),
+                                          fontSize: '11px',
+                                          fontWeight: '500'
+                                        }}>
+                                          {(person.ageConfidence * 100).toFixed(0)}%
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    <span style={{ fontSize: '11px', color: '#666', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Face Detection</span>
+                                    <span style={{ 
+                                      fontWeight: '600', 
+                                      color: getConfidenceColor(person.faceConfidence),
+                                      fontSize: '13px'
+                                    }}>
+                                      {(person.faceConfidence * 100).toFixed(0)}%
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
+            )}
 
             {/* Frames */}
             {analysisData.video.frames.length > 0 && (

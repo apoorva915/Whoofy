@@ -325,6 +325,7 @@ export async function POST(request: NextRequest) {
             logos: analysis.logos,
             objects: analysis.objects,
             brands: analysis.brands,
+            people: analysis.people,
             visualMatches: analysis.visualMatches,
           })),
           summary: {

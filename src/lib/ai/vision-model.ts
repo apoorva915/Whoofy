@@ -1,4 +1,4 @@
-import { FrameAnalysis } from '@/types/vision';
+import { FrameAnalysis, PersonDemographics } from '@/types/vision';
 import * as fs from 'fs-extra';
 import { spawn } from 'child_process';
 import path from 'path';
@@ -36,9 +36,11 @@ class VisionModel {
   private yoloScriptPath: string;
   private ocrScriptPath: string;
   private clipScriptPath: string;
+  private faceDetectionScriptPath: string;
   private yoloAvailable: boolean | null = null;
   private ocrAvailable: boolean | null = null;
   private clipAvailable: boolean | null = null;
+  private faceDetectionAvailable: boolean | null = null;
   private referenceEmbeddingPath: string | null = null; // Path to saved reference embedding JSON (deprecated, use referenceEmbeddingPaths)
   private referenceEmbeddingPaths: string[] = []; // Paths to saved reference embedding JSON files
 
@@ -52,6 +54,7 @@ class VisionModel {
     this.yoloScriptPath = path.join(process.cwd(), 'yolo', 'detect.py');
     this.ocrScriptPath = path.join(process.cwd(), 'yolo', 'ocr.py');
     this.clipScriptPath = path.join(process.cwd(), 'yolo', 'clip_similarity.py');
+    this.faceDetectionScriptPath = path.join(process.cwd(), 'yolo', 'face_detection.py');
   }
 
   /**
@@ -439,10 +442,11 @@ class VisionModel {
         };
       }
 
-      // Run object detection, OCR, and visual similarity in parallel
-      const [objects, ocrText, visualSimilarityRaw] = await Promise.all([
+      // Run object detection, OCR, face detection, and visual similarity in parallel
+      const [objects, ocrText, detectedFaces, visualSimilarityRaw] = await Promise.all([
         this.detectObjects(framePath),
         this.readText(framePath),
+        this.detectFaces(framePath), // Detect faces (returns basic face detection)
         this.computeVisualSimilarity(framePath), // May return null if no reference image
       ]);
 
@@ -451,6 +455,26 @@ class VisionModel {
 
       // Extract brands from objects and OCR text using dynamic brand/product detection
       const brands = this.detectBrands(filteredObjects, ocrText, targetBrand, productNames, null); // Pass null initially
+      
+      // Use OpenCV face detection results directly (age/gender already detected by DNN models)
+      const people = detectedFaces;
+      
+      if (people.length > 0) {
+        logger.debug(
+          {
+            timestamp,
+            facesDetected: detectedFaces.length,
+            peopleEnhanced: people.length,
+            objects: filteredObjects.slice(0, 10),
+            ocrPreview: ocrText.substring(0, 100),
+            brands: brands.map(b => b.name),
+            targetBrand,
+            productNames,
+            demographics: people.map(p => `${p.gender}(${p.genderConfidence})/${p.ageBracket}(${p.ageConfidence})`),
+          },
+          'Local face detection with demographics estimation'
+        );
+      }
 
       // Validate visual similarity with contextual information to reduce false positives
       // Only accept matches if:
@@ -530,6 +554,7 @@ class VisionModel {
         timestamp,
         objects: filteredObjects,
         brands,
+        people: people.length > 0 ? people : undefined,
         visualSimilarity: visualSimilarity || undefined,
       };
     } catch (error: any) {
@@ -663,6 +688,146 @@ class VisionModel {
       // Return empty string but allow retries on next frame
       return '';
     }
+  }
+
+  /**
+   * Detect faces and estimate age/gender using Python script
+   * Always attempts to run - will return empty array if unavailable
+   */
+  private async detectFaces(framePath: string): Promise<PersonDemographics[]> {
+    // Check if face detection script exists
+    if (!(await fs.pathExists(this.faceDetectionScriptPath))) {
+      if (this.faceDetectionAvailable === null) {
+        logger.warn('Face detection script not found');
+        this.faceDetectionAvailable = false;
+      }
+      return [];
+    }
+
+    try {
+      // Normalize path to absolute
+      const absolutePath = path.isAbsolute(framePath) 
+        ? framePath 
+        : path.resolve(process.cwd(), framePath);
+
+      // Ensure file exists
+      if (!(await fs.pathExists(absolutePath))) {
+        logger.warn({ framePath: absolutePath }, 'Face detection: Frame file does not exist');
+        return [];
+      }
+
+      // Run face detection
+      const result = await this.runFaceDetectionCommand([absolutePath]);
+      
+      // Mark as available if successful
+      if (this.faceDetectionAvailable !== true) {
+        this.faceDetectionAvailable = true;
+        logger.info('Face detection is working correctly');
+      }
+      
+      return result;
+    } catch (error: any) {
+      // Log error but don't permanently disable - dependencies might be installed later
+      const errorMsg = error?.message || '';
+      
+      // Only log warning on first failure or if status changed from available to unavailable
+      if (this.faceDetectionAvailable === null || this.faceDetectionAvailable === true) {
+        this.faceDetectionAvailable = false;
+        if (errorMsg.includes('deepface') || errorMsg.includes('not installed')) {
+          logger.warn('Face detection not available. Install with: pip install deepface');
+        } else {
+          logger.debug({ error: errorMsg, framePath }, 'Face detection failed for frame');
+        }
+      } else {
+        // Log individual frame failures even if face detection was already marked as unavailable
+        logger.debug({ error: errorMsg, framePath }, 'Face detection failed for individual frame');
+      }
+      
+      // Return empty array but allow retries on next frame
+      return [];
+    }
+  }
+
+  /**
+   * Run face detection via Python subprocess
+   */
+  private async runFaceDetectionCommand(args: string[]): Promise<PersonDemographics[]> {
+    return new Promise((resolve, reject) => {
+      const scriptArgs = [this.faceDetectionScriptPath, ...args];
+      
+      const child = spawn(this.pythonCommand, scriptArgs, {
+        cwd: process.cwd(),
+        env: process.env,
+        shell: process.platform === 'win32',
+      });
+
+      let stdout = '';
+      let stderr = '';
+
+      child.stdout.on('data', (chunk) => {
+        stdout += chunk.toString();
+      });
+
+      child.stderr.on('data', (chunk) => {
+        const stderrChunk = chunk.toString();
+        stderr += stderrChunk;
+        if (stderrChunk.includes('ERROR') || stderrChunk.includes('WARNING') || stderrChunk.includes('Downloading')) {
+          logger.debug({ stderr: stderrChunk.trim() }, 'Face detection stderr output');
+        }
+      });
+
+      child.on('error', (error) => {
+        reject(new Error(`Face detection process failed: ${error.message}`));
+      });
+
+      child.on('close', (code) => {
+        if (code !== 0) {
+          logger.error({ code, stderr, stdout }, 'Face detection process exited with error');
+          reject(new Error(`Face detection exited with code ${code}: ${stderr || stdout}`));
+          return;
+        }
+
+        if (stderr && (stderr.includes('ERROR') || stderr.includes('WARNING'))) {
+          logger.warn({ stderr: stderr.trim() }, 'Face detection warnings/errors in stderr');
+        }
+
+        try {
+          const cleanOutput = stdout
+            .replace(/\u001b\[[0-9;]*m/g, '')
+            .replace(/\u001b\[K/g, '')
+            .replace(/\r/g, '')
+            .trim();
+          
+          const jsonMatch = cleanOutput.match(/\{[\s\S]*\}/);
+          const jsonString = jsonMatch ? jsonMatch[0] : cleanOutput;
+          
+          const result = JSON.parse(jsonString);
+          if (result.error) {
+            if (result.error.includes('No face detected') || result.error.includes('Face could not be detected')) {
+              resolve([]);
+              return;
+            }
+            logger.error({ error: result.error }, 'Face detection script returned error');
+            reject(new Error(result.error));
+            return;
+          }
+          
+          // Return people array, ensuring all required fields are present
+          const people: PersonDemographics[] = (result.people || []).map((person: any) => ({
+            gender: person.gender || 'unknown',
+            genderConfidence: person.genderConfidence || 0.3,
+            ageBracket: person.ageBracket || 'unknown',
+            ageConfidence: person.ageConfidence || 0.3,
+            faceConfidence: person.faceConfidence || 0.5,
+          }));
+          
+          resolve(people);
+        } catch (parseError: any) {
+          logger.debug({ stdout, stderr, parseError: parseError.message }, 'Face detection output parsing failed');
+          reject(new Error(`Failed to parse face detection output: ${parseError.message}. Output: ${stdout.substring(0, 200)}`));
+        }
+      });
+    });
   }
 
   /**
@@ -962,6 +1127,7 @@ class VisionModel {
     
     return { found, occurrences: found ? Math.max(occurrences, 1) : 0, hasUppercase };
   }
+
 
   /**
    * Detect brands from objects and OCR text based on target brand and product names
