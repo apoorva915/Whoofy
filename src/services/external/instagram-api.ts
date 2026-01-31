@@ -44,49 +44,17 @@ class InstagramApiClient {
   private apiKey: string | null;
 
   constructor() {
-    this.apiKey = externalApiConfig.instagram.apiKey || null;
+    // Instagram RapidAPI is deprecated - this client is no longer used
+    // Constructor is kept for backward compatibility but does nothing
+    this.apiKey = null;
     
-    // instagram-scraper21 uses /api/v1/ prefix
-    // baseUrl is already https://instagram-scraper21.p.rapidapi.com
-    // So we need to add /api/v1
-    const baseUrl = externalApiConfig.instagram.baseUrl;
-    const apiBaseUrl = baseUrl.endsWith('/api/v1') 
-      ? baseUrl 
-      : baseUrl.endsWith('/api/v1/')
-      ? baseUrl.slice(0, -1) // Remove trailing slash
-      : `${baseUrl}/api/v1`;
-    
-    logger.debug(`Instagram API base URL: ${apiBaseUrl}`);
-    
+    // Create a dummy client that will never be used
     this.client = axios.create({
-      baseURL: apiBaseUrl,
+      baseURL: 'https://deprecated',
       timeout: 30000,
-      headers: {
-        'Content-Type': 'application/json',
-        ...(this.apiKey && {
-          'X-RapidAPI-Key': this.apiKey,
-          'X-RapidAPI-Host': externalApiConfig.instagram.apiHost,
-        }),
-      },
     });
-
-    // Add response interceptor for error handling
-    this.client.interceptors.response.use(
-      (response) => response,
-      (error) => {
-        if (error.response?.status === 429) {
-          throw new RateLimitError('Instagram', error.response.headers['retry-after']);
-        }
-        if (error.response) {
-          throw new ExternalApiError(
-            'Instagram',
-            error.response.data?.message || error.message,
-            error
-          );
-        }
-        throw new ExternalApiError('Instagram', error.message, error);
-      }
-    );
+    
+    // Don't log or initialize anything - this API is deprecated
   }
 
   /**
@@ -300,7 +268,29 @@ class InstagramApiClient {
         || reelData.video_versions?.[0]?.src
         || reelData.media_url 
         || reelData.display_url
+        || reelData.videoUrl
+        || reelData.video_src
+        || reelData.video_src_url
+        || reelData.dash_manifest
+        || reelData.playback_url
+        || reelData.video_dash_manifest
         || null;
+      
+      // Log video URL extraction for debugging
+      if (!videoInfo) {
+        logger.debug({
+          reelId,
+          availableFields: Object.keys(reelData).filter(k => 
+            k.toLowerCase().includes('video') || 
+            k.toLowerCase().includes('media') ||
+            k.toLowerCase().includes('url') ||
+            k.toLowerCase().includes('src')
+          ),
+          reelDataKeys: Object.keys(reelData).slice(0, 20), // First 20 keys for debugging
+        }, 'Video URL not found in API response, checking available fields');
+      } else {
+        logger.debug({ reelId, videoUrlFound: true }, 'Video URL extracted successfully from API response');
+      }
       
       // Extract caption from various formats
       const caption = reelData.caption?.text 
@@ -463,5 +453,6 @@ class InstagramApiClient {
   }
 }
 
-// Export singleton instance
+// Export singleton instance (DEPRECATED - Instagram RapidAPI removed, using Apify only)
+// This is kept for type exports only - the instance is never actually used
 export const instagramApi = new InstagramApiClient();

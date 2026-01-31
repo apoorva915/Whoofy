@@ -26,7 +26,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const reelUrl = body.reelUrl as string;
+    let reelUrl = body.reelUrl as string;
+
+    // Normalize URL - add https:// if missing
+    if (!reelUrl.startsWith('http://') && !reelUrl.startsWith('https://')) {
+      reelUrl = `https://${reelUrl}`;
+    }
 
     // Validate URL format
     try {
@@ -61,7 +66,7 @@ export async function POST(request: NextRequest) {
       logger.warn({ error }, 'Apify scrapers failed, trying fallback methods');
     }
 
-    // Fallback to regular Instagram API if Apify fails
+    // If Apify failed, try again (no fallback to Instagram API)
     let reelMetadata = null;
     if (!apifyReelData) {
       try {
@@ -69,7 +74,7 @@ export async function POST(request: NextRequest) {
           reelMetadata = await externalApiService.getInstagramReel(reelUrl);
         }
       } catch (error) {
-        logger.warn({ error }, 'Could not fetch reel metadata');
+        logger.error({ error }, 'Apify scraper failed to fetch reel metadata');
       }
     }
 
@@ -132,10 +137,14 @@ export async function POST(request: NextRequest) {
           }
         }
         
-        // Fallback to regular Instagram API
+        // If Apify failed, try again (no fallback to Instagram API)
         if (!creatorProfile) {
-          creatorProfile = await externalApiService.getInstagramProfile(username);
-          creatorSource = 'instagram-api';
+          try {
+            creatorProfile = await externalApiService.getInstagramProfile(username);
+            creatorSource = 'apify-profile-scraper';
+          } catch (error) {
+            logger.error({ error }, 'Apify scraper failed to fetch creator profile');
+          }
         }
       } else {
         logger.warn('Could not extract username from reel metadata');
@@ -261,7 +270,7 @@ export async function POST(request: NextRequest) {
           facebookId: creatorProfile.facebookId ?? null,
         } : null,
         sources: {
-          reel: apifyReelData ? apifySources : (reelMetadata ? ['instagram-api'] : []),
+            reel: apifyReelData ? apifySources : (reelMetadata ? ['apify-scraper'] : []),
           creator: creatorSource !== 'none' ? [creatorSource] : [],
         },
       },

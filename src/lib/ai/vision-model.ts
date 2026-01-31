@@ -263,6 +263,7 @@ class VisionModel {
   private async computeVisualSimilarity(framePath: string): Promise<{ similarity: number; match: boolean; confidence: 'high' | 'medium' | 'low' | 'none'; referenceImageIndex?: number } | null> {
     // Check if CLIP is available
     if (this.clipAvailable === false) {
+      logger.debug({ framePath }, 'CLIP similarity skipped - CLIP was disabled due to previous errors');
       return null; // CLIP was disabled due to errors
     }
 
@@ -272,10 +273,12 @@ class VisionModel {
       : (this.referenceEmbeddingPath ? [this.referenceEmbeddingPath] : []);
 
     if (embeddingPaths.length === 0) {
+      logger.debug({ framePath }, 'CLIP similarity skipped - no reference images provided');
       return null;
     }
 
     if (!(await fs.pathExists(this.clipScriptPath))) {
+      logger.debug({ framePath, clipScriptPath: this.clipScriptPath }, 'CLIP similarity skipped - CLIP script not found');
       return null;
     }
 
@@ -287,6 +290,7 @@ class VisionModel {
       // Compare against all reference images in parallel and take the best match
       const comparisonPromises = embeddingPaths.map(async (embeddingPath, i) => {
         if (!(await fs.pathExists(embeddingPath))) {
+          logger.debug({ embeddingPath, framePath, referenceIndex: i }, 'CLIP similarity skipped - embedding file does not exist');
           return null;
         }
 
@@ -294,7 +298,12 @@ class VisionModel {
           const result = await this.runClipCommand(['compare', absoluteFramePath, embeddingPath]);
           
           if (result.error) {
-            logger.debug({ error: result.error, framePath, referenceIndex: i }, 'CLIP similarity computation failed for reference image');
+            logger.warn({ 
+              error: result.error, 
+              framePath: path.basename(framePath), 
+              referenceIndex: i,
+              embeddingPath 
+            }, 'CLIP similarity computation failed for reference image');
             return null;
           }
 
@@ -305,7 +314,13 @@ class VisionModel {
             index: i,
           };
         } catch (error: any) {
-          logger.debug({ error: error?.message, framePath, referenceIndex: i }, 'CLIP similarity failed for reference image');
+          logger.warn({ 
+            error: error?.message, 
+            framePath: path.basename(framePath), 
+            referenceIndex: i,
+            embeddingPath,
+            stack: error?.stack 
+          }, 'CLIP similarity failed for reference image');
           return null;
         }
       });
@@ -315,6 +330,11 @@ class VisionModel {
       const results = comparisonResults.filter((r): r is { similarity: number; match: boolean; confidence: 'high' | 'medium' | 'low' | 'none'; index: number } => r !== null);
 
       if (results.length === 0) {
+        logger.debug({ 
+          framePath: path.basename(framePath),
+          embeddingPathsCount: embeddingPaths.length,
+          reason: 'All CLIP comparisons failed or returned null'
+        }, 'CLIP similarity - no valid results from any reference image');
         return null;
       }
 

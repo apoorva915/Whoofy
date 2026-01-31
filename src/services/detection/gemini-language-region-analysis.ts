@@ -138,7 +138,9 @@ ${commentsText}
    - Identify the top 3-5 languages by count
 
 4. **Region Detection:**
-   - Based on the detected languages, determine the geographic region(s)
+   - **FIRST**: Check for brand tags in the caption (e.g., "@garnieruk" = United Kingdom, "@garnierindia" = India, "@garnierusa" = United States)
+   - Brand tags are STRONG indicators and should result in high confidence (0.85-0.95) for that region
+   - Based on the detected languages AND brand tags, determine the geographic region(s)
    - Map languages to regions using this logic:
      * Tamil (ta) → Tamil Nadu, India
      * Telugu (te) → Andhra Pradesh / Telangana, India
@@ -153,16 +155,24 @@ ${commentsText}
      * English (en) → Could be multiple regions (India, US, UK, etc.)
      * And other languages to their respective regions
    - For each detected region, provide:
-     * Region name (e.g., "Tamil Nadu", "North India", "Kerala")
-     * Country (if applicable, e.g., "India", "Pakistan", "Bangladesh")
-     * Confidence score (0.0-1.0)
-     * Reasoning (2-3 sentences explaining why this region is detected)
+     * Region name (e.g., "Tamil Nadu", "North India", "Kerala", "United Kingdom")
+     * Country (if applicable, e.g., "India", "Pakistan", "Bangladesh", "UK")
+     * Confidence score (0.0-1.0) - **Use high confidence (0.85-0.95) when brand tags or clear language evidence exists**
+     * Reasoning (2-3 sentences explaining why this region is detected, mentioning brand tags if present)
      * Primary languages that indicate this region
      * Percentage of content in languages associated with this region
 
 5. **Primary Region:**
    - Determine the PRIMARY region based on the highest confidence and language distribution
    - This should be the most likely geographic location of the audience/creator
+   - **CRITICAL**: If there's a brand tag in the caption (e.g., "@garnieruk" indicates UK, "@garnierindia" indicates India), this is a STRONG indicator
+   - **Confidence Scoring Guidelines:**
+     * If brand tag + language evidence align: confidence should be 0.90-0.95 (very high)
+     * If brand tag exists: confidence should be at least 0.85 (high)
+     * If language distribution is clear (60%+ in one language): confidence should be 0.80-0.90 (high)
+     * If multiple indicators align (tag + language + comments): confidence should be 0.90-0.95 (very high)
+     * Only use low confidence (0.0-0.50) if there's truly ambiguous or conflicting evidence
+   - **IMPORTANT**: Brand tags like "@garnieruk" are explicit geographic indicators and should result in high confidence (0.90-0.95) for that region
 
 **OUTPUT FORMAT (JSON only, no markdown, no code blocks):**
 {

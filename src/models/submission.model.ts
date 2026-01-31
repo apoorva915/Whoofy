@@ -2,6 +2,7 @@ import prisma from '@/config/database';
 import { Submission, CreateSubmissionInput, UpdateSubmissionInput } from '@/types/submission';
 import { NotFoundError, DatabaseError } from '@/utils/errors';
 import logger from '@/utils/logger';
+import { normalizeReelUrlCanonical, extractInstagramReelId } from '@/utils/validation';
 
 /**
  * Submission Model - CRUD Operations
@@ -63,6 +64,54 @@ export const SubmissionModel = {
       throw new NotFoundError('Submission', id);
     }
     return submission;
+  },
+
+  /**
+   * Find submission by reel URL (most recent if multiple).
+   * Uses canonical URL so https://instagram.com/reel/ID/?hl=en matches https://instagram.com/reel/ID
+   */
+  async findByReelUrl(reelUrl: string): Promise<Submission | null> {
+    try {
+      const canonical = normalizeReelUrlCanonical(reelUrl);
+      const reelId = extractInstagramReelId(canonical);
+      if (!reelId) {
+        return null;
+      }
+
+      // Find submissions that might match (by reel ID in URL), then match by canonical
+      const candidates = await prisma.reel_submissions.findMany({
+        where: { reelUrl: { contains: reelId } },
+        orderBy: { createdAt: 'desc' },
+        take: 20,
+        include: {
+          campaigns: true,
+          users: true,
+        },
+      });
+      const submission = candidates.find(
+        (s) => s.reelUrl && normalizeReelUrlCanonical(s.reelUrl) === canonical
+      );
+      if (!submission) {
+        return null;
+      }
+
+      return {
+        id: submission.id,
+        campaignId: submission.campaignId,
+        creatorId: submission.creatorId,
+        reelUrl: submission.reelUrl,
+        reelId: submission.reelUrl?.match(/\/reel\/([A-Za-z0-9_-]+)/)?.[1] || null,
+        caption: null,
+        status: submission.reviewStatus as any,
+        submittedAt: submission.submittedAt,
+        verifiedAt: submission.aiAnalysisTimestamp || null,
+        createdAt: submission.createdAt,
+        updatedAt: submission.updatedAt,
+      };
+    } catch (error) {
+      logger.error({ error, reelUrl }, 'Error finding submission by reel URL');
+      return null;
+    }
   },
 
   /**

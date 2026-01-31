@@ -115,8 +115,21 @@ class FrameAnalyzer {
       }, `CLIP Visual Similarity Summary: ${vs.matchedFrames}/${vs.totalFrames} frames matched (avg: ${vs.averageSimilarity.toFixed(3)}, max: ${vs.maxSimilarity.toFixed(3)})`);
     } else {
       const framesWithSimilarity = frameAnalyses.filter(f => f.visualSimilarity).length;
+      const mockFramesCount = frames.filter(f => f.startsWith('mock://')).length;
+      const realFramesCount = frames.length - mockFramesCount;
+      
       if (framesWithSimilarity === 0) {
-        logger.info('CLIP visual similarity not available - no reference image provided or CLIP dependencies not installed');
+        if (mockFramesCount > 0 && realFramesCount === 0) {
+          logger.info(`CLIP visual similarity skipped - all ${mockFramesCount} frames are mock frames (no real video available)`);
+        } else if (mockFramesCount > 0) {
+          logger.info(`CLIP visual similarity: ${framesWithSimilarity}/${realFramesCount} real frames had similarity data (${mockFramesCount} mock frames skipped)`);
+        } else {
+          logger.info({
+            totalFrames: frames.length,
+            framesWithSimilarity,
+            reason: 'No reference images provided, CLIP dependencies not installed, or CLIP computation failed for all frames'
+          }, 'CLIP visual similarity not available');
+        }
       }
     }
 

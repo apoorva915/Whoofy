@@ -5,7 +5,8 @@
  * All services have built-in fallback/mock support when APIs are not configured.
  */
 
-export { instagramApi, type InstagramProfile, type InstagramReelMetadata } from './instagram-api';
+// Export types only (Instagram API is deprecated, not exported)
+export type { InstagramProfile, InstagramReelMetadata } from './instagram-api';
 export { apifyScraper, type ScrapedProfile, type ScrapedReel } from './apify-scraper';
 export { shazamApi, type ShazamTrack, type ShazamResult } from './shazam-api';
 
@@ -14,8 +15,7 @@ import type { InstagramProfile, InstagramReelMetadata } from './instagram-api';
 import type { ScrapedProfile, ScrapedReel } from './apify-scraper';
 import type { ShazamResult } from './shazam-api';
 
-// Import services (lazy to avoid circular dependencies)
-import { instagramApi } from './instagram-api';
+// Import services (lazy to avoid circular dependencies and prevent Instagram API initialization)
 import { apifyScraper } from './apify-scraper';
 import { shazamApi } from './shazam-api';
 import logger from '@/utils/logger';
@@ -26,91 +26,65 @@ import logger from '@/utils/logger';
  */
 export class ExternalApiService {
   /**
-   * Get Instagram profile data (tries official API first, falls back to scraping)
+   * Get Instagram profile data (uses Apify scraper only)
    */
   async getInstagramProfile(username: string): Promise<InstagramProfile> {
-      // Try official API first
-      if (instagramApi.isConfigured()) {
-      try {
-        return await instagramApi.getUserProfile(username);
-      } catch (error: any) {
-        // Log the error but try fallback
-        const { logger } = await import('@/utils/logger');
-        logger.warn({ error: error.message }, 'Instagram API failed, trying Apify fallback');
-        // Continue to fallback below
-      }
-    }
-    
-    // Use scraper as fallback
+    // Use Apify scraper
     if (apifyScraper.isConfigured()) {
       try {
-    const scraped = await apifyScraper.scrapeProfile(username);
-    return {
-      id: `scraped-${username}`,
-      username: scraped.username,
-      accountType: 'CREATOR',
-      followersCount: scraped.followersCount,
-      followingCount: scraped.followingCount,
-      mediaCount: scraped.postsCount,
-      profilePictureUrl: scraped.profilePictureUrl,
-      bio: scraped.biography,
-      website: scraped.externalUrl,
-      isVerified: scraped.isVerified,
-    };
+        const scraped = await apifyScraper.scrapeProfile(username);
+        return {
+          id: `scraped-${username}`,
+          username: scraped.username,
+          accountType: 'CREATOR',
+          followersCount: scraped.followersCount,
+          followingCount: scraped.followingCount,
+          mediaCount: scraped.postsCount,
+          profilePictureUrl: scraped.profilePictureUrl,
+          bio: scraped.biography,
+          website: scraped.externalUrl,
+          isVerified: scraped.isVerified,
+        };
       } catch (error: any) {
         const { logger } = await import('@/utils/logger');
-        logger.warn({ error: error.message }, 'Apify scraper failed, using mock data');
+        logger.error({ error: error.message }, 'Apify scraper failed');
+        throw error;
       }
     }
     
-    // Last resort: return mock data
-    const { logger } = await import('@/utils/logger');
-    logger.warn('All Instagram APIs failed, returning mock data');
-    return instagramApi.getUserProfile(username); // This will return mock since API failed
+    // If Apify not configured, throw error
+    throw new Error('Apify scraper is not configured. Please set APIFY_API_TOKEN environment variable.');
   }
 
   /**
-   * Get Instagram reel metadata (tries official API first, falls back to scraping)
+   * Get Instagram reel metadata (uses Apify scraper only)
    */
   async getInstagramReel(reelUrl: string): Promise<InstagramReelMetadata> {
-      // Try official API first
-      if (instagramApi.isConfigured()) {
-      try {
-        return await instagramApi.getReelMetadata(reelUrl);
-      } catch (error: any) {
-        // Log the error but try fallback
-        const { logger } = await import('@/utils/logger');
-        logger.warn({ error: error.message }, 'Instagram API failed, trying Apify fallback');
-        // Continue to fallback below
-      }
-    }
-    
-    // Use scraper as fallback
+    // Use Apify scraper
     if (apifyScraper.isConfigured()) {
       try {
-    const scraped = await apifyScraper.scrapeReel(reelUrl);
-    return {
-      id: scraped.id,
-      caption: scraped.caption,
-      likeCount: scraped.likeCount,
-      commentCount: scraped.commentCount,
-      playCount: scraped.playCount,
-      timestamp: scraped.timestamp,
-      mediaType: 'REELS',
-      videoUrl: scraped.videoUrl,
-      thumbnailUrl: scraped.thumbnailUrl,
-      permalink: `https://www.instagram.com/reel/${scraped.shortcode}/`,
-    };
+        const scraped = await apifyScraper.scrapeReel(reelUrl);
+        return {
+          id: scraped.id,
+          caption: scraped.caption,
+          likeCount: scraped.likeCount,
+          commentCount: scraped.commentCount,
+          playCount: scraped.playCount,
+          timestamp: scraped.timestamp,
+          mediaType: 'REELS',
+          videoUrl: scraped.videoUrl,
+          thumbnailUrl: scraped.thumbnailUrl,
+          permalink: `https://www.instagram.com/reel/${scraped.shortcode}/`,
+        };
       } catch (error: any) {
         const { logger } = await import('@/utils/logger');
-        logger.warn({ error: error.message }, 'Apify scraper failed, using mock data');
+        logger.error({ error: error.message }, 'Apify scraper failed');
+        throw error;
       }
     }
     
-    // Last resort: return mock data
-    const { logger } = await import('@/utils/logger');
-    logger.warn('All Instagram APIs failed, returning mock data');
-    return instagramApi.getReelMetadata(reelUrl); // This will return mock since API failed
+    // If Apify not configured, throw error
+    throw new Error('Apify scraper is not configured. Please set APIFY_API_TOKEN environment variable.');
   }
 
   /**

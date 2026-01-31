@@ -105,15 +105,22 @@ ${this.getAvailableNiches()}
 
 3. **Determine Primary Niche(s):**
    - Based on BOTH the bio AND the actual content in posts, determine the creator's niche(s)
-   - A creator can have MULTIPLE niches (e.g., Tech + Education, Fashion + Lifestyle)
+   - A creator can have MULTIPLE niches (e.g., Tech + Education, Fashion + Lifestyle, Beauty + Lifestyle)
+   - **CRITICAL**: You MUST identify at least one clear niche. Do NOT return an empty array or only "Other" unless there is truly no identifiable niche
    - Prioritize niches that are evident in BOTH bio and posts
+   - If bio mentions a niche (e.g., "@stmoriz Ambassador" = Beauty) AND posts show that content, include it with high confidence
+   - If bio mentions multiple themes (e.g., "Thyroid Cancer Advocate" = Lifestyle + Education) AND posts support them, include all relevant niches
    - If bio and posts don't align, prioritize what's actually in the posts (actions speak louder than words)
-   - If unclear, choose "Other" as a fallback
+   - **IMPORTANT**: Always provide clear, specific niche names from the available niches list. Examples: "Beauty", "Lifestyle", "Education", "Entertainment", "Fashion", "Tech", etc.
+   - Only use "Other" as a fallback if there is genuinely no identifiable niche from the available options
 
 4. **Confidence Assessment:**
    - Provide a confidence score between 0.0 and 1.0
-   - Higher confidence if bio and posts align strongly
-   - Lower confidence if there's inconsistency or limited content
+   - **CRITICAL**: If bio and posts provide clear evidence of niche(s), confidence should be 0.85-0.95 (high confidence)
+   - Use 0.70-0.85 (medium-high) if there's good alignment but some ambiguity
+   - Use 0.50-0.70 (medium) if there's partial alignment
+   - Only use low confidence (0.0-0.50) if there's very limited or conflicting information
+   - **IMPORTANT**: When multiple niches are clearly evident in both bio and posts, confidence should be 0.85-0.95
 
 **OUTPUT FORMAT (JSON only, no markdown, no code blocks):**
 {

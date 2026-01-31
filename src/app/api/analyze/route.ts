@@ -6,6 +6,8 @@ import { frameExtractor } from '@/services/video/frame-extractor';
 import { frameAnalyzer } from '@/services/vision/frame-analyzer';
 import { validateVideoFile } from '@/utils/video-validation';
 import logger from '@/utils/logger';
+import prisma from '@/config/database';
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * POST /api/analyze
@@ -166,6 +168,102 @@ export async function POST(request: NextRequest) {
           .replace(/\\/g, '/')
       : null;
 
+    // Save to database if analysis was successful
+    let videoAnalysisId: string | null = null;
+    if (visionAnalysis && frames.length > 0) {
+      try {
+        videoAnalysisId = uuidv4();
+        const reelId = reelUrl.match(/\/reel\/([A-Za-z0-9_-]+)/)?.[1] || null;
+        
+        // Create video_analyses record
+        await prisma.$executeRawUnsafe(`
+          INSERT INTO aimodule.video_analyses (id, "reelUrl", "reelId", "videoId", duration, "frameCount", "analysisType", status, "createdAt", "updatedAt")
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
+          ON CONFLICT (id) DO UPDATE SET
+            duration = EXCLUDED.duration,
+            "frameCount" = EXCLUDED."frameCount",
+            status = EXCLUDED.status,
+            "updatedAt" = NOW()
+        `, videoAnalysisId, reelUrl, reelId, finalVideoId, duration, frames.length, 'local', 'completed');
+
+        logger.info({
+          videoAnalysisId,
+          reelUrl,
+          reelId,
+          finalVideoId,
+          duration,
+          frameCount: frames.length,
+          analysisType: 'local',
+          status: 'completed',
+        }, 'Inserting video analysis record');
+
+        // Create frame_analyses records
+        if (visionAnalysis.frameAnalyses && visionAnalysis.frameAnalyses.length > 0) {
+          for (const frameAnalysis of visionAnalysis.frameAnalyses) {
+            const frameId = uuidv4();
+            const framePath = frames[visionAnalysis.frameAnalyses.indexOf(frameAnalysis)];
+            const relativeFramePath = framePath?.startsWith('mock://') ? null : 
+              framePath?.replace(process.cwd(), '').replace(/\\/g, '/');
+            
+            await prisma.$executeRawUnsafe(`
+              INSERT INTO aimodule.frame_analyses (id, "videoAnalysisId", timestamp, "framePath", objects, labels, text, "textDetections", logos, brands, people, "visualSimilarity", "createdAt")
+              VALUES ($1, $2, $3, $4, $5::jsonb, $6::jsonb, $7, $8::jsonb, $9::jsonb, $10::jsonb, $11::jsonb, $12::jsonb, NOW())
+            `,
+              frameId,
+              videoAnalysisId,
+              frameAnalysis.timestamp || 0,
+              relativeFramePath,
+              JSON.stringify(frameAnalysis.objects || []),
+              JSON.stringify([]),
+              frameAnalysis.text || null,
+              JSON.stringify([]),
+              JSON.stringify([]),
+              JSON.stringify(frameAnalysis.brands || []),
+              JSON.stringify(frameAnalysis.people || []),
+              frameAnalysis.visualSimilarity ? JSON.stringify(frameAnalysis.visualSimilarity) : null
+            );
+          }
+        }
+
+        logger.info({
+          frameAnalyses: visionAnalysis.frameAnalyses,
+        }, 'Inserting frame analyses records');
+
+        // Create video_analysis_summaries record
+        if (visionAnalysis.visualSummary) {
+          const summaryId = uuidv4();
+          await prisma.$executeRawUnsafe(`
+            INSERT INTO aimodule.video_analysis_summaries (id, "videoAnalysisId", "uniqueObjects", "brandsDetected", "targetBrandConfirmation", "visualSentiment", "visualSimilaritySummary", "createdAt", "updatedAt")
+            VALUES ($1, $2, $3::jsonb, $4::jsonb, $5::jsonb, $6::jsonb, $7::jsonb, NOW(), NOW())
+            ON CONFLICT ("videoAnalysisId") DO UPDATE SET
+              "uniqueObjects" = EXCLUDED."uniqueObjects",
+              "brandsDetected" = EXCLUDED."brandsDetected",
+              "targetBrandConfirmation" = EXCLUDED."targetBrandConfirmation",
+              "visualSentiment" = EXCLUDED."visualSentiment",
+              "visualSimilaritySummary" = EXCLUDED."visualSimilaritySummary",
+              "updatedAt" = NOW()
+          `,
+            summaryId,
+            videoAnalysisId,
+            JSON.stringify(visionAnalysis.visualSummary.uniqueObjects || []),
+            JSON.stringify(visionAnalysis.visualSummary.brandsDetected || []),
+            JSON.stringify(visionAnalysis.visualSummary.targetBrandConfirmation || {}),
+            JSON.stringify(visionAnalysis.visualSummary.visualSentiment || {}),
+            visionAnalysis.visualSummary.visualSimilaritySummary ? JSON.stringify(visionAnalysis.visualSummary.visualSimilaritySummary) : null
+          );
+        }
+
+        logger.info({
+          visualSummary: visionAnalysis.visualSummary,
+        }, 'Inserting video analysis summary record');
+
+        logger.info({ videoAnalysisId, reelUrl }, 'Saved video analysis to database');
+      } catch (dbError: any) {
+        logger.error({ error: dbError.message, videoAnalysisId }, 'Failed to save analysis to database (continuing with response)');
+        // Don't fail the request if database save fails
+      }
+    }
+
     const response = {
       success: true,
       data: {
@@ -186,6 +284,7 @@ export async function POST(request: NextRequest) {
           storagePath: visionStoragePath,
           visualSummary: visionAnalysis.visualSummary,
         } : null,
+        videoAnalysisId, // Include the database ID in response
       },
       timestamp: new Date().toISOString(),
     };

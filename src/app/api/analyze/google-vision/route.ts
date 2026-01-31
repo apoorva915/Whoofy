@@ -299,6 +299,86 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Save to database if analysis was successful
+    let videoAnalysisId: string | null = null;
+    if (analysisResults.length > 0 && frames.length > 0) {
+      try {
+        const { v4: uuidv4 } = await import('uuid');
+        const prisma = (await import('@/config/database')).default;
+        
+        videoAnalysisId = uuidv4();
+        const reelId = reelUrl.match(/\/reel\/([A-Za-z0-9_-]+)/)?.[1] || null;
+        
+        // Create video_analyses record
+        await prisma.$executeRawUnsafe(`
+          INSERT INTO aimodule.video_analyses (id, "reelUrl", "reelId", "videoId", duration, "frameCount", "analysisType", status, "createdAt", "updatedAt")
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
+          ON CONFLICT (id) DO UPDATE SET
+            duration = EXCLUDED.duration,
+            "frameCount" = EXCLUDED."frameCount",
+            status = EXCLUDED.status,
+            "updatedAt" = NOW()
+        `, videoAnalysisId, reelUrl, reelId, finalVideoId, duration, frames.length, 'google-vision', 'completed');
+
+        // Create frame_analyses records
+        for (const { framePath, timestamp, analysis } of analysisResults) {
+          const frameId = uuidv4();
+          const relativeFramePath = framePath?.startsWith('mock://') ? null : 
+            framePath?.replace(process.cwd(), '').replace(/\\/g, '/');
+          
+          await prisma.$executeRawUnsafe(`
+            INSERT INTO aimodule.frame_analyses (id, "videoAnalysisId", timestamp, "framePath", objects, labels, text, "textDetections", logos, brands, people, "visualSimilarity", "createdAt")
+            VALUES ($1, $2, $3, $4, $5::jsonb, $6::jsonb, $7, $8::jsonb, $9::jsonb, $10::jsonb, $11::jsonb, $12::jsonb, NOW())
+          `,
+            frameId,
+            videoAnalysisId,
+            timestamp,
+            relativeFramePath,
+            JSON.stringify(analysis.objects || []),
+            JSON.stringify(analysis.labels || []),
+            analysis.text || null,
+            JSON.stringify(analysis.textDetections || []),
+            JSON.stringify(analysis.logos || []),
+            JSON.stringify(analysis.brands || []),
+            JSON.stringify(analysis.people || []),
+            analysis.visualMatches ? JSON.stringify(analysis.visualMatches) : null
+          );
+        }
+
+        // Create video_analysis_summaries record
+        const summaryId = uuidv4();
+        await prisma.$executeRawUnsafe(`
+          INSERT INTO aimodule.video_analysis_summaries (id, "videoAnalysisId", "uniqueObjects", "brandsDetected", "targetBrandConfirmation", "visualSentiment", "visualSimilaritySummary", "createdAt", "updatedAt")
+          VALUES ($1, $2, $3::jsonb, $4::jsonb, $5::jsonb, $6::jsonb, $7::jsonb, NOW(), NOW())
+          ON CONFLICT ("videoAnalysisId") DO UPDATE SET
+            "uniqueObjects" = EXCLUDED."uniqueObjects",
+            "brandsDetected" = EXCLUDED."brandsDetected",
+            "targetBrandConfirmation" = EXCLUDED."targetBrandConfirmation",
+            "visualSentiment" = EXCLUDED."visualSentiment",
+            "visualSimilaritySummary" = EXCLUDED."visualSimilaritySummary",
+            "updatedAt" = NOW()
+        `,
+          summaryId,
+          videoAnalysisId,
+          JSON.stringify(objectSummary.map((o: any) => o.name) || []),
+          JSON.stringify(brandSummary || []),
+          JSON.stringify(allTargetTerms.length > 0 ? {
+            detected: targetBrandDetected,
+            confidence: targetBrandConfidence,
+            message: targetBrandDetected
+              ? `Target items (${allTargetTerms.join(', ')}) were detected with ${(targetBrandConfidence * 100).toFixed(1)}% confidence`
+              : `Target items (${allTargetTerms.join(', ')}) were not detected in the video frames`,
+          } : {}),
+          JSON.stringify({}), // visualSentiment not available for Google Vision
+          null // visualSimilaritySummary
+        );
+
+        logger.info({ videoAnalysisId, reelUrl }, 'Saved Google Vision analysis to database');
+      } catch (dbError: any) {
+        logger.error({ error: dbError.message, videoAnalysisId }, 'Failed to save Google Vision analysis to database (continuing with response)');
+      }
+    }
+
     // Build response
     const response = {
       success: true,
@@ -343,6 +423,7 @@ export async function POST(request: NextRequest) {
             } : null,
           },
         },
+        videoAnalysisId, // Include database ID in response
       },
       timestamp: new Date().toISOString(),
     };

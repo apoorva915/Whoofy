@@ -1,6 +1,6 @@
 {
   "videoId": "DRZN4egihHx",
-  "generatedAt": "2026-01-28T05:22:34.953Z",
+  "generatedAt": "2026-01-31T14:26:25.766Z",
   "frameCount": 15,
   "payload": {
     "frameAnalyses": [
@@ -80,12 +80,12 @@
       {
         "timestamp": 6,
         "objects": [
-          "bottle",
-          "person"
+          "person",
+          "bottle"
         ],
         "brands": [
           {
-            "name": "garnier",
+            "name": "Garnier",
             "confidence": 0.571
           }
         ],
@@ -113,8 +113,12 @@
         ],
         "brands": [
           {
-            "name": "Brightening",
+            "name": "Vitamin C Brightening Serum",
             "confidence": 0.617
+          },
+          {
+            "name": "Brightening",
+            "confidence": 0.557
           }
         ],
         "people": [
@@ -205,18 +209,18 @@
         "brands": [],
         "people": [
           {
-            "gender": "female",
-            "genderConfidence": 1,
-            "ageBracket": "young",
-            "ageConfidence": 0.877,
-            "faceConfidence": 0.814
-          },
-          {
             "gender": "male",
             "genderConfidence": 0.961,
             "ageBracket": "middle_age",
             "ageConfidence": 0.36,
             "faceConfidence": 0.717
+          },
+          {
+            "gender": "female",
+            "genderConfidence": 1,
+            "ageBracket": "young",
+            "ageConfidence": 0.877,
+            "faceConfidence": 0.814
           }
         ],
         "visualSimilarity": {
@@ -366,21 +370,27 @@
       ],
       "brandsDetected": [
         {
-          "name": "garnier",
+          "name": "Garnier",
           "confidence": 0.571,
           "totalFrames": 1,
           "totalVisibleSeconds": 2
         },
         {
-          "name": "Brightening",
+          "name": "Vitamin C Brightening Serum",
           "confidence": 0.617,
+          "totalFrames": 1,
+          "totalVisibleSeconds": 2
+        },
+        {
+          "name": "Brightening",
+          "confidence": 0.557,
           "totalFrames": 1,
           "totalVisibleSeconds": 2
         }
       ],
       "targetBrandConfirmation": {
         "detected": true,
-        "message": "Yes, it shows Brightening (detected in 3 frames, visible for 6.0s).",
+        "message": "Yes, it shows Vitamin C Brightening Serum (detected in 3 frames, visible for 6.0s).",
         "confidence": 0.6200727083206177,
         "detectedInFrames": 3,
         "totalVisibleSeconds": 6
@@ -388,7 +398,7 @@
       "visualSentiment": {
         "sentiment": "positive",
         "score": 1,
-        "reasoning": "Target brand \"garnier, garnieruk\" is prominently shown in 2 frames. Positive visual elements detected (person, food, product) Overall, this reel provides POSITIVE publicity for garnier, garnieruk - the brand/product is shown favorably with positive visual elements.",
+        "reasoning": "Target brand \"Garnier, Garnieruk\" is prominently shown in 2 frames. Positive visual elements detected (person, food, product) Overall, this reel provides POSITIVE publicity for Garnier, Garnieruk - the brand/product is shown favorably with positive visual elements.",
         "confidence": 0.95
       },
       "visualSimilaritySummary": {
@@ -476,12 +486,12 @@
         {
           "timestamp": 6,
           "objects": [
-            "bottle",
-            "person"
+            "person",
+            "bottle"
           ],
           "brands": [
             {
-              "name": "garnier",
+              "name": "Garnier",
               "confidence": 0.571
             }
           ],
@@ -509,8 +519,12 @@
           ],
           "brands": [
             {
-              "name": "Brightening",
+              "name": "Vitamin C Brightening Serum",
               "confidence": 0.617
+            },
+            {
+              "name": "Brightening",
+              "confidence": 0.557
             }
           ],
           "people": [
@@ -601,18 +615,18 @@
           "brands": [],
           "people": [
             {
-              "gender": "female",
-              "genderConfidence": 1,
-              "ageBracket": "young",
-              "ageConfidence": 0.877,
-              "faceConfidence": 0.814
-            },
-            {
               "gender": "male",
               "genderConfidence": 0.961,
               "ageBracket": "middle_age",
               "ageConfidence": 0.36,
               "faceConfidence": 0.717
+            },
+            {
+              "gender": "female",
+              "genderConfidence": 1,
+              "ageBracket": "young",
+              "ageConfidence": 0.877,
+              "faceConfidence": 0.814
             }
           ],
           "visualSimilarity": {

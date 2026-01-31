@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { geminiSentimentAnalysis } from '@/services/detection/gemini-sentiment-analysis';
 import logger from '@/utils/logger';
+import prisma from '@/config/database';
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * POST /api/sentiment/gemini
@@ -28,11 +30,13 @@ export async function POST(request: NextRequest) {
 
     const caption = body.caption || null;
     const transcript = body.transcript || null;
+    const reelUrl = body.reelUrl || null; // Optional: for database storage
 
     logger.info(
       {
         captionLength: caption?.length || 0,
         transcriptLength: transcript?.length || 0,
+        reelUrl,
       },
       'Gemini sentiment analysis request received'
     );
@@ -42,6 +46,46 @@ export async function POST(request: NextRequest) {
       caption,
       transcript
     );
+
+    // Save to database if reelUrl is provided
+    let sentimentAnalysisId: string | null = null;
+    if (reelUrl) {
+      try {
+        sentimentAnalysisId = uuidv4();
+        const reelId = reelUrl.match(/\/reel\/([A-Za-z0-9_-]+)/)?.[1] || null;
+        
+        await prisma.$executeRawUnsafe(`
+          INSERT INTO aimodule.sentiment_analyses (id, "reelUrl", "reelId", "captionSentiment", "transcriptSentiment", "isPositivePublicity", "overallReasoning", "processingTimeMs", "analysisProvider", "createdAt")
+          VALUES ($1, $2, $3, $4::jsonb, $5::jsonb, $6, $7, $8, $9, NOW())
+        `,
+          sentimentAnalysisId,
+          reelUrl,
+          reelId,
+          JSON.stringify({
+            sentiment: sentimentAnalysis.caption.sentiment,
+            confidence: sentimentAnalysis.caption.confidence,
+            reasoning: sentimentAnalysis.caption.reasoning,
+            language: sentimentAnalysis.caption.language,
+            languageConfidence: sentimentAnalysis.caption.languageConfidence,
+          }),
+          JSON.stringify({
+            sentiment: sentimentAnalysis.transcript.sentiment,
+            confidence: sentimentAnalysis.transcript.confidence,
+            reasoning: sentimentAnalysis.transcript.reasoning,
+            language: sentimentAnalysis.transcript.language,
+            languageConfidence: sentimentAnalysis.transcript.languageConfidence,
+          }),
+          sentimentAnalysis.isPositivePublicity,
+          sentimentAnalysis.overallReasoning,
+          sentimentAnalysis.processingTimeMs,
+          'gemini'
+        );
+
+        logger.info({ sentimentAnalysisId, reelUrl }, 'Saved sentiment analysis to database');
+      } catch (dbError: any) {
+        logger.error({ error: dbError.message, sentimentAnalysisId }, 'Failed to save sentiment analysis to database (continuing with response)');
+      }
+    }
 
     const response = {
       success: true,
@@ -63,6 +107,7 @@ export async function POST(request: NextRequest) {
         isPositivePublicity: sentimentAnalysis.isPositivePublicity,
         overallReasoning: sentimentAnalysis.overallReasoning,
         processingTimeMs: sentimentAnalysis.processingTimeMs,
+        sentimentAnalysisId, // Include database ID in response
       },
       timestamp: new Date().toISOString(),
     };

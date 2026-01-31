@@ -10,8 +10,7 @@ export function logApiConfiguration(): void {
   logger.info('=== API Configuration Status ===');
   
   const apis = [
-    { name: 'Instagram (RapidAPI)', configured: isApiConfigured('instagram') },
-    { name: 'Apify', configured: isApiConfigured('apify') },
+    { name: 'Apify (Instagram Scraper)', configured: isApiConfigured('apify') },
     { name: 'Shazam (RapidAPI)', configured: isApiConfigured('shazam') },
     { name: 'OpenAI Whisper', configured: isApiConfigured('openai') },
     { name: 'NoteGPT', configured: isApiConfigured('notegpt') },
@@ -42,7 +41,6 @@ export function getApiConfigurationSummary(): {
 } {
   return {
     apis: {
-      instagram: isApiConfigured('instagram'),
       apify: isApiConfigured('apify'),
       shazam: isApiConfigured('shazam'),
       openai: isApiConfigured('openai'),

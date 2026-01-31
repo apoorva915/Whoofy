@@ -389,26 +389,61 @@ model ratings {
 }
 
 model reel_submissions {
-  id                  String                @id
-  campaignId          String
-  reelUrl             String
-  submittedAt         DateTime              @default(now())
-  createdAt           DateTime              @default(now())
-  feedback            String?
-  performanceMetrics  Json?
-  updatedAt           DateTime
-  aiAlignmentReason   String?
-  aiAlignmentStatus   Boolean?
-  aiAnalysisTimestamp DateTime?
-  reviewStatus        ReelReviewStatus      @default(PENDING)
-  creatorId           String
-  campaigns           campaigns             @relation(fields: [campaignId], references: [id])
-  users               users                 @relation(fields: [creatorId], references: [id])
-  wallet_transactions wallet_transactions[]
+  id                      String                           @id
+  campaignId              String
+  reelUrl                 String
+  submittedAt             DateTime                         @default(now())
+  createdAt               DateTime                         @default(now())
+  feedback                String?
+  performanceMetrics      Json?
+  updatedAt               DateTime
+  aiAlignmentReason       String?
+  aiAlignmentStatus       Boolean?
+  aiAnalysisTimestamp     DateTime?
+  reviewStatus            ReelReviewStatus                 @default(PENDING)
+  creatorId               String
+  view_tracking_snapshots view_tracking_snapshots[]
+  public_view_tracking_snapshots public_view_tracking_snapshots[]
+  campaigns               campaigns                        @relation(fields: [campaignId], references: [id])
+  users                   users                            @relation(fields: [creatorId], references: [id])
+  wallet_transactions     wallet_transactions[]
 
   @@index([campaignId])
   @@index([creatorId])
   @@schema("public")
+}
+
+model view_tracking_snapshots {
+  id               String           @id @default(uuid())
+  reelSubmissionId String
+  viewCount        Int              @default(0)
+  likeCount        Int?             @default(0)
+  commentCount     Int?             @default(0)
+  shareCount       Int?             @default(0)
+  snapshotAt       DateTime         @default(now())
+  isSpikeDetected  Boolean          @default(false)
+  spikeReason      String?
+  createdAt        DateTime         @default(now())
+  reelUrl          String?
+  engagementRatio  Float?
+  engagementLabel  String?
+  reel_submissions reel_submissions @relation(fields: [reelSubmissionId], references: [id], onDelete: Cascade)
+
+  @@index([reelSubmissionId, snapshotAt])
+  @@index([snapshotAt])
+  @@schema("aimodule")
+}
+
+model view_tracking_jobs {
+  id           String    @id @default(uuid())
+  reelUrl      String
+  status       String
+  intervalHours Float    @default(1) // hours between snapshots
+  nextRunAt    DateTime? // when the next snapshot is due (null = not scheduled)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@schema("aimodule")
 }
 
 model social_profiles {
@@ -575,6 +610,180 @@ model youtube_videos {
   latestComments   Json?
   social_profiles  social_profiles @relation(fields: [socialProfileId], references: [id], onDelete: Cascade)
 
+  @@schema("public")
+}
+
+model video_analyses {
+  id                       String                    @id
+  reelUrl                  String
+  reelId                   String?
+  videoId                  String?
+  duration                 Float?
+  frameCount               Int                       @default(0)
+  analysisType             String                    @default("local")
+  status                   String                    @default("processing")
+  errorMessage             String?
+  createdAt                DateTime                  @default(now())
+  updatedAt                DateTime
+  frame_analyses           frame_analyses[]
+  video_analysis_summaries video_analysis_summaries?
+
+  @@index([status])
+  @@index([createdAt], map: "video_analyses_createdat_idx")
+  @@index([reelId], map: "video_analyses_reelid_idx")
+  @@index([reelUrl], map: "video_analyses_reelurl_idx")
+  @@schema("aimodule")
+}
+
+model frame_analyses {
+  id               String         @id
+  videoAnalysisId  String
+  timestamp        Float
+  framePath        String?
+  objects          Json           @default("[]")
+  labels           Json           @default("[]")
+  text             String?
+  textDetections   Json           @default("[]")
+  logos            Json           @default("[]")
+  brands           Json           @default("[]")
+  people           Json           @default("[]")
+  visualSimilarity Json?
+  createdAt        DateTime       @default(now())
+  video_analyses   video_analyses @relation(fields: [videoAnalysisId], references: [id], onDelete: Cascade, map: "frame_analyses_videoanalysisid_fkey")
+
+  @@index([timestamp])
+  @@index([videoAnalysisId], map: "frame_analyses_videoanalysisid_idx")
+  @@schema("aimodule")
+}
+
+model video_analysis_summaries {
+  id                      String         @id
+  videoAnalysisId         String         @unique
+  uniqueObjects           Json           @default("[]")
+  brandsDetected          Json           @default("[]")
+  targetBrandConfirmation Json
+  visualSentiment         Json
+  visualSimilaritySummary Json?
+  createdAt               DateTime       @default(now())
+  updatedAt               DateTime
+  video_analyses          video_analyses @relation(fields: [videoAnalysisId], references: [id], onDelete: Cascade, map: "video_analysis_summaries_videoanalysisid_fkey")
+
+  @@schema("aimodule")
+}
+
+model sentiment_analyses {
+  id                  String   @id
+  reelUrl             String
+  reelId              String?
+  captionSentiment    Json
+  transcriptSentiment Json
+  isPositivePublicity Boolean
+  overallReasoning    String
+  processingTimeMs    Int
+  analysisProvider    String   @default("gemini")
+  createdAt           DateTime @default(now())
+
+  @@index([createdAt], map: "sentiment_analyses_createdat_idx")
+  @@index([reelId], map: "sentiment_analyses_reelid_idx")
+  @@index([reelUrl], map: "sentiment_analyses_reelurl_idx")
+  @@schema("aimodule")
+}
+
+model language_region_analyses {
+  id               String   @id
+  reelUrl          String
+  reelId           String?
+  languages        Json     @default("[]")
+  primaryLanguage  String?
+  regions          Json     @default("[]")
+  primaryRegion    String?
+  analysisProvider String   @default("gemini")
+  processingTimeMs Int
+  createdAt        DateTime @default(now())
+
+  @@index([primaryLanguage], map: "language_region_analyses_primarylanguage_idx")
+  @@index([primaryRegion], map: "language_region_analyses_primaryregion_idx")
+  @@index([reelId], map: "language_region_analyses_reelid_idx")
+  @@index([reelUrl], map: "language_region_analyses_reelurl_idx")
+  @@schema("aimodule")
+}
+
+model comment_analyses {
+  id               String   @id
+  reelUrl          String
+  reelId           String?
+  totalComments    Int      @default(0)
+  comments         Json     @default("[]")
+  engagementRate   Float?
+  averageLikes     Float?
+  averageReplies   Float?
+  positiveComments Int      @default(0)
+  negativeComments Int      @default(0)
+  neutralComments  Int      @default(0)
+  brandMentions    Json     @default("[]")
+  createdAt        DateTime @default(now())
+
+  @@index([createdAt], map: "comment_analyses_createdat_idx")
+  @@index([reelId], map: "comment_analyses_reelid_idx")
+  @@index([reelUrl], map: "comment_analyses_reelurl_idx")
+  @@schema("aimodule")
+}
+
+model niche_analyses {
+  id               String   @id
+  reelUrl          String?
+  reelId           String?
+  creatorUsername  String?
+  niches           Json     @default("[]")
+  confidence       Float    @default(0.0)
+  reasoning        String
+  processingTimeMs Int
+  analysisProvider String   @default("gemini")
+  createdAt        DateTime @default(now())
+
+  @@index([createdAt], map: "niche_analyses_createdat_idx")
+  @@index([creatorUsername], map: "niche_analyses_creatorusername_idx")
+  @@index([reelId], map: "niche_analyses_reelid_idx")
+  @@index([reelUrl], map: "niche_analyses_reelurl_idx")
+  @@schema("aimodule")
+}
+
+model engagement_analyses {
+  id                 String    @id
+  reelUrl            String
+  reelId             String?
+  overallAuthentic   Boolean   @default(true)
+  overallScore       Float     @default(1.0)
+  overallIssues      Json      @default("[]")
+  commentAnalysis    Json      @default("{}")
+  engagementAnalysis Json      @default("{}")
+  promotionTimestamp DateTime?
+  processingTimeMs   Int
+  createdAt          DateTime  @default(now())
+
+  @@index([createdAt], map: "engagement_analyses_createdat_idx")
+  @@index([overallAuthentic], map: "engagement_analyses_overallauthentic_idx")
+  @@index([reelId], map: "engagement_analyses_reelid_idx")
+  @@index([reelUrl], map: "engagement_analyses_reelurl_idx")
+  @@schema("aimodule")
+}
+
+model public_view_tracking_snapshots {
+  id               String           @id
+  reelSubmissionId String
+  viewCount        Int              @default(0)
+  likeCount        Int?             @default(0)
+  commentCount     Int?             @default(0)
+  shareCount       Int?             @default(0)
+  snapshotAt       DateTime         @default(now())
+  isSpikeDetected  Boolean          @default(false)
+  spikeReason      String?
+  createdAt        DateTime         @default(now())
+  reel_submissions reel_submissions @relation(fields: [reelSubmissionId], references: [id], onDelete: Cascade)
+
+  @@index([reelSubmissionId, snapshotAt])
+  @@index([snapshotAt])
+  @@map("view_tracking_snapshots")
   @@schema("public")
 }
 

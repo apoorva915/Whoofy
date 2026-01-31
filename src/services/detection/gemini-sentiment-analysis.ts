@@ -86,11 +86,14 @@ ${transcript || '(No transcript provided)'}
    - **FIRST, detect the language** of the caption text (use ISO 639-1 language codes like 'en', 'hi', 'es', 'fr', 'de', 'zh', 'ja', 'ko', 'ar', 'pt', 'ru', 'it', 'nl', 'sv', 'pl', 'tr', 'vi', 'th', 'id', 'ms', 'ta', 'te', 'ml', 'kn', 'gu', 'pa', 'bn', 'ur', 'fa', 'he', etc.)
    - If the text is mixed language or unclear, use the primary language or 'unknown'
    - Determine if the sentiment is: "positive", "negative", or "neutral"
+   - **CRITICAL**: If the content promotes, endorses, recommends, or praises a product/brand, it MUST be classified as "positive", NOT "neutral"
    - Consider:
-     * Positive indicators: praise, recommendations, enthusiasm, satisfaction, excitement, positive emojis, endorsements
-     * Negative indicators: complaints, criticism, disappointment, dissatisfaction, negative emojis, warnings
-     * Neutral indicators: factual statements, neutral descriptions, no clear emotional tone
-   - Provide a confidence score between 0.0 and 1.0 (where 1.0 is completely certain)
+     * Positive indicators: praise, recommendations, enthusiasm, satisfaction, excitement, positive emojis, endorsements, product benefits mentioned, calls to action, discounts/promotions
+     * Negative indicators: complaints, criticism, disappointment, dissatisfaction, negative emojis, warnings, product failures
+     * Neutral indicators: ONLY use "neutral" for purely factual statements with NO emotional tone, NO recommendations, and NO product mentions
+   - **IMPORTANT**: Content that mentions product benefits, uses enthusiastic language, or recommends a product should ALWAYS be "positive", even if it starts with a relatable problem
+   - Provide a confidence score between 0.85 and 1.0 for clear positive/negative sentiment (where 1.0 is completely certain)
+   - Only use lower confidence (0.5-0.85) if sentiment is genuinely ambiguous
    - Provide a brief reasoning (2-3 sentences) explaining your assessment
 
 2. **Transcript Sentiment Analysis:**
@@ -98,8 +101,11 @@ ${transcript || '(No transcript provided)'}
    - **FIRST, detect the language** of the transcript text (use ISO 639-1 language codes like 'en', 'hi', 'es', 'fr', 'de', 'zh', 'ja', 'ko', 'ar', 'pt', 'ru', 'it', 'nl', 'sv', 'pl', 'tr', 'vi', 'th', 'id', 'ms', 'ta', 'te', 'ml', 'kn', 'gu', 'pa', 'bn', 'ur', 'fa', 'he', etc.)
    - If the text is mixed language or unclear, use the primary language or 'unknown'
    - Apply the same sentiment classification (positive/negative/neutral)
+   - **CRITICAL**: If the transcript promotes, endorses, recommends, or praises a product/brand, it MUST be classified as "positive", NOT "neutral"
    - Consider the spoken content, tone, and context
-   - Provide a confidence score between 0.0 and 1.0
+   - **IMPORTANT**: Transcripts that mention product benefits, solutions to problems, or positive outcomes should ALWAYS be "positive"
+   - Provide a confidence score between 0.85 and 1.0 for clear positive/negative sentiment
+   - Only use lower confidence (0.5-0.85) if sentiment is genuinely ambiguous
    - Provide a brief reasoning (2-3 sentences) explaining your assessment
 
 3. **Positive Publicity Assessment:**

@@ -763,6 +763,20 @@ class ApifyScraperClient {
       following: postData.postOwnerInfo?.following || postData.owner?.following || postData.ownerFollowing || reelData.owner?.following || reelData.ownerFollowing || instagramData.owner?.following || instagramData.ownerFollowing || null,
     } : null;
 
+    // Extract view count: Apify actors use various field names (viewsCount, viewCount, videoViewCount, views, playCount, etc.)
+    const playCount = this.extractPlayCount(reelData, postData, instagramData);
+    if (playCount == null || playCount === 0) {
+      logger.warn(
+        {
+          reelUrl,
+          reelDataViews: this.pickViewFields(reelData),
+          postDataViews: this.pickViewFields(postData),
+          instagramDataViews: this.pickViewFields(instagramData),
+        },
+        'Apify reel scrape: no view count found in API response (views may be under a different key or not exposed by Instagram)'
+      );
+    }
+
     return {
       id: reelData.id || postData.id || instagramData.id || reelData.shortcode || postData.shortcode || reelId,
       shortcode: reelData.shortcode || postData.shortcode || reelId,
@@ -771,7 +785,7 @@ class ApifyScraperClient {
       transcript: reelData.transcript || postData.transcript || instagramData.transcript || null,
       likeCount: reelData.likesCount || postData.likesCount || instagramData.likesCount || reelData.likes || postData.likes || instagramData.likes || reelData.likeCount || 0,
       commentCount: reelData.commentsCount || postData.commentsCount || instagramData.commentsCount || reelData.comments || postData.comments || instagramData.comments || reelData.commentCount || 0,
-      playCount: reelData.viewsCount || postData.viewsCount || instagramData.viewsCount || reelData.views || postData.views || instagramData.views || reelData.playCount || postData.playCount || null,
+      playCount,
       shareCount: reelData.sharesCount || reelData.shares || null,
       timestamp: reelData.timestamp ? new Date(reelData.timestamp) : (postData.timestamp ? new Date(postData.timestamp) : (instagramData.timestamp ? new Date(instagramData.timestamp) : new Date())),
       videoUrl: reelData.videoUrl || postData.videoUrl || instagramData.videoUrl || reelData.video || postData.video || instagramData.video || null,
@@ -810,6 +824,42 @@ class ApifyScraperClient {
       replyCount: postData.replyCount || null,
       postOwnerInfo: postOwnerInfo,
     };
+  }
+
+  /**
+   * Try all known Apify/Instagram field names for view/play count
+   */
+  private extractPlayCount(reelData: any, postData: any, instagramData: any): number | null {
+    const viewKeys = [
+      'viewsCount', 'viewCount', 'videoViewCount', 'video_view_count', 'videoViews',
+      'views', 'playCount', 'play_count', 'videoPlayCount',
+    ];
+    for (const key of viewKeys) {
+      const val = reelData?.[key] ?? postData?.[key] ?? instagramData?.[key];
+      if (val != null && typeof val === 'number' && !Number.isNaN(val) && val >= 0) {
+        return val;
+      }
+      if (val != null && typeof val === 'string' && /^\d+$/.test(val)) {
+        return parseInt(val, 10);
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Pick view-related keys from a raw API object for logging (when views are 0)
+   */
+  private pickViewFields(obj: any): Record<string, unknown> {
+    if (!obj || typeof obj !== 'object') return {};
+    const viewKeys = [
+      'viewsCount', 'viewCount', 'videoViewCount', 'video_view_count', 'videoViews',
+      'views', 'playCount', 'play_count', 'videoPlayCount',
+    ];
+    const out: Record<string, unknown> = {};
+    for (const key of viewKeys) {
+      if (obj[key] !== undefined) out[key] = obj[key];
+    }
+    return out;
   }
 
   /**

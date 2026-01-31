@@ -120,3 +120,24 @@ export const VIDEO_FORMATS = ['.mp4', '.mov', '.avi', '.mkv', '.webm'] as const;
  * Supported Image Formats
  */
 export const IMAGE_FORMATS = ['.jpg', '.jpeg', '.png', '.webp'] as const;
+
+/**
+ * Engagement Ratio Thresholds (percentage)
+ * Engagement Ratio = (Likes + Comments + Shares + Saves) ÷ Views
+ */
+export const ENGAGEMENT_RATIO_THRESHOLDS = {
+  SUSPICIOUS: 0.5,      // Less than 0.5% - Suspicious
+  AVERAGE_MIN: 1.0,     // 1-3% - Average
+  AVERAGE_MAX: 3.0,
+  STRONG_MIN: 4.0,      // 4-8% or higher - Strong or Organic
+  STRONG_MAX: 8.0,
+} as const;
+
+/**
+ * Engagement Ratio Labels
+ */
+export const ENGAGEMENT_RATIO_LABELS = {
+  SUSPICIOUS: 'Suspicious',
+  AVERAGE: 'Average',
+  STRONG: 'Strong or Organic',
+} as const;
