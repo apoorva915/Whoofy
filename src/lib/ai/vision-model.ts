@@ -3,6 +3,7 @@ import * as fs from 'fs-extra';
 import { spawn } from 'child_process';
 import path from 'path';
 import logger from '@/utils/logger';
+import env from '@/config/env';
 
 /**
  * Object class names that might indicate brands/products
@@ -37,6 +38,7 @@ class VisionModel {
   private ocrScriptPath: string;
   private clipScriptPath: string;
   private faceDetectionScriptPath: string;
+  private mlServiceUrl?: string;
   private yoloAvailable: boolean | null = null;
   private ocrAvailable: boolean | null = null;
   private clipAvailable: boolean | null = null;
@@ -55,6 +57,42 @@ class VisionModel {
     this.ocrScriptPath = path.join(process.cwd(), 'yolo', 'ocr.py');
     this.clipScriptPath = path.join(process.cwd(), 'yolo', 'clip_similarity.py');
     this.faceDetectionScriptPath = path.join(process.cwd(), 'yolo', 'face_detection.py');
+
+    // If running in Docker, we prefer calling the ML service instead of spawning local Python.
+    this.mlServiceUrl = env.ML_SERVICE_URL?.replace(/\/+$/, '');
+  }
+
+  private async mlPostJson<TResponse>(endpoint: string, body: Record<string, any>): Promise<TResponse> {
+    if (!this.mlServiceUrl) {
+      throw new Error('ML service URL not configured');
+    }
+
+    const url = `${this.mlServiceUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    const text = await res.text();
+    let parsed: any;
+    try {
+      parsed = text ? JSON.parse(text) : {};
+    } catch {
+      parsed = { error: text || `Non-JSON response from ML service (${res.status})` };
+    }
+
+    if (!res.ok) {
+      const msg = parsed?.error || `ML service error (${res.status})`;
+      throw new Error(msg);
+    }
+
+    if (parsed?.error) {
+      throw new Error(parsed.error);
+    }
+
+    return parsed as TResponse;
   }
 
   /**
@@ -96,6 +134,17 @@ class VisionModel {
    * Run YOLO detection via Python subprocess
    */
   private async runYoloCommand(args: string[]): Promise<string[]> {
+    if (this.mlServiceUrl) {
+      // args: [imagePath, confidenceThreshold]
+      const imagePath = args[0];
+      const conf = args[1] ? Number(args[1]) : 0.25;
+      const result = await this.mlPostJson<{ objects: string[] }>('/yolo', {
+        image_path: imagePath,
+        confidence: conf,
+      });
+      return result.objects || [];
+    }
+
     return new Promise((resolve, reject) => {
       const scriptArgs = [this.yoloScriptPath, ...args];
       
@@ -372,6 +421,29 @@ class VisionModel {
    * Run CLIP command via Python subprocess
    */
   private async runClipCommand(args: string[]): Promise<any> {
+    if (this.mlServiceUrl) {
+      // Supported commands from vision-model.ts:
+      // - ['embed', imagePath]
+      // - ['compare', framePath, embeddingPath]
+      const command = args[0];
+      if (command === 'embed') {
+        const imagePath = args[1];
+        return await this.mlPostJson<{ embedding: number[]; dimension: number }>('/clip/embed', {
+          image_path: imagePath,
+        });
+      }
+      if (command === 'compare') {
+        const framePath = args[1];
+        const embeddingPath = args[2];
+        return await this.mlPostJson<{ similarity: number; match: boolean; confidence: 'high' | 'medium' | 'low' | 'none' }>('/clip/compare', {
+          image_path: framePath,
+          embedding_path: embeddingPath,
+        });
+      }
+
+      throw new Error(`Unsupported CLIP command for ML service: ${command}`);
+    }
+
     return new Promise((resolve, reject) => {
       const scriptArgs = [this.clipScriptPath, ...args];
       
@@ -574,6 +646,8 @@ class VisionModel {
         timestamp,
         objects: filteredObjects,
         brands,
+        // Store raw OCR text on the frame so it can be persisted / visualized
+        text: ocrText,
         people: people.length > 0 ? people : undefined,
         visualSimilarity: visualSimilarity || undefined,
       };
@@ -590,6 +664,7 @@ class VisionModel {
       timestamp,
       objects: [],
       brands: [],
+      text: '',
     };
     }
   }
@@ -772,6 +847,14 @@ class VisionModel {
    * Run face detection via Python subprocess
    */
   private async runFaceDetectionCommand(args: string[]): Promise<PersonDemographics[]> {
+    if (this.mlServiceUrl) {
+      const imagePath = args[0];
+      const result = await this.mlPostJson<{ people: PersonDemographics[] }>('/faces', {
+        image_path: imagePath,
+      });
+      return result.people || [];
+    }
+
     return new Promise((resolve, reject) => {
       const scriptArgs = [this.faceDetectionScriptPath, ...args];
       
@@ -854,6 +937,14 @@ class VisionModel {
    * Run OCR detection via Python subprocess
    */
   private async runOcrCommand(args: string[]): Promise<string> {
+    if (this.mlServiceUrl) {
+      const imagePath = args[0];
+      const result = await this.mlPostJson<{ text: string }>('/ocr', {
+        image_path: imagePath,
+      });
+      return result.text || '';
+    }
+
     return new Promise((resolve, reject) => {
       const scriptArgs = [this.ocrScriptPath, ...args];
       

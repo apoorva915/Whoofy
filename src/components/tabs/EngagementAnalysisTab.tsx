@@ -423,45 +423,10 @@ export default function EngagementAnalysisTab({ scrapingData, persistedData, onD
     <div className="max-w-6xl mx-auto">
       <h1 className="text-3xl font-bold mb-6">Views Spike Detection & Engagement Ratio analysis (Dynamic)</h1>
       <p className="text-sm text-gray-600 mb-6">
-            This section keeps snapshots of view counts, engagement metrics, and detects suspicious spikes in views over time. 
-            It tracks changes in views, likes, comments, and shares at regular intervals to identify potential fraudulent activity 
-            or artificial view inflation.
-          </p>
-
-      {/* Queue Stats */}
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4">Queue Statistics</h2>
-        {stats ? (
-          <div className="grid grid-cols-3 gap-4">
-            <div className="p-4 bg-blue-50 rounded-lg">
-              <div className="text-sm text-gray-600">Waiting</div>
-              <div className="text-2xl font-bold">{stats.waiting}</div>
-            </div>
-            <div className="p-4 bg-green-50 rounded-lg">
-              <div className="text-sm text-gray-600">Active</div>
-              <div className="text-2xl font-bold">{stats.active}</div>
-            </div>
-            <div className="p-4 bg-purple-50 rounded-lg">
-              <div className="text-sm text-gray-600">Completed</div>
-              <div className="text-2xl font-bold">{stats.completed}</div>
-            </div>
-            <div className="p-4 bg-red-50 rounded-lg">
-              <div className="text-sm text-gray-600">Failed</div>
-              <div className="text-2xl font-bold">{stats.failed}</div>
-            </div>
-            <div className="p-4 bg-yellow-50 rounded-lg">
-              <div className="text-sm text-gray-600">Delayed</div>
-              <div className="text-2xl font-bold">{stats.delayed}</div>
-            </div>
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <div className="text-sm text-gray-600">Paused</div>
-              <div className="text-2xl font-bold">{stats.paused}</div>
-            </div>
-          </div>
-        ) : (
-          <p>Loading stats...</p>
-        )}
-      </div>
+        This section keeps snapshots of view counts, engagement metrics, and detects suspicious spikes in views over time.
+        It tracks changes in views, likes, comments, and shares at regular intervals to identify potential fraudulent activity
+        or artificial view inflation.
+      </p>
 
       {/* Start/Stop Tracking */}
       <div className="bg-white rounded-lg shadow p-6 mb-6">

@@ -41,8 +41,8 @@ class FrameExtractor {
       } catch (error) {
         logger.warn({ error }, 'Error checking FFmpeg path');
       }
-      // Return the path anyway - it might work in the execution context
-      return ffmpegPath;
+      // Static binary path is not valid; fall back to system ffmpeg
+      return 'ffmpeg';
     }
     // Fallback to system ffmpeg if static binary not available
     return 'ffmpeg';
@@ -64,7 +64,8 @@ class FrameExtractor {
       } catch (error) {
         logger.warn({ error }, 'Error checking FFprobe path');
       }
-      return ffprobePath.path;
+      // Static binary path is not valid; fall back to system ffprobe
+      return 'ffprobe';
     }
     // Fallback to system ffprobe if static binary not available
     return 'ffprobe';
@@ -133,7 +134,7 @@ class FrameExtractor {
       
       // On Windows, use shell: true to properly handle paths with spaces
       if (process.platform === 'win32') {
-        await execAsync(command, { shell: true });
+        await execAsync(command, { shell: true } as any);
       } else {
       await execAsync(command);
       }
@@ -203,9 +204,9 @@ class FrameExtractor {
       
       // On Windows, use cmd /c to properly handle quotes
       if (process.platform === 'win32') {
-        await execAsync(command, { shell: true });
+        await execAsync(command, { shell: true } as any);
       } else {
-      await execAsync(command);
+        await execAsync(command);
       }
 
       if (await fs.pathExists(outputPath)) {
@@ -267,9 +268,9 @@ class FrameExtractor {
       
       // On Windows, use cmd /c to properly handle quotes
       const { stdout } = process.platform === 'win32' 
-        ? await execAsync(command, { shell: true })
+        ? await execAsync(command, { shell: true } as any)
         : await execAsync(command);
-      const duration = parseFloat(stdout.trim());
+      const duration = parseFloat(String(stdout).trim());
       
       if (isNaN(duration) || duration <= 0) {
         logger.warn(`Invalid duration extracted: ${duration}, defaulting to 30s`);

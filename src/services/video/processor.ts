@@ -11,6 +11,7 @@ import { audioExtractor } from './audio-extractor';
 type LocalWhisperTranscriptionResult = null;
 type SentimentAnalysisResult = null;
 import logger from '@/utils/logger';
+import { ProcessingError } from '@/utils/errors';
 import { VisionAnalysisResult } from '@/types/vision';
 
 /**

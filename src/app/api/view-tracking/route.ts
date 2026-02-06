@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { removeViewTrackingJob, getQueueStats } from '@/workers/queue';
+import { removeViewTrackingJob } from '@/workers/queue';
 import { SubmissionModel } from '@/models/submission.model';
 import logger from '@/utils/logger';
 import { z } from 'zod';
@@ -7,22 +7,17 @@ import prisma from '@/config/database';
 import { v4 as uuidv4 } from 'uuid';
 import { normalizeReelUrlCanonical } from '@/utils/validation';
 
-// View tracking is now DB-driven: jobs run at nextRunAt; a standalone scheduler (or cron calling process-due) processes due jobs.
-// No need to start the BullMQ worker for scheduling; the UI is used to start/stop tracking and view snapshots.
-
 /**
  * Start view tracking for a submission or reel URL
  * POST /api/view-tracking
- * Body: { submissionId?: string, reelUrl?: string, intervalHours: number }
  */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    
+
     const schema = z.object({
       submissionId: z.string().optional(),
       reelUrl: z.string().optional(),
-      // Support minutes or hours: 1/60 (1 min) to 24 (24 hours). UI sends decimal hours (e.g. 0.5 = 30 mins, 1 = 1 hr).
       intervalHours: z.number().min(1 / 60).max(24).default(1),
     });
 
@@ -35,173 +30,189 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let submission;
+    let submission: { id: string; reelUrl: string } | null = null;
+    const now = new Date();
+
+    /* ------------------------------------------------------------------ */
+    /* Fetch or auto-create submission */
+    /* ------------------------------------------------------------------ */
+
     if (submissionId) {
       submission = await SubmissionModel.findByIdOrThrow(submissionId);
     } else if (reelUrl) {
-      // Normalize and find by canonical URL so ?hl=en etc. match
       const normalizedUrl = normalizeReelUrlCanonical(reelUrl);
+
+      if (!normalizedUrl) {
+        return NextResponse.json(
+          { error: 'Invalid reel URL' },
+          { status: 400 }
+        );
+      }
+
       submission = await SubmissionModel.findByReelUrl(normalizedUrl);
-      
+
       if (!submission) {
-        // Auto-create a minimal submission for view tracking
-        logger.info(`No submission found for ${normalizedUrl}, creating one automatically`);
-        
+        logger.info(`No submission found for ${normalizedUrl}, auto-creating`);
+
         try {
-          // Get or create a default campaign (for view tracking purposes)
-          let defaultCampaign = await prisma.campaigns.findFirst({
-            orderBy: { createdAt: 'desc' },
-          });
-          
-          // Get or create a default user/creator first (needed for both campaign and submission)
+          /* ------------------ Creator ------------------ */
           let defaultCreator = await prisma.users.findFirst({
             where: { role: 'CREATOR' },
             orderBy: { createdAt: 'desc' },
           });
-          
+
           if (!defaultCreator) {
-            // Create a minimal default creator
-            const creatorId = uuidv4();
             defaultCreator = await prisma.users.create({
               data: {
-                id: creatorId,
+                id: uuidv4(),
                 name: 'View Tracking User',
                 email: `view-tracking-${Date.now()}@whoofy.local`,
                 role: 'CREATOR',
-                createdAt: new Date(),
-                updatedAt: new Date(),
+                createdAt: now,
+                updatedAt: now,
               },
             });
-            logger.info(`Created default creator: ${creatorId}`);
           }
-          
-          // Get or create a default brand user (campaigns.brandId references users.id)
-          let defaultBrandUser = await prisma.users.findFirst({
+
+          /* ------------------ Brand User ------------------ */
+          let defaultBrand = await prisma.users.findFirst({
             where: { role: 'BRAND' },
             orderBy: { createdAt: 'desc' },
           });
-          
-          if (!defaultBrandUser) {
-            // Create a minimal default brand user
-            const brandUserId = uuidv4();
-            defaultBrandUser = await prisma.users.create({
+
+          if (!defaultBrand) {
+            defaultBrand = await prisma.users.create({
               data: {
-                id: brandUserId,
+                id: uuidv4(),
                 name: 'View Tracking Brand',
                 email: `view-tracking-brand-${Date.now()}@whoofy.local`,
                 role: 'BRAND',
-                createdAt: new Date(),
-                updatedAt: new Date(),
+                createdAt: now,
+                updatedAt: now,
               },
             });
-            logger.info(`Created default brand user: ${brandUserId}`);
           }
-          
-          if (!defaultCampaign) {
-            // Create a minimal default campaign
-            const campaignId = uuidv4();
-            defaultCampaign = await prisma.campaigns.create({
+
+          /* ------------------ Campaign ------------------ */
+          let campaign = await prisma.campaigns.findFirst({
+            orderBy: { createdAt: 'desc' },
+          });
+
+          if (!campaign) {
+            campaign = await prisma.campaigns.create({
               data: {
-                id: campaignId,
+                id: uuidv4(),
                 title: 'View Tracking Campaign',
                 description: 'Auto-created for view tracking',
                 budget: 0,
-                startDate: new Date(),
-                endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year from now
+                startDate: now,
+                endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
                 status: 'Active',
-                brandId: defaultBrandUser.id, // campaigns.brandId references users.id
+                brandId: defaultBrand.id,
                 platforms: ['Instagram'],
                 type: 'UGC',
-                createdAt: new Date(),
-                updatedAt: new Date(),
+                createdAt: now,
+                updatedAt: now,
               },
             });
-            logger.info(`Created default campaign: ${campaignId}`);
           }
-          
-          // Create submission (store canonical URL for consistent lookups)
-          const submissionId = uuidv4();
+
+          /* ------------------ Submission ------------------ */
+          const newSubmissionId = uuidv4();
+
           await prisma.reel_submissions.create({
             data: {
-              id: submissionId,
-              campaignId: defaultCampaign.id,
+              id: newSubmissionId,
+              campaignId: campaign.id,
               creatorId: defaultCreator.id,
               reelUrl: normalizedUrl,
-              submittedAt: new Date(),
-              createdAt: new Date(),
-              updatedAt: new Date(),
               reviewStatus: 'PENDING',
+              submittedAt: now,
+              createdAt: now,
+              updatedAt: now,
             },
           });
-          
-          logger.info(`Auto-created submission ${submissionId} for reel ${normalizedUrl}`);
-          
-          // Fetch the created submission
+
           submission = await SubmissionModel.findByReelUrl(normalizedUrl);
-          
+
           if (!submission) {
-            throw new Error('Failed to retrieve created submission');
+            throw new Error('Failed to retrieve auto-created submission');
           }
         } catch (error: any) {
-          logger.error({ error, reelUrl: normalizedUrl }, 'Failed to auto-create submission');
+          logger.error({ error }, 'Auto-create submission failed');
           return NextResponse.json(
-            { 
-              success: false,
-              error: `Failed to create submission automatically: ${error.message}`,
-              reelUrl: normalizedUrl,
-            },
+            { error: error.message },
             { status: 500 }
           );
         }
       }
     }
 
-    // Ensure we have a non-null reel URL for job payload and view_tracking_jobs (both require non-null)
-    const reelUrlForJob = submission.reelUrl ?? reelUrl ?? '';
-    const canonicalReelUrl = normalizeReelUrlCanonical(reelUrlForJob);
-    if (!canonicalReelUrl) {
+    /* ------------------------------------------------------------------ */
+    /* Hard guarantee */
+    /* ------------------------------------------------------------------ */
+
+    if (!submission) {
       return NextResponse.json(
-        { error: 'Submission does not have a reel URL and none was provided' },
+        { error: 'Submission could not be resolved' },
         { status: 400 }
       );
     }
 
-    // DB-driven scheduling: store interval and next_run_at. A standalone scheduler (or cron calling process-due) runs snapshots at the chosen interval—no need for npm run dev or the BullMQ worker to be running.
+    const canonicalReelUrl = normalizeReelUrlCanonical(submission.reelUrl);
+
+    if (!canonicalReelUrl) {
+      return NextResponse.json(
+        { error: 'Invalid reel URL after normalization' },
+        { status: 400 }
+      );
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Schedule or update job */
+    /* ------------------------------------------------------------------ */
+
     const existing = await prisma.$queryRaw<{ id: string }[]>`
-      SELECT id FROM aimodule.view_tracking_jobs WHERE "reelUrl" = ${canonicalReelUrl} ORDER BY "updatedAt" DESC LIMIT 1
-    `.then((rows) => rows?.[0]);
-    const nextRunAt = new Date(); // First run due immediately when scheduler runs
+      SELECT id FROM aimodule.view_tracking_jobs
+      WHERE "reelUrl" = ${canonicalReelUrl}
+      ORDER BY "updatedAt" DESC
+      LIMIT 1
+    `.then((rows: { id: string }[]) => rows?.[0]);
+
+    const nextRunAt = now;
+
     if (existing) {
       await prisma.$executeRaw`
         UPDATE aimodule.view_tracking_jobs
-        SET status = 'ACTIVE', "intervalHours" = ${intervalHours}, "nextRunAt" = ${nextRunAt}, "updatedAt" = NOW()
+        SET status = 'ACTIVE',
+            "intervalHours" = ${intervalHours},
+            "nextRunAt" = ${nextRunAt},
+            "updatedAt" = NOW()
         WHERE id = (${existing.id})::uuid
       `;
     } else {
-      const jobId = uuidv4();
       await prisma.$executeRaw`
-        INSERT INTO aimodule.view_tracking_jobs (id, "reelUrl", status, "intervalHours", "nextRunAt", "createdAt", "updatedAt")
-        VALUES (${jobId}::uuid, ${canonicalReelUrl}, 'ACTIVE', ${intervalHours}, ${nextRunAt}, NOW(), NOW())
+        INSERT INTO aimodule.view_tracking_jobs
+        (id, "reelUrl", status, "intervalHours", "nextRunAt", "createdAt", "updatedAt")
+        VALUES
+        (${uuidv4()}::uuid, ${canonicalReelUrl}, 'ACTIVE', ${intervalHours}, ${nextRunAt}, NOW(), NOW())
       `;
     }
 
-    logger.info(
-      `Started view tracking for submission ${submission.id} (reelUrl: ${submission.reelUrl}, interval: ${intervalHours} hours)`
-    );
+    logger.info(`Started view tracking for ${canonicalReelUrl}`);
 
     return NextResponse.json({
       success: true,
-      message: `View tracking started for reel ${canonicalReelUrl}`,
       submissionId: submission.id,
       reelUrl: canonicalReelUrl,
       intervalHours,
     });
   } catch (error: any) {
-    logger.error({ error }, 'Error starting view tracking');
-    
+    logger.error({ error }, 'View tracking start failed');
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid request data', details: error.errors },
+        { error: 'Invalid request', details: error.errors },
         { status: 400 }
       );
     }
@@ -214,67 +225,68 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * Stop view tracking for a submission or reel URL
- * DELETE /api/view-tracking?submissionId=xxx
- * DELETE /api/view-tracking?reelUrl=xxx
+ * Stop view tracking
+ * DELETE /api/view-tracking
  */
 export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const submissionId = searchParams.get('submissionId');
-    const reelUrl = searchParams.get('reelUrl');
+    const reelUrlParam = searchParams.get('reelUrl');
 
-    if (!submissionId && !reelUrl) {
+    if (!submissionId && !reelUrlParam) {
       return NextResponse.json(
         { error: 'Either submissionId or reelUrl is required' },
         { status: 400 }
       );
     }
 
-    let finalSubmissionId = submissionId;
-    let normalizedReelUrl: string | null = null;
+    let resolvedSubmissionId = submissionId;
 
-    if (!finalSubmissionId && reelUrl) {
-      normalizedReelUrl = normalizeReelUrlCanonical(reelUrl);
-      const submission = await SubmissionModel.findByReelUrl(normalizedReelUrl);
+    // Allow stopping by reelUrl (what the frontend sends)
+    if (!resolvedSubmissionId && reelUrlParam) {
+      const canonical = normalizeReelUrlCanonical(reelUrlParam);
+      if (!canonical) {
+        return NextResponse.json(
+          { error: 'Invalid reel URL' },
+          { status: 400 }
+        );
+      }
+
+      const submission = await SubmissionModel.findByReelUrl(canonical);
       if (!submission) {
         return NextResponse.json(
           { error: 'No submission found for this reel URL' },
           { status: 404 }
         );
       }
-      finalSubmissionId = submission.id;
-    } else if (finalSubmissionId) {
-      const sub = await SubmissionModel.findById(finalSubmissionId).catch(() => null);
-      if (sub?.reelUrl) {
-        normalizedReelUrl = sub.reelUrl.startsWith('http') ? sub.reelUrl : `https://${sub.reelUrl}`;
-      }
-    }
+      resolvedSubmissionId = submission.id;
 
-    await removeViewTrackingJob(finalSubmissionId!);
-
-    // Mark view_tracking_jobs as STOPPED (raw SQL for bundle-safe access)
-    if (normalizedReelUrl) {
-      const canonical = normalizeReelUrlCanonical(normalizedReelUrl);
-      const activeJobs = await prisma.$queryRaw<{ id: string; reelUrl: string }[]>`
-        SELECT id, "reelUrl" FROM aimodule.view_tracking_jobs WHERE status = 'ACTIVE'
+      // Deactivate any DB-driven jobs for this reel so the scheduler stops running it
+      await prisma.$executeRaw`
+        UPDATE aimodule.view_tracking_jobs
+        SET status = 'INACTIVE',
+            "updatedAt" = NOW()
+        WHERE "reelUrl" = ${canonical}
       `;
-      const active = activeJobs.find((j) => normalizeReelUrlCanonical(j.reelUrl) === canonical);
-      if (active) {
-        await prisma.$executeRaw`
-          UPDATE aimodule.view_tracking_jobs SET status = 'STOPPED', "updatedAt" = NOW() WHERE id = (${active.id})::uuid
-        `;
-      }
     }
 
-    logger.info(`Stopped view tracking for submission ${finalSubmissionId}`);
+    if (!resolvedSubmissionId) {
+      return NextResponse.json(
+        { error: 'Submission could not be resolved' },
+        { status: 400 }
+      );
+    }
+
+    // Remove any BullMQ-based repeatable jobs that might exist (backwards compatibility)
+    await removeViewTrackingJob(resolvedSubmissionId);
 
     return NextResponse.json({
       success: true,
-      message: `View tracking stopped for submission ${finalSubmissionId}`,
+      message: `View tracking stopped for submission ${resolvedSubmissionId}`,
     });
   } catch (error: any) {
-    logger.error({ error }, 'Error stopping view tracking');
+    logger.error({ error }, 'View tracking stop failed');
     return NextResponse.json(
       { error: error.message || 'Failed to stop view tracking' },
       { status: 500 }
@@ -283,26 +295,12 @@ export async function DELETE(request: NextRequest) {
 }
 
 /**
- * Get view tracking info
+ * Health check
  * GET /api/view-tracking
  */
-export async function GET(request: NextRequest) {
-  try {
-    return NextResponse.json({
-      success: true,
-      message: 'View tracking API is running. Use /api/view-tracking/stats for queue statistics.',
-      endpoints: {
-        stats: '/api/view-tracking/stats',
-        start: 'POST /api/view-tracking',
-        stop: 'DELETE /api/view-tracking?submissionId=xxx',
-        snapshots: 'GET /api/view-tracking/snapshots?submissionId=xxx',
-      },
-    });
-  } catch (error: any) {
-    logger.error({ error }, 'Error in view tracking GET');
-    return NextResponse.json(
-      { error: error.message || 'Failed to process request' },
-      { status: 500 }
-    );
-  }
+export async function GET() {
+  return NextResponse.json({
+    success: true,
+    message: 'View tracking API is running',
+  });
 }

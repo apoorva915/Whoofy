@@ -74,7 +74,7 @@ class EngagementAnalysisService {
     const startTime = Date.now();
     
     const promotionTimestamp = currentEngagement.timestamp;
-    const issues = {
+    const issues: EngagementAnalysisResult['issues'] = {
       suspiciousLikePattern: {
         detected: false,
         description: '',

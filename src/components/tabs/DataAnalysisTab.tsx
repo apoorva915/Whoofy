@@ -2,25 +2,51 @@
 
 import { useState, useEffect } from 'react';
 
+/* ------------------------------------------------------------------ */
+/* Types */
+/* ------------------------------------------------------------------ */
+
+type AnalysisResults = {
+  sentiment?: any;
+  niche?: any;
+  region?: any;
+};
+
+/* ------------------------------------------------------------------ */
+/* Props */
+/* ------------------------------------------------------------------ */
+
 interface DataAnalysisTabProps {
   scrapingData?: any;
-  persistedData?: any;
-  onDataUpdate: (data: any) => void;
+  persistedData?: AnalysisResults;
+  onDataUpdate: (data: AnalysisResults) => void;
 }
 
-export default function DataAnalysisTab({ scrapingData, persistedData, onDataUpdate }: DataAnalysisTabProps) {
-  const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState<any>(persistedData || {});
+/* ------------------------------------------------------------------ */
+/* Component */
+/* ------------------------------------------------------------------ */
+
+export default function DataAnalysisTab({
+  scrapingData,
+  persistedData,
+  onDataUpdate,
+}: DataAnalysisTabProps) {
+  const [loading, setLoading] = useState<boolean>(false);
+  const [results, setResults] = useState<AnalysisResults>(persistedData || {});
   const [error, setError] = useState<string | null>(null);
 
-  // Sync with persisted data when it changes
+  /* ---------------- Sync persisted data ---------------- */
+
   useEffect(() => {
     if (persistedData && Object.keys(persistedData).length > 0) {
-      setResults(prev => {
-        return { ...prev, ...persistedData };
-      });
+      setResults((prev: AnalysisResults) => ({
+        ...prev,
+        ...persistedData,
+      }));
     }
   }, [persistedData]);
+
+  /* ---------------- Run analysis ---------------- */
 
   const runAnalysis = async (type: 'sentiment' | 'niche' | 'region') => {
     if (!scrapingData) {
@@ -32,57 +58,61 @@ export default function DataAnalysisTab({ scrapingData, persistedData, onDataUpd
     setError(null);
 
     try {
-      let response;
+      let response: Response;
+
       const metadata = scrapingData.data?.metadata || scrapingData.metadata;
-      const reelUrl = scrapingData.data?.metadata?.reelUrl || scrapingData.reelUrl || scrapingData.data?.reelUrl || '';
+      const reelUrl =
+        scrapingData.data?.metadata?.reelUrl ||
+        scrapingData.reelUrl ||
+        scrapingData.data?.reelUrl ||
+        '';
 
-      switch (type) {
-        case 'sentiment':
-          response = await fetch('/api/sentiment/gemini', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              reelUrl,
-              caption: metadata?.caption,
-              transcript: metadata?.transcript,
-              comments: metadata?.comments || [],
-            }),
-          });
-          break;
-
-        case 'niche':
-          response = await fetch('/api/creators/niche-analysis', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              reelUrl,
-              bio: metadata?.bio || scrapingData.data?.creator?.bio || '',
-              posts: metadata?.comments?.slice(0, 10) || [],
-              creatorUsername: scrapingData.data?.creator?.username || null,
-            }),
-          });
-          break;
-
-        case 'region':
-          response = await fetch('/api/language-region/analyze', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              reelUrl,
-              caption: metadata?.caption,
-              transcript: metadata?.transcript,
-              comments: metadata?.comments || [],
-            }),
-          });
-          break;
+      if (type === 'sentiment') {
+        response = await fetch('/api/sentiment/gemini', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            reelUrl,
+            caption: metadata?.caption,
+            transcript: metadata?.transcript,
+            comments: metadata?.comments || [],
+          }),
+        });
+      } else if (type === 'niche') {
+        response = await fetch('/api/creators/niche-analysis', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            reelUrl,
+            bio: metadata?.bio || scrapingData.data?.creator?.bio || '',
+            posts: metadata?.comments?.slice(0, 10) || [],
+            creatorUsername: scrapingData.data?.creator?.username || null,
+          }),
+        });
+      } else {
+        response = await fetch('/api/language-region/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            reelUrl,
+            caption: metadata?.caption,
+            transcript: metadata?.transcript,
+            comments: metadata?.comments || [],
+          }),
+        });
       }
 
       const data = await response.json();
+
       if (!response.ok) {
-        throw new Error(data.error?.message || 'Analysis failed');
+        throw new Error(data?.error?.message || 'Analysis failed');
       }
 
-      const updatedResults = { ...results, [type]: data };
+      const updatedResults: AnalysisResults = {
+        ...results,
+        [type]: data,
+      };
+
       setResults(updatedResults);
       onDataUpdate(updatedResults);
     } catch (err: any) {
@@ -92,9 +122,193 @@ export default function DataAnalysisTab({ scrapingData, persistedData, onDataUpd
     }
   };
 
+  /* ---------------- Derived data ---------------- */
+
   const sentimentData = results.sentiment?.data || results.sentiment;
   const nicheData = results.niche?.data || results.niche;
   const regionData = results.region?.data || results.region;
+
+  /* ---------------- Render helpers ---------------- */
+
+  const renderSentimentCard = () => {
+    if (!sentimentData) return null;
+
+    const caption = sentimentData.caption || {};
+    const transcript = sentimentData.transcript || {};
+    const isPositive = !!sentimentData.isPositivePublicity;
+
+    const badgeClass = isPositive
+      ? 'bg-green-100 text-green-800 border-green-200'
+      : 'bg-red-100 text-red-800 border-red-200';
+
+    const badgeLabel = isPositive ? 'YES' : 'NO';
+
+    const sentimentToColor = (s: string | undefined) => {
+      switch (s) {
+        case 'positive':
+          return 'text-green-700';
+        case 'negative':
+          return 'text-red-700';
+        default:
+          return 'text-gray-700';
+      }
+    };
+
+    return (
+      <div className="bg-white border rounded-lg shadow-sm mb-8">
+        <div className="border-b px-6 py-4 flex items-center justify-between">
+          <h2 className="text-xl font-semibold">Gemini Sentiment Analysis</h2>
+          <span className={`px-3 py-1 text-sm font-semibold rounded-full border ${badgeClass}`}>
+            Positive Publicity: {badgeLabel}
+          </span>
+        </div>
+
+        <div className="px-6 py-4 space-y-4">
+          <p className="text-sm text-gray-700">
+            {sentimentData.overallReasoning ||
+              'Overall sentiment assessment for caption and transcript.'}
+          </p>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            {/* Caption */}
+            <div className="border rounded-lg p-4 bg-gray-50">
+              <h3 className="font-semibold mb-2">Caption Sentiment</h3>
+              <p className={`font-semibold ${sentimentToColor(caption.sentiment)}`}>
+                {(caption.sentiment || 'neutral').toUpperCase()}
+              </p>
+              <p className="text-sm text-gray-600 mt-1">
+                Confidence:{' '}
+                {caption.confidence != null ? `${Math.round(caption.confidence * 100)}%` : 'N/A'}{' '}
+                {caption.language && ` Language: ${caption.language.toUpperCase()}`}
+              </p>
+              {caption.reasoning && (
+                <p className="text-sm text-gray-700 mt-2">{caption.reasoning}</p>
+              )}
+            </div>
+
+            {/* Transcript */}
+            <div className="border rounded-lg p-4 bg-gray-50">
+              <h3 className="font-semibold mb-2">Transcript Sentiment</h3>
+              <p className={`font-semibold ${sentimentToColor(transcript.sentiment)}`}>
+                {(transcript.sentiment || 'neutral').toUpperCase()}
+              </p>
+              <p className="text-sm text-gray-600 mt-1">
+                Confidence:{' '}
+                {transcript.confidence != null
+                  ? `${Math.round(transcript.confidence * 100)}%`
+                  : 'N/A'}{' '}
+                {transcript.language && ` Language: ${transcript.language.toUpperCase()}`}
+              </p>
+              {transcript.reasoning && (
+                <p className="text-sm text-gray-700 mt-2">{transcript.reasoning}</p>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderNicheCard = () => {
+    if (!nicheData) return null;
+
+    const niches: string[] = nicheData.niches || [];
+
+    return (
+      <div className="bg-white border rounded-lg shadow-sm mb-8">
+        <div className="border-b px-6 py-4 flex items-center justify-between">
+          <h2 className="text-xl font-semibold">Niche Analysis</h2>
+          {nicheData.confidence != null && (
+            <span className="px-3 py-1 text-sm font-semibold rounded-full border bg-blue-50 text-blue-800 border-blue-200">
+              Confidence: {Math.round(nicheData.confidence * 100)}%
+            </span>
+          )}
+        </div>
+
+        <div className="px-6 py-4 space-y-4">
+          {niches.length > 0 && (
+            <div>
+              <h3 className="font-semibold mb-2">Primary Niches</h3>
+              <div className="flex flex-wrap gap-2">
+                {niches.map((niche: string) => (
+                  <span
+                    key={niche}
+                    className="px-3 py-1 text-sm rounded-full bg-indigo-50 text-indigo-800 border border-indigo-200"
+                  >
+                    {niche}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {nicheData.reasoning && (
+            <p className="text-sm text-gray-700">{nicheData.reasoning}</p>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderRegionCard = () => {
+    if (!regionData) return null;
+
+    const primaryRegion = regionData.primaryRegion || {};
+    const regions: any[] = regionData.regions || [];
+    const comments = regionData.comments || {};
+
+    return (
+      <div className="bg-white border rounded-lg shadow-sm mb-8">
+        <div className="border-b px-6 py-4 flex items-center justify-between">
+          <h2 className="text-xl font-semibold">Region Analysis</h2>
+          {primaryRegion.region && (
+            <span className="px-3 py-1 text-sm font-semibold rounded-full border bg-emerald-50 text-emerald-800 border-emerald-200">
+              Primary Region: {primaryRegion.region}{' '}
+              {primaryRegion.confidence != null &&
+                `(${Math.round(primaryRegion.confidence * 100)}% confidence)`}
+            </span>
+          )}
+        </div>
+
+        <div className="px-6 py-4 space-y-4">
+          {/* Language examples */}
+          {comments?.languageDistribution && comments.languageDistribution.length > 0 && (
+            <div>
+              <h3 className="font-semibold mb-2">Language Examples</h3>
+              <ul className="space-y-2 text-sm text-gray-700">
+                {comments.languageDistribution.map((lang: any) => (
+                  <li key={lang.language}>
+                    <span className="font-semibold">
+                      {lang.languageName || lang.language}:
+                    </span>{' '}
+                    {lang.examples?.slice(0, 3).join(' | ')}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Regions list */}
+          {regions.length > 0 && (
+            <div>
+              <h3 className="font-semibold mb-2">All Detected Regions</h3>
+              <ul className="space-y-2 text-sm text-gray-700">
+                {regions.map((r) => (
+                  <li key={r.region}>
+                    <span className="font-semibold">{r.region}</span>
+                    {r.confidence != null && ` • ${Math.round(r.confidence * 100)}% confidence`}
+                    {r.reasoning && ` – ${r.reasoning}`}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  /* ---------------- Render ---------------- */
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -108,12 +322,11 @@ export default function DataAnalysisTab({ scrapingData, persistedData, onDataUpd
         </div>
       )}
 
-      {/* Analysis Buttons */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
         <button
           onClick={() => runAnalysis('sentiment')}
           disabled={loading || !scrapingData}
-          className="px-6 py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
+          className="px-6 py-4 bg-blue-600 text-white rounded-lg disabled:bg-gray-400"
         >
           Run Sentiment Analysis
         </button>
@@ -121,7 +334,7 @@ export default function DataAnalysisTab({ scrapingData, persistedData, onDataUpd
         <button
           onClick={() => runAnalysis('niche')}
           disabled={loading || !scrapingData}
-          className="px-6 py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
+          className="px-6 py-4 bg-blue-600 text-white rounded-lg disabled:bg-gray-400"
         >
           Run Niche Analysis
         </button>
@@ -129,7 +342,7 @@ export default function DataAnalysisTab({ scrapingData, persistedData, onDataUpd
         <button
           onClick={() => runAnalysis('region')}
           disabled={loading || !scrapingData}
-          className="px-6 py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
+          className="px-6 py-4 bg-blue-600 text-white rounded-lg disabled:bg-gray-400"
         >
           Run Region Analysis
         </button>
@@ -141,328 +354,9 @@ export default function DataAnalysisTab({ scrapingData, persistedData, onDataUpd
         </div>
       )}
 
-      <div className="space-y-6">
-        {/* Sentiment Analysis */}
-        {sentimentData && (
-          <div className="bg-white rounded-lg shadow-lg border-2 border-purple-500 p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold text-purple-700">Gemini Sentiment Analysis</h2>
-              <button
-                onClick={() => {
-                  const blob = new Blob([JSON.stringify(results.sentiment, null, 2)], {
-                    type: 'application/json',
-                  });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement('a');
-                  a.href = url;
-                  a.download = `sentiment-analysis-${Date.now()}.json`;
-                  document.body.appendChild(a);
-                  a.click();
-                  document.body.removeChild(a);
-                  URL.revokeObjectURL(url);
-                }}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
-              >
-                📥 Download
-              </button>
-            </div>
-
-            {/* Positive Publicity Assessment */}
-            {(sentimentData.isPositivePublicity !== undefined || sentimentData.positivePublicityAssessment !== undefined) && (
-              <div className="bg-green-50 border-2 border-green-500 rounded-lg p-4 mb-4">
-                <div className="flex items-center gap-3 mb-2">
-                  <span className="font-semibold text-green-900">Positive Publicity Assessment:</span>
-                  <span className="bg-green-600 text-white px-3 py-1 rounded-full font-bold">
-                    {(sentimentData.isPositivePublicity !== undefined ? sentimentData.isPositivePublicity : sentimentData.positivePublicityAssessment) ? 'YES' : 'NO'}
-                  </span>
-                </div>
-                {(sentimentData.overallReasoning || sentimentData.assessmentReasoning) && (
-                  <p className="text-sm text-gray-700 mt-2">{sentimentData.overallReasoning || sentimentData.assessmentReasoning}</p>
-                )}
-              </div>
-            )}
-
-            {/* Caption and Transcript Sentiment - Side by Side */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              {/* Caption Sentiment */}
-              {sentimentData.caption && (
-                <div className="bg-gray-50 border border-gray-300 rounded-lg p-4">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-semibold text-gray-900">Caption Sentiment:</h3>
-                    {sentimentData.caption.sentiment && (
-                      <span className={`px-3 py-1 rounded-full text-sm font-bold ${
-                        (typeof sentimentData.caption.sentiment === 'string' ? sentimentData.caption.sentiment : sentimentData.caption.sentiment?.label || '').toUpperCase() === 'POSITIVE' ? 'bg-green-500 text-white' :
-                        (typeof sentimentData.caption.sentiment === 'string' ? sentimentData.caption.sentiment : sentimentData.caption.sentiment?.label || '').toUpperCase() === 'NEGATIVE' ? 'bg-red-500 text-white' :
-                        'bg-yellow-500 text-white'
-                      }`}>
-                        {(typeof sentimentData.caption.sentiment === 'string' ? sentimentData.caption.sentiment : sentimentData.caption.sentiment?.label || 'neutral').toUpperCase()}
-                      </span>
-                    )}
-                  </div>
-                  {sentimentData.caption.confidence !== undefined && (
-                    <div className="text-xs text-gray-600 mb-2">
-                      Confidence: {((sentimentData.caption.confidence || 0) * 100).toFixed(1)}%
-                      {sentimentData.caption.language && ` Language: ${sentimentData.caption.language} (${sentimentData.caption.languageConfidence ? (sentimentData.caption.languageConfidence * 100).toFixed(0) : '100'}%)`}
-                    </div>
-                  )}
-                  {sentimentData.caption.reasoning && (
-                    <p className="text-sm text-gray-700">{sentimentData.caption.reasoning}</p>
-                  )}
-                </div>
-              )}
-
-              {/* Transcript Sentiment */}
-              {sentimentData.transcript && (
-                <div className="bg-gray-50 border border-gray-300 rounded-lg p-4">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-semibold text-gray-900">Transcript Sentiment:</h3>
-                    {sentimentData.transcript.sentiment && (
-                      <span className={`px-3 py-1 rounded-full text-sm font-bold ${
-                        (typeof sentimentData.transcript.sentiment === 'string' ? sentimentData.transcript.sentiment : sentimentData.transcript.sentiment?.label || '').toUpperCase() === 'POSITIVE' ? 'bg-green-500 text-white' :
-                        (typeof sentimentData.transcript.sentiment === 'string' ? sentimentData.transcript.sentiment : sentimentData.transcript.sentiment?.label || '').toUpperCase() === 'NEGATIVE' ? 'bg-red-500 text-white' :
-                        'bg-yellow-500 text-white'
-                      }`}>
-                        {(typeof sentimentData.transcript.sentiment === 'string' ? sentimentData.transcript.sentiment : sentimentData.transcript.sentiment?.label || 'neutral').toUpperCase()}
-                      </span>
-                    )}
-                  </div>
-                  {sentimentData.transcript.confidence !== undefined && (
-                    <div className="text-xs text-gray-600 mb-2">
-                      Confidence: {((sentimentData.transcript.confidence || 0) * 100).toFixed(1)}%
-                      {sentimentData.transcript.language && ` Language: ${sentimentData.transcript.language} (${sentimentData.transcript.languageConfidence ? (sentimentData.transcript.languageConfidence * 100).toFixed(0) : '100'}%)`}
-                    </div>
-                  )}
-                  {sentimentData.transcript.reasoning && (
-                    <p className="text-sm text-gray-700">{sentimentData.transcript.reasoning}</p>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {results.sentiment?.processingTimeMs && (
-              <div className="text-xs text-gray-500 mt-2">
-                Processing time: {results.sentiment.processingTimeMs}ms
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Niche Analysis */}
-        {nicheData && (
-          <div className="bg-yellow-50 border-2 border-yellow-400 rounded-lg p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold text-yellow-900">Creator Niche Analysis</h2>
-              <button
-                onClick={() => {
-                  const blob = new Blob([JSON.stringify(results.niche, null, 2)], {
-                    type: 'application/json',
-                  });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement('a');
-                  a.href = url;
-                  a.download = `niche-analysis-${Date.now()}.json`;
-                  document.body.appendChild(a);
-                  a.click();
-                  document.body.removeChild(a);
-                  URL.revokeObjectURL(url);
-                }}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
-              >
-                📥 Download
-              </button>
-            </div>
-
-            {/* Detected Niches */}
-            {(nicheData.niches || nicheData.detectedNiches) && (nicheData.niches || nicheData.detectedNiches || []).length > 0 && (
-              <div className="mb-4">
-                <span className="font-semibold text-gray-900 block mb-2">Detected Niches:</span>
-                <div className="flex flex-wrap gap-2">
-                  {(nicheData.niches || nicheData.detectedNiches || []).map((niche: string, idx: number) => (
-                    <span
-                      key={idx}
-                      className="bg-orange-300 text-orange-900 px-4 py-2 rounded-full font-medium"
-                    >
-                      {niche}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Confidence */}
-            {nicheData.confidence !== undefined && (
-              <div className="mb-4">
-                <span className="font-semibold text-gray-900">Confidence: </span>
-                <span className="text-lg font-bold">{((nicheData.confidence || 0) * 100).toFixed(1)}%</span>
-              </div>
-            )}
-
-            {/* Reasoning */}
-            {nicheData.reasoning && (
-              <div className="mb-4">
-                <span className="font-semibold text-gray-900 block mb-2">Reasoning:</span>
-                <p className="text-sm text-gray-700 whitespace-pre-wrap">{nicheData.reasoning}</p>
-              </div>
-            )}
-
-            {results.niche?.processingTimeMs && (
-              <div className="text-xs text-gray-500 mt-2">
-                Processing time: {results.niche.processingTimeMs}ms
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Region Analysis */}
-        {regionData && (
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold text-gray-900">Region Analysis</h2>
-              <button
-                onClick={() => {
-                  const blob = new Blob([JSON.stringify(results.region, null, 2)], {
-                    type: 'application/json',
-                  });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement('a');
-                  a.href = url;
-                  a.download = `region-analysis-${Date.now()}.json`;
-                  document.body.appendChild(a);
-                  a.click();
-                  document.body.removeChild(a);
-                  URL.revokeObjectURL(url);
-                }}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
-              >
-                📥 Download
-              </button>
-            </div>
-
-            {/* Language/Comment Statistics */}
-            {regionData.comments && regionData.comments.languageDistribution && (
-              <div className="mb-4">
-                <span className="font-semibold text-gray-900 block mb-2">Examples:</span>
-                {Object.entries(regionData.comments.languageDistribution)
-                  .slice(0, 3)
-                  .map(([lang, langData]: [string, any]) => {
-                    // Handle both object and number formats
-                    const langInfo = typeof langData === 'object' && langData !== null
-                      ? {
-                          language: langData.language || lang,
-                          languageName: langData.languageName || lang,
-                          count: langData.count || 0,
-                          percentage: langData.percentage || 0,
-                          examples: langData.examples || []
-                        }
-                      : {
-                          language: lang,
-                          languageName: lang,
-                          count: typeof langData === 'number' ? langData : 0,
-                          percentage: regionData.comments.totalAnalyzed > 0
-                            ? ((typeof langData === 'number' ? langData : 0) / regionData.comments.totalAnalyzed * 100)
-                            : 0,
-                          examples: []
-                        };
-                    
-                    const displayPercentage = langInfo.percentage > 0 
-                      ? langInfo.percentage.toFixed(1)
-                      : (regionData.comments.totalAnalyzed > 0
-                          ? ((langInfo.count / regionData.comments.totalAnalyzed) * 100).toFixed(1)
-                          : '0.0');
-                    
-                    return (
-                      <div key={lang} className="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-2">
-                        <div className="font-semibold">{langInfo.languageName || langInfo.language}</div>
-                        <div className="text-sm text-gray-600">
-                          {langInfo.count} comments ({displayPercentage}%)
-                        </div>
-                        {langInfo.examples && langInfo.examples.length > 0 && (
-                          <div className="text-xs text-gray-500 mt-1">
-                            Examples: {langInfo.examples.slice(0, 2).map((ex: string, idx: number) => (
-                              <span key={idx}>"{ex}"{idx < langInfo.examples.slice(0, 2).length - 1 ? ', ' : ''}</span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-              </div>
-            )}
-
-            {/* Primary Region */}
-            {regionData.primaryRegion && (
-              <div className="bg-green-50 border-2 border-green-500 rounded-lg p-4 mb-4">
-                <div className="flex items-center gap-3 mb-2">
-                  <span className="font-semibold text-green-900">Primary Region:</span>
-                  <span className="bg-green-600 text-white px-4 py-2 rounded-full font-bold">
-                    {regionData.primaryRegion.region}
-                    {regionData.primaryRegion.countryCode && `, ${regionData.primaryRegion.countryCode}`}
-                  </span>
-                  {regionData.primaryRegion.confidence && (
-                    <span className="text-sm text-gray-700">
-                      ({((regionData.primaryRegion.confidence || 0) * 100).toFixed(0)}% confidence)
-                    </span>
-                  )}
-                </div>
-                {regionData.primaryRegion.reasoning && (
-                  <p className="text-sm text-gray-700 mt-2">{regionData.primaryRegion.reasoning}</p>
-                )}
-              </div>
-            )}
-
-            {/* All Detected Regions */}
-            {regionData.regions && regionData.regions.length > 0 && (
-              <div className="mb-4">
-                <span className="font-semibold text-gray-900 block mb-3">All Detected Regions:</span>
-                <div className="space-y-3">
-                  {regionData.regions.map((region: any, idx: number) => (
-                    <div key={idx} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-semibold">
-                          {region.region}
-                          {region.countryCode && ` (${region.countryCode})`}
-                        </span>
-                        {region.confidence && (
-                          <span className="text-sm text-gray-600">
-                            {((region.confidence || 0) * 100).toFixed(0)}% confidence
-                          </span>
-                        )}
-                      </div>
-                      {region.languages && Object.keys(region.languages).length > 0 && (
-                        <div className="text-sm text-gray-600 mb-2">
-                          Languages: {Object.entries(region.languages)
-                            .map(([lang, langData]: [string, any]) => {
-                              // Handle both object and number formats
-                              const count = typeof langData === 'object' && langData !== null
-                                ? (langData.count || 0)
-                                : (typeof langData === 'number' ? langData : 0);
-                              const total = regionData.comments?.totalAnalyzed || 1;
-                              const percentage = ((count / total) * 100).toFixed(1);
-                              const langName = typeof langData === 'object' && langData !== null
-                                ? (langData.languageName || langData.language || lang)
-                                : lang;
-                              return `${langName} (${percentage}%)`;
-                            })
-                            .join(', ')}
-                        </div>
-                      )}
-                      {region.reasoning && (
-                        <p className="text-sm text-gray-700">{region.reasoning}</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {results.region?.processingTimeMs && (
-              <div className="text-xs text-gray-500 mt-2">
-                Processing time: {results.region.processingTimeMs}ms
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+      {renderSentimentCard()}
+      {renderNicheCard()}
+      {renderRegionCard()}
     </div>
   );
 }

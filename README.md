@@ -12,6 +12,7 @@ Instagram reel verification and analysis: data scraping, frame analysis (YOLO/OC
 - [API keys](#api-keys)
 - [Database setup (Supabase / PostgreSQL)](#database-setup-supabase--postgresql)
 - [Redis setup](#redis-setup)
+- [Docker setup](#docker-setup)
 - [How to run everything](#how-to-run-everything)
 - [View tracking (scheduler)](#view-tracking-scheduler)
 - [Python / YOLO / Tesseract / CLIP](#python--yolo--tesseract--clip)
@@ -193,6 +194,66 @@ sudo apt-get install redis-server && sudo service redis-server start
 ```
 
 Verify: `redis-cli ping` → `PONG`.
+
+---
+
+## Docker setup
+
+Docker lets you run the full stack (web + ML + Redis + Postgres) without installing Node/FFmpeg/Python tooling globally.
+
+### 1. Prepare `.env`
+
+From the project root:
+
+```bash
+cp .env.docker.example .env
+```
+
+Then edit `.env` and set at least:
+
+- `DATABASE_URL` – your Supabase/Postgres connection string  
+- `APIFY_API_TOKEN` – Apify token  
+- `GEMINI_API_KEY` – Gemini API key  
+
+You can also keep your existing non‑Docker `.env`; the key requirement for Docker is that `DATABASE_URL` is valid.
+
+### 2. Start the containers
+
+From `whoofy` project root:
+
+```bash
+docker-compose up --build
+```
+
+This starts:
+
+- `web` – Next.js app at `http://localhost:3000`
+- `ml` – Python YOLO/OCR/CLIP service (used by Frame Analysis – Local)
+- `redis` – Redis for queue usage (optional)
+- `db` – Postgres (optional if you already use Supabase; in that case, just point `DATABASE_URL` at Supabase)
+
+### 3. Start the view‑tracking scheduler (host)
+
+View tracking snapshots & spike detection are **DB‑driven** and require the scheduler script to run continuously.
+Run this on your host machine in a **separate terminal**:
+
+```bash
+cd /path/to/Whoofy
+
+# install deps once if you haven't already
+npm install
+
+# keep this running while you want view tracking active
+npm run scheduler:view-tracking
+```
+
+This script uses the same `.env` as the app and:
+
+- Finds due jobs in `aimodule.view_tracking_jobs`
+- Calls the view‑snapshot pipeline
+- Updates `aimodule.view_tracking_snapshots` for the Engagement Analysis tab
+
+You can run the scheduler under a process manager (PM2, systemd, etc.) in production.
 
 ---
 

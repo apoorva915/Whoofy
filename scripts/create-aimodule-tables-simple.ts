@@ -9,13 +9,24 @@ import logger from '../src/utils/logger';
 
 const prisma = new PrismaClient();
 
+/* ------------------------------------------------------------------ */
+/* Types */
+/* ------------------------------------------------------------------ */
+
+type PgTableRow = {
+  tablename: string;
+};
+
+/* ------------------------------------------------------------------ */
+/* Script */
+/* ------------------------------------------------------------------ */
+
 async function createAimoduleTables() {
   try {
     logger.info('Creating aimodule schema tables...');
 
-    // Define SQL statements in correct order
-    const statements = [
-      // Create tables first
+    /* -------------------- TABLES -------------------- */
+    const statements: string[] = [
       `CREATE TABLE IF NOT EXISTS aimodule.video_analyses (
         id TEXT PRIMARY KEY,
         "reelUrl" TEXT NOT NULL,
@@ -29,7 +40,7 @@ async function createAimoduleTables() {
         "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
         "updatedAt" TIMESTAMP(3) NOT NULL
       )`,
-      
+
       `CREATE TABLE IF NOT EXISTS aimodule.frame_analyses (
         id TEXT PRIMARY KEY,
         "videoAnalysisId" TEXT NOT NULL,
@@ -44,10 +55,12 @@ async function createAimoduleTables() {
         people JSONB NOT NULL DEFAULT '[]',
         "visualSimilarity" JSONB,
         "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        CONSTRAINT frame_analyses_videoAnalysisId_fkey FOREIGN KEY ("videoAnalysisId") 
-            REFERENCES aimodule.video_analyses(id) ON DELETE CASCADE ON UPDATE CASCADE
+        CONSTRAINT frame_analyses_videoAnalysisId_fkey
+          FOREIGN KEY ("videoAnalysisId")
+          REFERENCES aimodule.video_analyses(id)
+          ON DELETE CASCADE ON UPDATE CASCADE
       )`,
-      
+
       `CREATE TABLE IF NOT EXISTS aimodule.video_analysis_summaries (
         id TEXT PRIMARY KEY,
         "videoAnalysisId" TEXT NOT NULL UNIQUE,
@@ -58,10 +71,12 @@ async function createAimoduleTables() {
         "visualSimilaritySummary" JSONB,
         "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
         "updatedAt" TIMESTAMP(3) NOT NULL,
-        CONSTRAINT video_analysis_summaries_videoAnalysisId_fkey FOREIGN KEY ("videoAnalysisId") 
-            REFERENCES aimodule.video_analyses(id) ON DELETE CASCADE ON UPDATE CASCADE
+        CONSTRAINT video_analysis_summaries_videoAnalysisId_fkey
+          FOREIGN KEY ("videoAnalysisId")
+          REFERENCES aimodule.video_analyses(id)
+          ON DELETE CASCADE ON UPDATE CASCADE
       )`,
-      
+
       `CREATE TABLE IF NOT EXISTS aimodule.sentiment_analyses (
         id TEXT PRIMARY KEY,
         "reelUrl" TEXT NOT NULL,
@@ -74,7 +89,7 @@ async function createAimoduleTables() {
         "analysisProvider" TEXT NOT NULL DEFAULT 'gemini',
         "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
       )`,
-      
+
       `CREATE TABLE IF NOT EXISTS aimodule.language_region_analyses (
         id TEXT PRIMARY KEY,
         "reelUrl" TEXT NOT NULL,
@@ -87,7 +102,7 @@ async function createAimoduleTables() {
         "processingTimeMs" INTEGER NOT NULL,
         "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
       )`,
-      
+
       `CREATE TABLE IF NOT EXISTS aimodule.comment_analyses (
         id TEXT PRIMARY KEY,
         "reelUrl" TEXT NOT NULL,
@@ -105,8 +120,8 @@ async function createAimoduleTables() {
       )`,
     ];
 
-    // Create indexes
-    const indexes = [
+    /* -------------------- INDEXES -------------------- */
+    const indexes: string[] = [
       `CREATE INDEX IF NOT EXISTS video_analyses_reelUrl_idx ON aimodule.video_analyses("reelUrl")`,
       `CREATE INDEX IF NOT EXISTS video_analyses_reelId_idx ON aimodule.video_analyses("reelId")`,
       `CREATE INDEX IF NOT EXISTS video_analyses_status_idx ON aimodule.video_analyses(status)`,
@@ -125,77 +140,59 @@ async function createAimoduleTables() {
       `CREATE INDEX IF NOT EXISTS comment_analyses_createdAt_idx ON aimodule.comment_analyses("createdAt")`,
     ];
 
-    // Grant permissions
-    const grants = [
+    /* -------------------- GRANTS -------------------- */
+    const grants: string[] = [
       `GRANT ALL ON ALL TABLES IN SCHEMA aimodule TO postgres, service_role`,
       `GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA aimodule TO authenticated`,
       `GRANT SELECT ON ALL TABLES IN SCHEMA aimodule TO anon`,
     ];
 
-    const allStatements = [...statements, ...indexes, ...grants];
-    logger.info(`Executing ${allStatements.length} SQL statements (${statements.length} tables, ${indexes.length} indexes, ${grants.length} grants)...`);
+    logger.info(
+      `Executing ${statements.length} tables, ${indexes.length} indexes, ${grants.length} grants`
+    );
 
-    // Execute tables first
-    logger.info('Creating tables...');
-    for (let i = 0; i < statements.length; i++) {
-      try {
-        await prisma.$executeRawUnsafe(statements[i]);
-        logger.debug(`✅ Created table ${i + 1}/${statements.length}`);
-      } catch (error: any) {
-        if (error.message?.includes('already exists') || error.code === '42P07') {
-          logger.debug(`Table ${i + 1} already exists, skipping...`);
-          continue;
-        }
-        throw error;
-      }
+    /* -------------------- EXECUTION -------------------- */
+    for (const sql of statements) {
+      await prisma.$executeRawUnsafe(sql);
     }
 
-    // Then indexes
-    logger.info('Creating indexes...');
-    for (let i = 0; i < indexes.length; i++) {
-      try {
-        await prisma.$executeRawUnsafe(indexes[i]);
-      } catch (error: any) {
-        if (error.message?.includes('already exists') || error.code === '42P07') {
-          logger.debug(`Index ${i + 1} already exists, skipping...`);
-          continue;
-        }
-        throw error;
-      }
+    for (const sql of indexes) {
+      await prisma.$executeRawUnsafe(sql);
     }
 
-    // Finally grants
-    logger.info('Setting permissions...');
-    for (let i = 0; i < grants.length; i++) {
-      try {
-        await prisma.$executeRawUnsafe(grants[i]);
-      } catch (error: any) {
-        // Permission errors are often expected, just log
-        logger.debug(`Grant ${i + 1} completed (may have warnings)`);
-      }
+    for (const sql of grants) {
+      await prisma.$executeRawUnsafe(sql);
     }
 
-    logger.info('✅ aimodule tables created successfully');
-    
-    // Verify tables were created
-    const tables = await prisma.$queryRaw<Array<{ tablename: string }>>`
-      SELECT tablename 
-      FROM pg_tables 
+    /* -------------------- VERIFY -------------------- */
+    const tables = await prisma.$queryRaw<PgTableRow[]>`
+      SELECT tablename
+      FROM pg_tables
       WHERE schemaname = 'aimodule'
       ORDER BY tablename
     `;
-    
-    logger.info(`Created tables: ${tables.map(t => t.tablename).join(', ')}`);
-    
+
+    logger.info(
+      `Created tables: ${tables.map((t: PgTableRow) => t.tablename).join(', ')}`
+    );
+
+    logger.info('✅ aimodule tables created successfully');
   } catch (error: any) {
-    logger.error({ 
-      error: error.message, 
-      code: error.code,
-      meta: error.meta 
-    }, 'Failed to create aimodule tables');
+    logger.error(
+      {
+        message: error.message,
+        code: error.code,
+        meta: error.meta,
+      },
+      'Failed to create aimodule tables'
+    );
     throw error;
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* Entry */
+/* ------------------------------------------------------------------ */
 
 async function main() {
   try {

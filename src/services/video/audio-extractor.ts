@@ -128,7 +128,7 @@ class AudioExtractor {
       
       // On Windows, use shell: true to properly handle paths with spaces
       if (process.platform === 'win32') {
-        await execAsync(command, { shell: true });
+        await execAsync(command, { shell: true } as any);
       } else {
         await execAsync(command);
       }

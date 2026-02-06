@@ -48,9 +48,10 @@ export async function runViewTrackingSnapshot(input: RunSnapshotInput): Promise<
       take: 10,
     });
 
+    type SnapshotRow = { viewCount: number; likeCount: number | null; snapshotAt: Date };
     const spikeResult = detectViewSpike(
       currentViewCount,
-      previousSnapshots.map((s) => ({
+      previousSnapshots.map((s: SnapshotRow) => ({
         viewCount: s.viewCount,
         likeCount: s.likeCount || 0,
         timestamp: s.snapshotAt,
@@ -58,7 +59,7 @@ export async function runViewTrackingSnapshot(input: RunSnapshotInput): Promise<
       currentLikeCount
     );
 
-    const currentShareCount = reelMetadata.shareCount || 0;
+    const currentShareCount = (reelMetadata as any).shareCount ?? 0;
     const saves = 0;
     const totalEngagement = currentLikeCount + currentCommentCount + currentShareCount + saves;
     const engagementRatio = currentViewCount > 0 ? totalEngagement / currentViewCount : 0;

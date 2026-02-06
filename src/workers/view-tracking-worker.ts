@@ -1,6 +1,7 @@
 import { Worker, Job } from 'bullmq';
 import { QueueName, ViewTrackingJobData } from './queue';
-import { getRedisClient } from '@/config/redis';
+import env from '@/config/env';
+import prisma from '@/config/database';
 import logger from '@/utils/logger';
 import { runViewTrackingSnapshot } from '@/services/view-tracking/run-snapshot';
 
@@ -39,7 +40,9 @@ export function createViewTrackingWorker(): Worker {
     },
     {
       connection: {
-        createClient: () => getRedisClient(),
+        host: env.REDIS_HOST,
+        port: env.REDIS_PORT,
+        password: env.REDIS_PASSWORD || undefined,
       },
       concurrency: 5, // Process up to 5 jobs concurrently
       limiter: {
@@ -139,9 +142,12 @@ export async function analyzeEngagementRatio(reelSubmissionId: string) {
       return;
     }
 
-    // Calculate engagement ratio
+    // Calculate engagement ratio (treat nullable counts as 0)
     const engagementRatio =
-      (latestSnapshot.likeCount + latestSnapshot.commentCount + latestSnapshot.shareCount + (latestSnapshot.saveCount || 0)) /
+      ((latestSnapshot.likeCount ?? 0) +
+        (latestSnapshot.commentCount ?? 0) +
+        (latestSnapshot.shareCount ?? 0) +
+        ((latestSnapshot as any).saveCount ?? 0)) /
       latestSnapshot.viewCount;
 
     // Determine engagement label based on thresholds

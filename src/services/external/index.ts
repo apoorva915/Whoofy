@@ -46,7 +46,6 @@ export class ExternalApiService {
           isVerified: scraped.isVerified,
         };
       } catch (error: any) {
-        const { logger } = await import('@/utils/logger');
         logger.error({ error: error.message }, 'Apify scraper failed');
         throw error;
       }
@@ -77,7 +76,6 @@ export class ExternalApiService {
           permalink: `https://www.instagram.com/reel/${scraped.shortcode}/`,
         };
       } catch (error: any) {
-        const { logger } = await import('@/utils/logger');
         logger.error({ error: error.message }, 'Apify scraper failed');
         throw error;
       }

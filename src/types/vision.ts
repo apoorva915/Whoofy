@@ -30,6 +30,8 @@ export interface FrameAnalysis {
     name: string;
     confidence: number; // 0–1
   }[];
+  // Optional OCR text content for this frame (local pipeline)
+  text?: string;
   people?: PersonDemographics[]; // People detected in frame with demographics
   visualSimilarity?: VisualSimilarity; // CLIP similarity if reference image provided
 }

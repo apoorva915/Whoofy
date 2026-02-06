@@ -125,6 +125,7 @@ class GoogleVisionService {
   private pythonCommand: string;
   private faceDetectionScriptPath: string;
   private faceDetectionAvailable: boolean | null = null;
+  private mlServiceUrl?: string;
 
   constructor() {
     this.apiKey = externalApiConfig.googleCloud.visionApiKey;
@@ -138,6 +139,7 @@ class GoogleVisionService {
         : path.join(process.cwd(), '.venv', 'bin', 'python'));
     
     this.faceDetectionScriptPath = path.join(process.cwd(), 'yolo', 'face_detection.py');
+    this.mlServiceUrl = env.ML_SERVICE_URL?.replace(/\/+$/, '');
   }
 
   /**
@@ -754,6 +756,33 @@ class GoogleVisionService {
    * Run face detection via Python subprocess
    */
   private async runFaceDetectionCommand(args: string[]): Promise<PersonDemographics[]> {
+    if (this.mlServiceUrl) {
+      const url = `${this.mlServiceUrl}/faces`;
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ image_path: args[0] }),
+      });
+
+      const text = await res.text();
+      let parsed: any;
+      try {
+        parsed = text ? JSON.parse(text) : {};
+      } catch {
+        parsed = { error: text || `Non-JSON response from ML service (${res.status})` };
+      }
+
+      if (!res.ok) {
+        throw new Error(parsed?.error || `ML service error (${res.status})`);
+      }
+
+      if (parsed?.error) {
+        throw new Error(parsed.error);
+      }
+
+      return Array.isArray(parsed?.people) ? parsed.people : [];
+    }
+
     return new Promise((resolve, reject) => {
       const scriptArgs = [this.faceDetectionScriptPath, ...args];
       

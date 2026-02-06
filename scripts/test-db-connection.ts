@@ -22,7 +22,7 @@ async function testConnection() {
 
     // Try a simple query
     const result = await prisma.$queryRaw`SELECT 1 as test`;
-    logger.info('✅ Database query successful', { result });
+    logger.info({ result }, '✅ Database query successful');
 
     // Check if schemas exist
     const schemas = await prisma.$queryRaw<Array<{ schema_name: string }>>`
@@ -30,7 +30,7 @@ async function testConnection() {
       FROM information_schema.schemata 
       WHERE schema_name IN ('public', 'aimodule')
     `;
-    logger.info('Available schemas:', { schemas: schemas.map(s => s.schema_name) });
+    logger.info({ schemas: schemas.map(s => s.schema_name) }, 'Available schemas');
 
     if (!schemas.find(s => s.schema_name === 'aimodule')) {
       logger.warn('⚠️  aimodule schema not found. Run: npm run db:setup-supabase');

@@ -1,5 +1,5 @@
 import { Queue, QueueOptions } from 'bullmq';
-import { getRedisClient } from '@/config/redis';
+import env from '@/config/env';
 import logger from '@/utils/logger';
 
 /**
@@ -23,7 +23,9 @@ export interface ViewTrackingJobData {
  */
 const queueOptions: QueueOptions = {
   connection: {
-    createClient: () => getRedisClient(),
+    host: env.REDIS_HOST,
+    port: env.REDIS_PORT,
+    password: env.REDIS_PASSWORD || undefined,
   },
   defaultJobOptions: {
     attempts: 3,

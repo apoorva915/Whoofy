@@ -78,13 +78,14 @@ export async function validateVideoFile(
 
     // Validate MP4 structure by checking for "moov" atom
     // MP4 files should have "ftyp" at the start and "moov" atom somewhere
-    const buffer = await fs.readFile(filePath, { start: 0, end: Math.min(8192, finalStats.size - 1) });
+    const fullBuffer = await fs.readFile(filePath);
+    const buffer = fullBuffer.subarray(0, Math.min(8192, fullBuffer.length));
     
     // Check for MP4 signature: "ftyp" should be at offset 4
     const ftypIndex = buffer.indexOf(Buffer.from('ftyp'));
     if (ftypIndex === -1 || ftypIndex > 8) {
-      // Try reading more of the file to find moov atom
-      const largerBuffer = await fs.readFile(filePath, { start: 0, end: Math.min(1024 * 1024, finalStats.size - 1) });
+      // Use up to 1MB of the file to search for moov atom
+      const largerBuffer = fullBuffer.subarray(0, Math.min(1024 * 1024, fullBuffer.length));
       const moovIndex = largerBuffer.indexOf(Buffer.from('moov'));
       
       if (moovIndex === -1) {

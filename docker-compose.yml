@@ -1,0 +1,78 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      # Point Node to ML container
+      ML_SERVICE_URL: http://ml:8000
+      # You must provide DATABASE_URL (either external or use the db service below)
+      DATABASE_URL: ${DATABASE_URL}
+      # External APIs (optional; pass through if set)
+      # Use a separate env var name so host-level GEMINI_API_KEY can't override it
+      GEMINI_API_KEY: ${GEMINI_API_KEY_NEW:-}
+      APIFY_API_TOKEN: ${APIFY_API_TOKEN:-}
+      GOOGLE_CLOUD_PROJECT_ID: ${GOOGLE_CLOUD_PROJECT_ID:-}
+      GOOGLE_CLOUD_VISION_API_KEY: ${GOOGLE_CLOUD_VISION_API_KEY:-}
+      GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS:-}
+      SHAZAM_API_KEY: ${SHAZAM_API_KEY:-}
+      SHAZAM_API_HOST: ${SHAZAM_API_HOST:-}
+      # Redis connection for BullMQ inside the web container
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      STORAGE_TYPE: ${STORAGE_TYPE:-local}
+      API_BASE_URL: ${API_BASE_URL:-http://localhost:3000}
+      FRAME_ANALYSIS_CONCURRENCY: ${FRAME_ANALYSIS_CONCURRENCY:-3}
+    ports:
+      - "3000:3000"
+    volumes:
+      # Shared storage between web and ML
+      - storage:/app/storage
+    depends_on:
+      ml:
+        condition: service_healthy
+
+  ml:
+    build:
+      context: .
+      dockerfile: ml/Dockerfile
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health').read(); print('ok')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    volumes:
+      # Must be same path as web uses (process.cwd()/storage => /app/storage)
+      - storage:/app/storage
+    expose:
+      - "8000"
+
+  # Optional local Redis (only needed for queue stats)
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis:/data
+
+  # Optional local Postgres (use if you don’t want Supabase)
+  # You still need to apply the SQL migrations in prisma/migrations/ (see README).
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres:/var/lib/postgresql/data
+
+volumes:
+  storage:
+  redis:
+  postgres:
+

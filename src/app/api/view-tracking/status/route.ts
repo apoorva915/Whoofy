@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
       WHERE status = 'ACTIVE'
     `);
     const activeTracking = activeJobs.find(
-      (job) => normalizeReelUrlCanonical(job.reelUrl) === canonical
+      (job: ViewTrackingJobRow) => normalizeReelUrlCanonical(job.reelUrl) === canonical
     );
 
     return NextResponse.json({

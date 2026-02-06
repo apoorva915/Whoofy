@@ -44,9 +44,8 @@ class OpenAIWhisperClient {
         maxRetries: 1, // Reduce retries to fail faster and get better error messages
         // Add explicit base URL to ensure correct endpoint
         baseURL: 'https://api.openai.com/v1',
-        // Add HTTP agent configuration for better compatibility
-        httpAgent: undefined, // Use default, but can be configured for proxy
-        httpsAgent: undefined, // Use default, but can be configured for proxy
+        // Add HTTP agent configuration for better compatibility (can be customized for proxies)
+        httpAgent: undefined,
       });
     } else {
       this.client = null;
@@ -147,7 +146,7 @@ class OpenAIWhisperClient {
       }
 
       // Download the video/audio file if it's a URL
-      let filePath: string;
+      let filePath: string | undefined;
       try {
         if (videoUrl.startsWith('http')) {
           downloadedFilePath = await this.downloadFile(videoUrl);
@@ -304,13 +303,16 @@ class OpenAIWhisperClient {
         return result;
       } catch (error: any) {
         const errorMessage = error?.message || error?.toString() || 'Unknown error';
-        logger.error({
+        const context: any = {
           error: errorMessage,
           stack: error?.stack,
           videoUrl,
-          filePath,
           audioFilePath,
-        }, 'Error preparing file for transcription');
+        };
+        if (typeof filePath === 'string') {
+          context.filePath = filePath;
+        }
+        logger.error(context, 'Error preparing file for transcription');
         throw error; // Re-throw to be caught by outer catch
       } finally {
         // Clean up temp files

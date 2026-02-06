@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
           LIMIT ${limit}
         `;
         const snapshotsByUrl = byUrl.filter(
-          (s) => s.reelUrl != null && normalizeReelUrlCanonical(s.reelUrl) === canonical
+          (s: SnapshotRow) => s.reelUrl != null && normalizeReelUrlCanonical(s.reelUrl) === canonical
         ).slice(0, limit);
         if (snapshotsByUrl.length > 0) {
           return NextResponse.json({
@@ -89,8 +89,9 @@ export async function GET(request: NextRequest) {
             take: 10,
           })
         : [];
+      type SubmissionCandidate = { id: string; reelUrl: string | null };
       const submission = submissionCandidates.find(
-        (s) => s.reelUrl && normalizeReelUrlCanonical(s.reelUrl) === canonical
+        (s: SubmissionCandidate) => s.reelUrl && normalizeReelUrlCanonical(s.reelUrl) === canonical
       ) ?? null;
       if (!submission) {
         return NextResponse.json({

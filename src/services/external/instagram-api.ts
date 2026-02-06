@@ -103,7 +103,10 @@ class InstagramApiClient {
       let lastError: any = null;
       for (const endpoint of endpoints) {
         try {
-          logger.debug(`Trying profile endpoint: ${endpoint.path} with params:`, endpoint.params);
+          logger.debug(
+            { path: endpoint.path, params: endpoint.params },
+            'Trying Instagram profile endpoint',
+          );
           response = await this.client.get(endpoint.path, {
             params: endpoint.params,
           });
@@ -113,7 +116,10 @@ class InstagramApiClient {
           lastError = error;
           // If it's not a 404/400, the endpoint might be correct but has other issues
           if (error.response?.status && error.response.status !== 404 && error.response.status !== 400) {
-            logger.debug(`Profile endpoint ${endpoint.path} returned status ${error.response.status}, stopping search`);
+            logger.debug(
+              { path: endpoint.path, status: error.response.status },
+              'Profile endpoint returned non-retryable status',
+            );
             break;
           }
           continue; // Try next endpoint
@@ -121,7 +127,13 @@ class InstagramApiClient {
       }
       
       if (!response) {
-        logger.error('All Instagram profile API endpoints failed. Last error:', lastError?.response?.status || lastError?.message);
+        logger.error(
+          {
+            lastErrorStatus: lastError?.response?.status,
+            lastErrorMessage: lastError?.message,
+          },
+          'All Instagram profile API endpoints failed',
+        );
         throw lastError || new Error('All Instagram API endpoints failed');
       }
 
@@ -228,7 +240,10 @@ class InstagramApiClient {
       let lastError: any = null;
       for (const endpoint of endpoints) {
         try {
-          logger.debug(`Trying endpoint: ${endpoint.path} with params:`, endpoint.params);
+          logger.debug(
+            { path: endpoint.path, params: endpoint.params },
+            'Trying Instagram reel endpoint',
+          );
           response = await this.client.get(endpoint.path, {
             params: endpoint.params,
           });
@@ -238,7 +253,10 @@ class InstagramApiClient {
           lastError = error;
           // If it's not a 404/400, the endpoint might be correct but has other issues
           if (error.response?.status && error.response.status !== 404 && error.response.status !== 400) {
-            logger.debug(`Endpoint ${endpoint.path} returned status ${error.response.status}, stopping search`);
+            logger.debug(
+              { path: endpoint.path, status: error.response.status },
+              'Instagram reel endpoint returned non-retryable status',
+            );
             break;
           }
           continue; // Try next endpoint
@@ -246,7 +264,13 @@ class InstagramApiClient {
       }
       
       if (!response) {
-        logger.error('All Instagram API endpoints failed. Last error:', lastError?.response?.status || lastError?.message);
+        logger.error(
+          {
+            lastErrorStatus: lastError?.response?.status,
+            lastErrorMessage: lastError?.message,
+          },
+          'All Instagram API endpoints failed',
+        );
         throw lastError || new Error('All Instagram API endpoints failed');
       }
 

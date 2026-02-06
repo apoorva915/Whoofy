@@ -1,5 +1,13 @@
 import prisma from '@/config/database';
-import { Campaign, CreateCampaignInput, UpdateCampaignInput } from '@/types/campaign';
+import { Decimal } from '@prisma/client/runtime/library';
+import { v4 as uuidv4 } from 'uuid';
+import {
+  Campaign,
+  CampaignRequirements,
+  CampaignStatus,
+  CreateCampaignInput,
+  UpdateCampaignInput,
+} from '@/types/campaign';
 import { NotFoundError, DatabaseError } from '@/utils/errors';
 import logger from '@/utils/logger';
 
@@ -12,15 +20,29 @@ export const CampaignModel = {
    */
   async create(data: CreateCampaignInput): Promise<Campaign> {
     try {
-      const campaign = await prisma.campaign.create({
+      const now = new Date();
+
+      const campaign = await prisma.campaigns.create({
         data: {
-          ...data,
-          requirements: data.requirements as any,
-          startDate: typeof data.startDate === 'string' ? new Date(data.startDate) : data.startDate,
-          endDate: typeof data.endDate === 'string' ? new Date(data.endDate) : data.endDate,
+          id: uuidv4(),
+          brandId: data.brandId,
+          title: data.title,
+          description: data.description ?? '',
+          budget: new Decimal(0),
+          startDate:
+            typeof data.startDate === 'string'
+              ? new Date(data.startDate)
+              : data.startDate,
+          endDate:
+            typeof data.endDate === 'string'
+              ? new Date(data.endDate)
+              : data.endDate,
+          type: 'UGC',
+          platforms: [],
+          updatedAt: now,
         },
       });
-      
+
       logger.info(`Campaign created: ${campaign.id}`);
       return this.mapToCampaign(campaign);
     } catch (error) {
@@ -34,10 +56,10 @@ export const CampaignModel = {
    */
   async findById(id: string): Promise<Campaign | null> {
     try {
-      const campaign = await prisma.campaign.findUnique({
+      const campaign = await prisma.campaigns.findUnique({
         where: { id },
       });
-      
+
       return campaign ? this.mapToCampaign(campaign) : null;
     } catch (error) {
       logger.error({ error }, 'Error finding campaign');
@@ -45,9 +67,6 @@ export const CampaignModel = {
     }
   },
 
-  /**
-   * Find campaign by ID or throw error
-   */
   async findByIdOrThrow(id: string): Promise<Campaign> {
     const campaign = await this.findById(id);
     if (!campaign) {
@@ -56,31 +75,26 @@ export const CampaignModel = {
     return campaign;
   },
 
-  /**
-   * Find all campaigns with pagination
-   */
   async findAll(options: {
     page?: number;
     limit?: number;
-    status?: string;
     brandId?: string;
   } = {}): Promise<{ campaigns: Campaign[]; total: number }> {
     try {
-      const { page = 1, limit = 20, status, brandId } = options;
+      const { page = 1, limit = 20, brandId } = options;
       const skip = (page - 1) * limit;
 
       const where: any = {};
-      if (status) where.status = status;
       if (brandId) where.brandId = brandId;
 
       const [campaigns, total] = await Promise.all([
-        prisma.campaign.findMany({
+        prisma.campaigns.findMany({
           where,
           skip,
           take: limit,
           orderBy: { createdAt: 'desc' },
         }),
-        prisma.campaign.count({ where }),
+        prisma.campaigns.count({ where }),
       ]);
 
       return {
@@ -93,32 +107,27 @@ export const CampaignModel = {
     }
   },
 
-  /**
-   * Update campaign
-   */
   async update(id: string, data: UpdateCampaignInput): Promise<Campaign> {
     try {
-      const updateData: any = { ...data };
-      
-      if (data.requirements) {
-        updateData.requirements = data.requirements as any;
-      }
-      
-      if (data.startDate) {
-        updateData.startDate = typeof data.startDate === 'string' 
-          ? new Date(data.startDate) 
-          : data.startDate;
-      }
-      
-      if (data.endDate) {
-        updateData.endDate = typeof data.endDate === 'string' 
-          ? new Date(data.endDate) 
-          : data.endDate;
-      }
-
-      const campaign = await prisma.campaign.update({
+      const campaign = await prisma.campaigns.update({
         where: { id },
-        data: updateData,
+        data: {
+          title: data.title,
+
+          description:
+            data.description !== undefined ? data.description : undefined,
+
+          startDate:
+            typeof data.startDate === 'string'
+              ? new Date(data.startDate)
+              : data.startDate,
+
+          endDate:
+            typeof data.endDate === 'string'
+              ? new Date(data.endDate)
+              : data.endDate,
+          updatedAt: new Date(),
+        },
       });
 
       logger.info(`Campaign updated: ${id}`);
@@ -132,12 +141,9 @@ export const CampaignModel = {
     }
   },
 
-  /**
-   * Delete campaign
-   */
   async delete(id: string): Promise<void> {
     try {
-      await prisma.campaign.delete({
+      await prisma.campaigns.delete({
         where: { id },
       });
       logger.info(`Campaign deleted: ${id}`);
@@ -151,17 +157,27 @@ export const CampaignModel = {
   },
 
   /**
-   * Map Prisma model to Campaign type
+   * Map Prisma → API Campaign type
    */
   mapToCampaign(campaign: any): Campaign {
+    const status: CampaignStatus =
+      typeof campaign.status === 'string'
+        ? (CampaignStatus[campaign.status.toUpperCase() as keyof typeof CampaignStatus] ??
+           CampaignStatus.DRAFT)
+        : CampaignStatus.DRAFT;
+
     return {
       id: campaign.id,
       brandId: campaign.brandId,
       brandName: campaign.brandName,
       title: campaign.title,
       description: campaign.description || undefined,
-      requirements: campaign.requirements,
-      status: campaign.status as any,
+      // Requirements are not yet persisted in the current Prisma schema.
+      // Default to an empty requirements object for now.
+      requirements:
+        (campaign as any).requirements ??
+        ({} as CampaignRequirements),
+      status,
       startDate: campaign.startDate,
       endDate: campaign.endDate,
       createdAt: campaign.createdAt,

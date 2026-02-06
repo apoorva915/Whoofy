@@ -46,6 +46,10 @@ const EnvSchema = z.object({
   // Python command for YOLO/CLIP scripts
   PYTHON_COMMAND: z.string().optional(),
 
+  // Optional: remote ML service (Docker) for YOLO/OCR/CLIP/Face Detection
+  // When set, the app will call this service instead of spawning local Python.
+  ML_SERVICE_URL: z.string().url().optional(),
+
   // AI Services - Google Gemini
   GEMINI_API_KEY: z.string().optional(),
   

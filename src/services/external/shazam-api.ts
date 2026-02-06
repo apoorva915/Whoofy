@@ -141,7 +141,7 @@ class ShazamApiClient {
         processingTimeMs: processingTime,
       };
     } catch (error) {
-      logger.error('Error recognizing audio with Shazam:', error);
+      logger.error({ error }, 'Error recognizing audio with Shazam');
       return this.getMockResult();
     }
   }
@@ -159,7 +159,7 @@ class ShazamApiClient {
       logger.info(`Recognizing audio from video: ${videoUrl} (mock mode)`);
       return this.getMockResult();
     } catch (error) {
-      logger.error('Error recognizing audio from video:', error);
+      logger.error({ error }, 'Error recognizing audio from video');
       return this.getMockResult();
     }
   }

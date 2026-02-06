@@ -1,23 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getQueueStats } from '@/workers/queue';
-import { getViewTrackingWorker } from '@/workers/view-tracking-worker';
 import { getRedisClient } from '@/config/redis';
 import logger from '@/utils/logger';
-
-// Initialize worker on first API call (lazy initialization)
-let workerInitialized = false;
-function ensureWorkerInitialized() {
-  if (!workerInitialized) {
-    try {
-      getViewTrackingWorker();
-      workerInitialized = true;
-      logger.info('View tracking worker initialized');
-    } catch (error: any) {
-      logger.error({ error }, 'Failed to initialize view tracking worker');
-      throw error;
-    }
-  }
-}
 
 /**
  * Get queue statistics
@@ -39,24 +23,6 @@ export async function GET(request: NextRequest) {
           message: redisError.message,
           details: process.env.NODE_ENV === 'development' ? {
             stack: redisError.stack,
-          } : undefined,
-        },
-        { status: 500 }
-      );
-    }
-
-    // Ensure worker is initialized
-    try {
-      ensureWorkerInitialized();
-    } catch (workerError: any) {
-      logger.error({ error: workerError }, 'Worker initialization failed');
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Worker initialization failed',
-          message: workerError.message,
-          details: process.env.NODE_ENV === 'development' ? {
-            stack: workerError.stack,
           } : undefined,
         },
         { status: 500 }
