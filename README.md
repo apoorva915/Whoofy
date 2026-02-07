@@ -6,31 +6,131 @@ Instagram reel verification and analysis: data scraping, frame analysis (YOLO/OC
 
 ## Table of contents
 
-- [Prerequisites](#prerequisites)
-- [Quick start](#quick-start)
-- [Environment variables](#environment-variables)
-- [API keys](#api-keys)
-- [Database setup (Supabase / PostgreSQL)](#database-setup-supabase--postgresql)
-- [Redis setup](#redis-setup)
-- [Docker setup](#docker-setup)
-- [How to run everything](#how-to-run-everything)
-- [View tracking (scheduler)](#view-tracking-scheduler)
-- [Python / YOLO / Tesseract / CLIP](#python--yolo--tesseract--clip)
+- [Part 1: Docker-based setup](#part-1-docker-based-setup) *(recommended for external users)*
+- [Part 2: Local setup](#part-2-local-setup)
 - [Architecture & external services](#architecture--external-services)
 - [Troubleshooting](#troubleshooting)
+- [Scripts reference](#scripts-reference)
 
 ---
 
-## Prerequisites
+# Part 1: Docker-based setup
+
+Use this if you want to run Whoofy without installing Node, Python, FFmpeg, or Tesseract on your machine. Docker runs the web app, ML service (YOLO/OCR/CLIP), Redis, and optionally PostgreSQL in containers.
+
+### Prerequisites
+
+- **Docker** and **Docker Compose** installed ([Get Docker](https://docs.docker.com/get-docker/))
+- A **PostgreSQL** database (use [Supabase](https://supabase.com) or the optional `db` service in compose)
+- API keys: **Apify**, **Gemini** (see [API keys](#api-keys) below for how to get them)
+
+### 1. Clone and prepare environment
+
+```bash
+git clone <repo-url>
+cd Whoofy
+
+# Copy Docker env template and edit with your values
+cp .env.docker.example .env
+```
+
+Edit `.env` and set at least:
+
+| Variable | Description |
+|----------|-------------|
+| `DATABASE_URL` | PostgreSQL connection string (Supabase or local). If using compose Postgres: `postgresql://postgres:postgres@db:5432/postgres` |
+| `APIFY_API_TOKEN` | Your [Apify](https://console.apify.com/) API token (Instagram scraping) |
+| `GEMINI_API_KEY_NEW` | Your [Google AI Studio](https://makersuite.google.com/app/apikey) Gemini API key *(Docker maps this to `GEMINI_API_KEY` inside the container)* |
+
+Optional: `GOOGLE_CLOUD_PROJECT_ID`, `GOOGLE_CLOUD_VISION_API_KEY` (Frame Analysis – Google Vision), `SHAZAM_API_KEY`, `SHAZAM_API_HOST`, `API_BASE_URL`, `FRAME_ANALYSIS_CONCURRENCY`.
+
+If you use the built-in **Postgres** service (`db`), set:
+
+```env
+DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres
+POSTGRES_PASSWORD=postgres
+```
+
+You still need to run the SQL migrations once (see step 3).
+
+### 2. Start the stack
+
+From the project root:
+
+```bash
+docker-compose up --build
+```
+
+This starts:
+
+| Service | Purpose | Access |
+|---------|---------|--------|
+| **web** | Next.js app (UI + API) | http://localhost:3000 |
+| **ml** | Python YOLO/OCR/CLIP (Frame Analysis – Local) | internal:8000 |
+| **redis** | Redis for BullMQ queue stats | localhost:6379 |
+| **db** | PostgreSQL (optional; omit if using Supabase) | localhost:5432 |
+
+Open **http://localhost:3000** and use the tabs: Data Scraping, Data Analysis, Frame Analysis, Engagement Analysis.
+
+### 3. Database migrations (one-time)
+
+The app uses an `aimodule` schema and several tables. You must run the SQL migrations once.
+
+**If using Supabase:**
+
+- Create schema: `npm run db:setup-supabase` (run on host with Node, or run the SQL from `scripts/setup-supabase.ts` in Supabase SQL Editor).
+- Run migration files in order in Supabase SQL Editor (see [Database migrations list](#database-migrations-in-order) below).
+
+**If using the `db` container:**
+
+- After `docker-compose up`, connect to Postgres (e.g. `psql` from host or another container) and run the same migrations in order.
+
+**Database migrations (in order):**
+
+1. `prisma/migrations/create_aimodule_schema.sql`
+2. `prisma/migrations/create_aimodule_tables.sql`
+3. `prisma/migrations/add_view_tracking_snapshots.sql`
+4. `prisma/migrations/update_view_tracking_snapshots.sql`
+5. `prisma/migrations/add_view_tracking_jobs_reel_url.sql`
+6. `prisma/migrations/add_view_tracking_jobs_interval_next_run.sql`
+7. `prisma/migrations/add_niche_engagement_tables.sql` (if needed)
+
+Optional: `prisma/migrations/clear_view_tracking_tables.sql` (dev only, truncates view tracking tables).
+
+### 4. View-tracking scheduler (optional)
+
+View-tracking snapshots and spike detection are **DB-driven**. To have snapshots run on a schedule, run the scheduler **on your host** (or a separate container) in a separate terminal:
+
+```bash
+cd /path/to/Whoofy
+npm install
+npm run scheduler:view-tracking
+```
+
+Keep this process running while you want view tracking active. It uses the same `.env` and `DATABASE_URL`. In production you can run it under PM2, systemd, or a cron that calls `POST /api/view-tracking/process-due` every minute.
+
+### 5. Stopping the stack
+
+```bash
+docker-compose down
+```
+
+Use `docker-compose down -v` to remove volumes (data in Postgres/Redis will be lost).
+
+---
+
+# Part 2: Local setup
+
+Use this if you prefer to run the app and services directly on your machine (Node, Python, Redis, Postgres, etc.).
+
+### Prerequisites
 
 - **Node.js** 18+ and npm
 - **PostgreSQL** (or Supabase)
 - **Python 3** (for YOLO, OCR, CLIP in local frame analysis)
-- **Redis** (optional; for BullMQ queue stats; view tracking is DB-driven and does not require Redis to run)
+- **Redis** (optional; for BullMQ queue stats; view tracking is DB-driven and does not require Redis)
 
----
-
-## Quick start
+### Quick start
 
 ```bash
 # 1. Install dependencies
@@ -49,13 +149,11 @@ npm run dev
 
 Open **http://localhost:3000**. Use the tabs: Data Scraping, Data Analysis, Frame Analysis, Engagement Analysis.
 
----
-
-## Environment variables
+### Environment variables
 
 Create a `.env` file in the project root.
 
-### Required
+**Required:**
 
 ```env
 NODE_ENV=development
@@ -70,7 +168,7 @@ GEMINI_API_KEY=your_gemini_api_key_here
 APIFY_API_TOKEN=your_apify_token
 ```
 
-### Optional but recommended
+**Optional but recommended:**
 
 ```env
 # Google Cloud Vision (Frame Analysis tab — Google Vision)
@@ -92,335 +190,98 @@ PORT=3000
 API_BASE_URL=http://localhost:3000
 ```
 
----
+### API keys
 
-## API keys
+- **Gemini (required for Data Analysis):** [Google AI Studio](https://makersuite.google.com/app/apikey) → create API key → set `GEMINI_API_KEY` in `.env`.
+- **Google Cloud Vision (Frame Analysis tab):** [Google Cloud Console](https://console.cloud.google.com/) → enable Cloud Vision API → create API key → set `GOOGLE_CLOUD_PROJECT_ID` and `GOOGLE_CLOUD_VISION_API_KEY`.
+- **Apify (required for Instagram data):** [Apify Console](https://console.apify.com/) → copy API token → set `APIFY_API_TOKEN` in `.env`.
+- **Shazam (optional):** [RapidAPI](https://rapidapi.com/) Shazam API → set `SHAZAM_API_KEY` and `SHAZAM_API_HOST` in `.env`.
 
-### Gemini (required for Data Analysis)
+### Database setup (Supabase / PostgreSQL)
 
-1. Go to [Google AI Studio](https://makersuite.google.com/app/apikey).
-2. Create an API key and set `GEMINI_API_KEY` in `.env`.
+1. **Get database URL:** Supabase → Settings → Database → Connection string (URI). Or local: `postgresql://postgres:password@localhost:5432/your_db`. Set `DATABASE_URL` in `.env`.
+2. **Create `aimodule` schema (Supabase):** `npm run db:setup-supabase` or run SQL from `scripts/setup-supabase.ts`.
+3. **Run migrations in order:** In Supabase SQL Editor or `psql`, run the files listed in [Database migrations (in order)](#database-migrations-in-order) above.
+4. **Prisma client:** `npm run db:generate`. Optional: `npm run db:push` or `npx prisma migrate deploy`.
+5. **Verify:** Supabase Table Editor → schema `aimodule`, or `npm run db:studio`.
 
-### Google Cloud Vision (Frame Analysis tab)
+### Redis setup (optional)
 
-1. [Google Cloud Console](https://console.cloud.google.com/) → create/select project.
-2. Enable **Cloud Vision API** (APIs & Services → Library).
-3. Create an API key under Credentials, restrict to Cloud Vision if desired.
-4. Set `GOOGLE_CLOUD_PROJECT_ID` and `GOOGLE_CLOUD_VISION_API_KEY` in `.env`.
+View tracking does **not** require Redis. Redis is used for BullMQ queue stats.
 
-### Apify (required for Instagram data)
-
-1. Sign up at [Apify Console](https://console.apify.com/).
-2. Copy your API token and set `APIFY_API_TOKEN` in `.env`.  
-   Instagram profile and reel data (including view tracking) come from Apify only.
-
-### Shazam (optional)
-
-Get an API key from [RapidAPI](https://rapidapi.com/) for Shazam and set `SHAZAM_API_KEY` and `SHAZAM_API_HOST` in `.env`.
-
----
-
-## Database setup (Supabase / PostgreSQL)
-
-The app uses PostgreSQL. You can use a local PostgreSQL instance or **Supabase** (recommended).
-
-### 1. Get database URL
-
-- **Supabase**: Dashboard → Settings → Database → Connection string (URI). Replace `[YOUR-PASSWORD]` with your DB password.
-- **Local**: `postgresql://postgres:password@localhost:5432/your_db`
-
-Set `DATABASE_URL` in `.env`.
-
-### 2. Create `aimodule` schema (Supabase)
-
-If using Supabase, create the schema and permissions:
-
-```bash
-npm run db:setup-supabase
-```
-
-Or run the SQL from `scripts/setup-supabase.ts` / create schema `aimodule` manually.
-
-### 3. Run migrations (in order)
-
-Run these SQL files in your DB client (Supabase SQL Editor or `psql`) in this order:
-
-1. `prisma/migrations/create_aimodule_schema.sql` — create schema if not exists  
-2. `prisma/migrations/create_aimodule_tables.sql` — core aimodule tables  
-3. `prisma/migrations/add_view_tracking_snapshots.sql` — view tracking snapshots  
-4. `prisma/migrations/update_view_tracking_snapshots.sql` — add reelUrl, engagement fields  
-5. `prisma/migrations/add_view_tracking_jobs_reel_url.sql` — view_tracking_jobs  
-6. `prisma/migrations/add_view_tracking_jobs_interval_next_run.sql` — interval & nextRunAt for scheduler  
-7. `prisma/migrations/add_niche_engagement_tables.sql` — niche/engagement tables if needed  
-
-Optional: `prisma/migrations/clear_view_tracking_tables.sql` — truncate view tracking tables (dev only).
-
-### 4. Prisma client
-
-After schema/migrations:
-
-```bash
-npm run db:generate
-```
-
-Optional: `npm run db:push` to sync Prisma schema to DB, or use `npx prisma migrate deploy` for migrations.
-
-### 5. Verify
-
-- Supabase: Table Editor → switch schema to `aimodule` and confirm tables exist.  
-- Or run: `npm run db:studio` to open Prisma Studio.
-
----
-
-## Redis setup
-
-Redis is **optional**. View tracking is DB-driven and does not require Redis. Redis is used for BullMQ queue stats (e.g. `/api/view-tracking/stats`).
-
-### Windows
-
-- **WSL**: `sudo apt-get install redis-server` then `sudo service redis-server start`.  
-- **Docker**: `docker run -d -p 6379:6379 --name redis redis`.  
-- **Memurai**: [memurai.com](https://www.memurai.com/) — Redis-compatible Windows service.  
-- **Cloud**: e.g. Upstash/Redis Cloud; set `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD` in `.env`.
-
-### macOS / Linux
-
-```bash
-# macOS
-brew install redis && brew services start redis
-
-# Ubuntu/Debian
-sudo apt-get install redis-server && sudo service redis-server start
-```
+- **Windows:** WSL `sudo apt-get install redis-server` + `sudo service redis-server start`; or Docker `docker run -d -p 6379:6379 --name redis redis`; or [Memurai](https://www.memurai.com/).
+- **macOS:** `brew install redis && brew services start redis`
+- **Linux:** `sudo apt-get install redis-server && sudo service redis-server start`
 
 Verify: `redis-cli ping` → `PONG`.
 
----
+### How to run everything (local)
 
-## Docker setup
-
-Docker lets you run the full stack (web + ML + Redis + Postgres) without installing Node/FFmpeg/Python tooling globally.
-
-### 1. Prepare `.env`
-
-From the project root:
-
-```bash
-cp .env.docker.example .env
-```
-
-Then edit `.env` and set at least:
-
-- `DATABASE_URL` – your Supabase/Postgres connection string  
-- `APIFY_API_TOKEN` – Apify token  
-- `GEMINI_API_KEY` – Gemini API key  
-
-You can also keep your existing non‑Docker `.env`; the key requirement for Docker is that `DATABASE_URL` is valid.
-
-### 2. Start the containers
-
-From `whoofy` project root:
-
-```bash
-docker-compose up --build
-```
-
-This starts:
-
-- `web` – Next.js app at `http://localhost:3000`
-- `ml` – Python YOLO/OCR/CLIP service (used by Frame Analysis – Local)
-- `redis` – Redis for queue usage (optional)
-- `db` – Postgres (optional if you already use Supabase; in that case, just point `DATABASE_URL` at Supabase)
-
-### 3. Start the view‑tracking scheduler (host)
-
-View tracking snapshots & spike detection are **DB‑driven** and require the scheduler script to run continuously.
-Run this on your host machine in a **separate terminal**:
-
-```bash
-cd /path/to/Whoofy
-
-# install deps once if you haven't already
-npm install
-
-# keep this running while you want view tracking active
-npm run scheduler:view-tracking
-```
-
-This script uses the same `.env` as the app and:
-
-- Finds due jobs in `aimodule.view_tracking_jobs`
-- Calls the view‑snapshot pipeline
-- Updates `aimodule.view_tracking_snapshots` for the Engagement Analysis tab
-
-You can run the scheduler under a process manager (PM2, systemd, etc.) in production.
-
----
-
-## How to run everything
-
-| What you want              | Command / step |
-|----------------------------|----------------|
-| **Web app (UI)**           | `npm run dev` → http://localhost:3000 |
-| **View tracking snapshots**| Run **scheduler** (see [View tracking](#view-tracking-scheduler)) so snapshots run at your chosen interval. No need for dev server or worker. |
-| **Queue stats**            | Redis running + optional `npm run worker:view-tracking`. App and stats still work without worker. |
-
-### Commands
+| What you want | Command / step |
+|---------------|----------------|
+| **Web app (UI)** | `npm run dev` → http://localhost:3000 |
+| **View tracking snapshots** | Run the [scheduler](#view-tracking-scheduler) in a separate terminal so snapshots run on schedule. |
+| **Queue stats** | Redis running + optional `npm run worker:view-tracking`. |
 
 ```bash
 # Development server (UI + API)
 npm run dev
 
-# View tracking scheduler — run in a separate terminal and leave running (snapshots run every minute for due jobs)
+# View tracking scheduler — run in a separate terminal and leave running
 npm run scheduler:view-tracking
 
 # Optional: BullMQ worker (for queue stats; not required for view tracking)
 npm run worker:view-tracking
 ```
 
-Build for production:
+Production build:
 
 ```bash
 npm run build
 npm run start
 ```
 
----
+### View tracking (scheduler)
 
-## View tracking (scheduler)
+View spike tracking is **database-driven**. You set an interval in the UI; a **scheduler** process (or cron) runs snapshot jobs.
 
-View spike tracking uses the **database** for scheduling. You choose an interval (minutes or hours); the UI starts/stops tracking and shows snapshots. A **scheduler** process (or cron) runs the actual snapshot jobs.
+- **Start/Stop tracking:** UI writes to `aimodule.view_tracking_jobs`.
+- **Scheduler:** Every minute, finds jobs where `nextRunAt <= now`, runs one snapshot per job, then sets `nextRunAt = now + interval`.
+- **Run scheduler:** `npm run scheduler:view-tracking` in a separate terminal (or `npx tsx scripts/run-view-tracking-scheduler.ts`). No Next.js or Redis required.
+- **Cron alternative:** `* * * * * curl -s -X POST https://your-app.com/api/view-tracking/process-due`
 
-### How it works
+Intervals: **Minutes** (1–1440) or **Hours** (0.5–24). Ensure migrations for view tracking are applied (see [Database migrations](#database-migrations-in-order) above).
 
-1. **Start Tracking** (UI): Saves reel URL and interval to `aimodule.view_tracking_jobs` (`nextRunAt` = now).  
-2. **Scheduler**: Every minute, finds jobs where `nextRunAt <= now`, runs one snapshot per job (fetch views/likes/comments, save snapshot, spike detection), then sets `nextRunAt = now + interval`.  
-3. **Stop Tracking** (UI): Sets job status to STOPPED so the scheduler skips it.  
-4. **Fetch Snapshots** (UI): Reads from DB; no dependency on dev server or worker.
+### Python / YOLO / Tesseract / CLIP (local frame analysis)
 
-Intervals: **Minutes** (1–1440) or **Hours** (0.5–24).
+Used for **local** frame analysis (object detection, OCR, CLIP). Google Vision frame analysis does not need these.
 
-### Run the scheduler
-
-**Option A — Standalone script (recommended)**
-
-In a separate terminal (or PM2/systemd):
-
-```bash
-npm run scheduler:view-tracking
-```
-
-Or: `npx tsx scripts/run-view-tracking-scheduler.ts`
-
-No Next.js or Redis required. Keep this process running so snapshots are taken on schedule.
-
-**Option B — Cron calling API**
-
-If the app is always running (e.g. in production), call the process-due API every minute:
-
-```bash
-* * * * * curl -s -X POST https://your-app.com/api/view-tracking/process-due
-```
-
-GET or POST both work.
-
-### View tracking migrations
-
-Ensure these are applied (see [Database setup](#database-setup-supabase--postgresql)):
-
-- `add_view_tracking_snapshots.sql`
-- `add_view_tracking_jobs_reel_url.sql`
-- `add_view_tracking_jobs_interval_next_run.sql` (adds `intervalHours`, `nextRunAt`)
-
-Then: `npx prisma generate` (optional).
-
----
-
-## Python / YOLO / Tesseract / CLIP
-
-Used for **local** frame analysis (object detection, OCR, CLIP similarity). Google Vision frame analysis does not need these.
-
-### Python
-
-- Create a venv, activate it, then:
-
-```bash
-pip install -r yolo/requirements.txt
-# For CLIP: pip install -r yolo/requirements_clip.txt
-```
-
-### Tesseract (OCR)
-
-- **Auto**: `npm run install:tesseract`  
-- **Windows**: `choco install tesseract` and add to PATH.  
-- **macOS**: `brew install tesseract`  
-- **Linux**: `sudo apt-get install tesseract-ocr` or `sudo dnf install tesseract`
-
-Verify: `tesseract --version`
-
-### YOLO
-
-- Weights download on first use (~6MB).  
-- Face/age-gender models (if used) download to `yolo/models/` (~40MB).
-
-### CLIP
-
-- Install deps from `yolo/requirements_clip.txt` for CLIP-based visual similarity in frame analysis.
+- **Python:** Create a venv, then `pip install -r yolo/requirements.txt`; for CLIP: `pip install -r yolo/requirements_clip.txt`.
+- **Tesseract (OCR):** `npm run install:tesseract`; or Windows `choco install tesseract`, macOS `brew install tesseract`, Linux `sudo apt-get install tesseract-ocr`. Verify: `tesseract --version`.
+- **YOLO:** Weights download on first use (~6MB); face/age-gender models to `yolo/models/` (~40MB) if used.
+- **CLIP:** Install from `yolo/requirements_clip.txt` for CLIP-based similarity in frame analysis.
 
 ---
 
 ## Architecture & external services
 
-- **Frontend**: Next.js (React), single page with tabs: Data Scraping, Data Analysis, Frame Analysis (Local / Google Vision), Engagement Analysis.  
-- **API routes**: `/api/profile` (scrape profile/reel via Apify), `/api/verify`, `/api/analyze`, `/api/sentiment/gemini`, `/api/verify/engagement`, `/api/view-tracking`, `/api/view-tracking/process-due`, etc.  
-- **External**:  
-  - **Apify**: Instagram profile + reel metadata (likes, comments, views when available). Primary and only Instagram data source.  
-  - **Google Gemini**: Sentiment, niche, language/region.  
-  - **Google Cloud Vision**: Frame analysis (optional).  
-  - **Shazam**: Music recognition (optional).  
-- **Database**: PostgreSQL (Supabase); `public` + `aimodule` schemas.  
-- **View tracking**: DB-driven; scheduler or cron calls process-due; no Redis required for snapshots.
+- **Frontend:** Next.js (React), single page with tabs: Data Scraping, Data Analysis, Frame Analysis (Local / Google Vision), Engagement Analysis.
+- **API routes:** `/api/profile`, `/api/verify`, `/api/analyze`, `/api/sentiment/gemini`, `/api/verify/engagement`, `/api/view-tracking`, `/api/view-tracking/process-due`, etc.
+- **External:** **Apify** (Instagram profile + reel metadata); **Google Gemini** (sentiment, niche, language/region); **Google Cloud Vision** (frame analysis, optional); **Shazam** (optional).
+- **Database:** PostgreSQL (Supabase or local); `public` + `aimodule` schemas.
+- **View tracking:** DB-driven; scheduler or cron calls process-due; Redis not required for snapshots.
 
 ---
 
 ## Troubleshooting
 
-### "Schema 'aimodule' does not exist"
-
-- Run `npm run db:setup-supabase` (or create `aimodule` schema manually).  
-- Run migrations in order (see [Database setup](#database-setup-supabase--postgresql)).
-
-### "Table … does not exist"
-
-- Run the corresponding migration from `prisma/migrations/` in your DB client.  
-- Then `npm run db:generate`.
-
-### View tracking: "ensureWorkerInitialized is not defined" / 500
-
-- Ensure you’re on the latest code: view tracking no longer uses that call; POST `/api/view-tracking` only writes to the DB.  
-- Restart dev server after pulling.
-
-### Views show 0, likes show correctly
-
-- Data is from Apify (not mock). Some reels or actors don’t return view count; we map multiple field names (`viewsCount`, `viewCount`, `playCount`, etc.).  
-- Check server logs for “no view count found”; they include raw view-related fields from each scraper for debugging.
-
-### Redis connection errors
-
-- View tracking does **not** require Redis. For queue stats, start Redis and set `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD` in `.env`.  
-- Test: `redis-cli ping` → `PONG`.
-
-### Prisma client out of date
-
-```bash
-npm run db:generate
-```
-
-Then restart the dev server.
-
-### Port 3000 in use
-
-- Change `PORT` in `.env` or run: `npm run dev -- -p 3001`
+- **"Schema 'aimodule' does not exist"** — Run `npm run db:setup-supabase` (or create `aimodule` manually) and run migrations in order.
+- **"Table … does not exist"** — Run the corresponding migration from `prisma/migrations/`, then `npm run db:generate`.
+- **View tracking 500 / ensureWorkerInitialized** — Update to latest code (view tracking no longer uses that); restart dev server.
+- **Views show 0, likes correct** — Data is from Apify; some reels don’t return view count; check server logs for "no view count found".
+- **Redis connection errors** — View tracking does not require Redis; for queue stats, start Redis and set `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD` in `.env`. Test: `redis-cli ping` → `PONG`.
+- **Prisma client out of date** — `npm run db:generate`, then restart the dev server.
+- **Port 3000 in use** — Set `PORT` in `.env` or run `npm run dev -- -p 3001`.
 
 ---
 
