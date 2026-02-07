@@ -156,7 +156,7 @@ Create a `.env` file in the project root.
 **Required:**
 
 ```env
-NODE_ENV=development
+NODE_ENV=production
 
 # Database (PostgreSQL or Supabase connection string)
 DATABASE_URL=postgresql://postgres:[PASSWORD]@[HOST]:5432/postgres
@@ -180,7 +180,7 @@ SHAZAM_API_KEY=your_shazam_api_key
 SHAZAM_API_HOST=shazam.p.rapidapi.com
 
 # Redis (optional — for queue stats; view tracking works without Redis)
-REDIS_HOST=localhost
+REDIS_HOST=redis
 REDIS_PORT=6379
 REDIS_PASSWORD=
 
