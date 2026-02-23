@@ -20,6 +20,10 @@ interface DataAnalysisTabProps {
   scrapingData?: any;
   persistedData?: AnalysisResults;
   onDataUpdate: (data: AnalysisResults) => void;
+  /** Optional: frame analysis result (local or Google) to use OCR/objects/labels for niche when captions are empty */
+  frameAnalysisData?: {
+    frameAnalyses?: Array<{ text?: string; objects?: string[]; labels?: string[] }>;
+  } | null;
 }
 
 /* ------------------------------------------------------------------ */
@@ -30,6 +34,7 @@ export default function DataAnalysisTab({
   scrapingData,
   persistedData,
   onDataUpdate,
+  frameAnalysisData,
 }: DataAnalysisTabProps) {
   const [loading, setLoading] = useState<boolean>(false);
   const [results, setResults] = useState<AnalysisResults>(persistedData || {});
@@ -79,14 +84,42 @@ export default function DataAnalysisTab({
           }),
         });
       } else if (type === 'niche') {
+        const creator = scrapingData.data?.creator;
+        const latestPosts = (creator?.latestPosts || []).slice(0, 5).map((post: any) => ({
+          caption: post.caption ?? post.text ?? null,
+          type: post.type ?? post.mediaType ?? 'unknown',
+          likes: post.likes ?? post.likesCount ?? post.likeCount ?? 0,
+          comments: post.comments ?? post.commentsCount ?? post.commentCount ?? 0,
+        }));
+        const commentTexts = (metadata?.comments || [])
+          .map((c: any) => (typeof c === 'string' ? c : c?.text))
+          .filter(Boolean);
+        const suggestedProfiles = creator?.relatedProfiles ?? [];
+        let frameInsights: { ocrTexts: string[]; objects: string[]; labels: string[] } | undefined;
+        if (frameAnalysisData?.frameAnalyses?.length) {
+          const ocrTexts: string[] = [];
+          const objects: string[] = [];
+          const labels: string[] = [];
+          for (const fa of frameAnalysisData.frameAnalyses) {
+            if (fa.text?.trim()) ocrTexts.push(fa.text.trim());
+            if (Array.isArray(fa.objects)) fa.objects.forEach((o: any) => objects.push(typeof o === 'string' ? o : o?.name ?? o?.class ?? ''));
+            if (Array.isArray(fa.labels)) fa.labels.forEach((l: any) => labels.push(typeof l === 'string' ? l : l?.description ?? l?.name ?? ''));
+          }
+          if (ocrTexts.length || objects.length || labels.length) {
+            frameInsights = { ocrTexts: [...new Set(ocrTexts)], objects: [...new Set(objects)], labels: [...new Set(labels)] };
+          }
+        }
         response = await fetch('/api/creators/niche-analysis', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             reelUrl,
-            bio: metadata?.bio || scrapingData.data?.creator?.bio || '',
-            posts: metadata?.comments?.slice(0, 10) || [],
-            creatorUsername: scrapingData.data?.creator?.username || null,
+            bio: metadata?.bio || creator?.bio || creator?.biography || '',
+            posts: latestPosts,
+            comments: commentTexts.length ? commentTexts : undefined,
+            frameInsights: frameInsights || undefined,
+            suggestedProfiles: suggestedProfiles.length ? suggestedProfiles : undefined,
+            creatorUsername: creator?.username ?? null,
           }),
         });
       } else {

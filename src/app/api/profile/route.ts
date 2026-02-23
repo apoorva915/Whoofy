@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
 
           comments:
             Array.isArray(apifyReelData.comments) && apifyReelData.comments.length > 0
-              ? apifyReelData.comments.slice(0, 200)
+              ? apifyReelData.comments.slice(0, 300)
               : [],
 
           postType: apifyReelData.postType,

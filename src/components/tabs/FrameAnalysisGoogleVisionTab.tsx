@@ -22,6 +22,7 @@ export default function FrameAnalysisGoogleVisionTab({
   const [targetBrandName, setTargetBrandName] = useState('');
   const [productNames, setProductNames] = useState('');
   const [additionalTerms, setAdditionalTerms] = useState('');
+  const [frameInterval, setFrameInterval] = useState(2); // seconds between frames (1 = more frames, better for reference match)
   const [productImages, setProductImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(persistedData || null);
@@ -78,6 +79,7 @@ export default function FrameAnalysisGoogleVisionTab({
           productNames: productNames.split(',').map(p => p.trim()).filter(p => p.length > 0),
           additionalTerms: additionalTerms.split(',').map(t => t.trim()).filter(t => t.length > 0),
           productImages: productImages,
+          frameInterval: frameInterval,
         }),
       });
 
@@ -152,6 +154,21 @@ export default function FrameAnalysisGoogleVisionTab({
               placeholder="e.g., Garnier"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Frame interval (seconds)
+            </label>
+            <select
+              value={frameInterval}
+              onChange={(e) => setFrameInterval(Number(e.target.value))}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            >
+              <option value={2}>1 frame every 2s (default)</option>
+              <option value={1}>1 frame per second (denser; use if reference does not match)</option>
+            </select>
+            <p className="text-xs text-gray-500 mt-1">If reference image does not match, analysis is auto-retried with 1 fps.</p>
           </div>
 
           <div>
@@ -257,17 +274,14 @@ export default function FrameAnalysisGoogleVisionTab({
             </div>
           </div>
 
-          {/* Target Brand Detection */}
+          {/* Combined Target Detection (legacy) */}
           {summary?.targetBrandDetection && (
             <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold mb-4">Target Brand Detection</h2>
-              <div className="bg-green-50 border-2 border-green-500 rounded-lg p-4">
+              <h2 className="text-xl font-semibold mb-4">Overall Target Detection</h2>
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                 <div className="flex items-center gap-3 mb-2">
-                  <span className="font-semibold text-green-900">Target Brand Detection:</span>
                   <span className={`px-4 py-2 rounded-full font-bold ${
-                    summary.targetBrandDetection.detected 
-                      ? 'bg-green-600 text-white' 
-                      : 'bg-red-600 text-white'
+                    summary.targetBrandDetection.detected ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
                   }`}>
                     {summary.targetBrandDetection.detected ? 'DETECTED' : 'NOT DETECTED'}
                   </span>
@@ -278,10 +292,65 @@ export default function FrameAnalysisGoogleVisionTab({
                   )}
                 </div>
                 {summary.targetBrandDetection.message && (
-                  <p className="text-sm text-gray-700 mt-2">
-                    {summary.targetBrandDetection.message}
-                  </p>
+                  <p className="text-sm text-gray-700 mt-2">{summary.targetBrandDetection.message}</p>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* Separate: Brand Detection */}
+          {summary?.brandDetection && (
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold mb-4">Brand Detection</h2>
+              <div className={`rounded-lg p-4 border-2 ${summary.brandDetection.detected ? 'bg-green-50 border-green-500' : 'bg-red-50 border-red-300'}`}>
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="font-semibold">Looked for: {summary.brandDetection.items?.join(', ') || '—'}</span>
+                  <span className={`px-3 py-1 rounded-full font-bold text-sm ${summary.brandDetection.detected ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}>
+                    {summary.brandDetection.detected ? 'DETECTED' : 'NOT DETECTED'}
+                  </span>
+                  {summary.brandDetection.confidence !== undefined && summary.brandDetection.detected && (
+                    <span className="text-sm text-gray-700">{(summary.brandDetection.confidence * 100).toFixed(1)}%</span>
+                  )}
+                </div>
+                {summary.brandDetection.message && <p className="text-sm text-gray-700 mt-1">{summary.brandDetection.message}</p>}
+              </div>
+            </div>
+          )}
+
+          {/* Separate: Product Detection */}
+          {summary?.productDetection && (
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold mb-4">Product Detection</h2>
+              <div className={`rounded-lg p-4 border-2 ${summary.productDetection.detected ? 'bg-green-50 border-green-500' : 'bg-red-50 border-red-300'}`}>
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="font-semibold">Looked for: {summary.productDetection.items?.join(', ') || '—'}</span>
+                  <span className={`px-3 py-1 rounded-full font-bold text-sm ${summary.productDetection.detected ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}>
+                    {summary.productDetection.detected ? 'DETECTED' : 'NOT DETECTED'}
+                  </span>
+                  {summary.productDetection.confidence !== undefined && summary.productDetection.detected && (
+                    <span className="text-sm text-gray-700">{(summary.productDetection.confidence * 100).toFixed(1)}%</span>
+                  )}
+                </div>
+                {summary.productDetection.message && <p className="text-sm text-gray-700 mt-1">{summary.productDetection.message}</p>}
+              </div>
+            </div>
+          )}
+
+          {/* Separate: Object Detection */}
+          {summary?.objectDetection && (
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold mb-4">Object Detection</h2>
+              <div className={`rounded-lg p-4 border-2 ${summary.objectDetection.detected ? 'bg-green-50 border-green-500' : 'bg-red-50 border-red-300'}`}>
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="font-semibold">Looked for: {summary.objectDetection.items?.join(', ') || '—'}</span>
+                  <span className={`px-3 py-1 rounded-full font-bold text-sm ${summary.objectDetection.detected ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}>
+                    {summary.objectDetection.detected ? 'DETECTED' : 'NOT DETECTED'}
+                  </span>
+                  {summary.objectDetection.confidence !== undefined && summary.objectDetection.detected && (
+                    <span className="text-sm text-gray-700">{(summary.objectDetection.confidence * 100).toFixed(1)}%</span>
+                  )}
+                </div>
+                {summary.objectDetection.message && <p className="text-sm text-gray-700 mt-1">{summary.objectDetection.message}</p>}
               </div>
             </div>
           )}
@@ -465,6 +534,40 @@ export default function FrameAnalysisGoogleVisionTab({
                           <div className="font-semibold text-gray-900 mb-2">
                             Frame at {frameAnalysis.timestamp?.toFixed(1) || (idx * 2).toFixed(1)}s
                           </div>
+                          {frameAnalysis.people && frameAnalysis.people.length > 0 && (
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-3">
+                              {frameAnalysis.people[0].gender && (
+                                <div>
+                                  <span className="text-xs text-gray-500 uppercase">GENDER</span>
+                                  <div className={`text-sm font-semibold ${
+                                    (frameAnalysis.people[0].genderConfidence || 0) > 0.8 ? 'text-green-600' : 'text-orange-600'
+                                  }`}>
+                                    {frameAnalysis.people[0].gender} {Math.round((frameAnalysis.people[0].genderConfidence || 0) * 100)}%
+                                  </div>
+                                </div>
+                              )}
+                              {frameAnalysis.people[0].ageBracket && (
+                                <div>
+                                  <span className="text-xs text-gray-500 uppercase">AGE BRACKET</span>
+                                  <div className={`text-sm font-semibold ${
+                                    (frameAnalysis.people[0].ageConfidence || 0) > 0.8 ? 'text-green-600' : 'text-orange-600'
+                                  }`}>
+                                    {frameAnalysis.people[0].ageBracket.replace('_', ' ')} {Math.round((frameAnalysis.people[0].ageConfidence || 0) * 100)}%
+                                  </div>
+                                </div>
+                              )}
+                              {frameAnalysis.people[0].faceConfidence !== undefined && (
+                                <div>
+                                  <span className="text-xs text-gray-500 uppercase">FACE DETECTION</span>
+                                  <div className={`text-sm font-semibold ${
+                                    (frameAnalysis.people[0].faceConfidence || 0) > 0.7 ? 'text-green-600' : 'text-orange-600'
+                                  }`}>
+                                    {Math.round((frameAnalysis.people[0].faceConfidence || 0) * 100)}%
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
                           {frameAnalysis.labels && frameAnalysis.labels.length > 0 && (
                             <div className="text-xs text-gray-600 mb-1">
                               <span className="font-medium">Labels:</span> {frameAnalysis.labels.slice(0, 5).map((l: any) => l.description || l.name).join(', ')}

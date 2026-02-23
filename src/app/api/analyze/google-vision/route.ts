@@ -5,6 +5,7 @@ import { videoDownloader } from '@/services/video/downloader';
 import { frameExtractor } from '@/services/video/frame-extractor';
 import { googleVisionService } from '@/services/detection/google-vision';
 import { validateVideoFile } from '@/utils/video-validation';
+import { normalizeReelUrlCanonical } from '@/utils/validation';
 import logger from '@/utils/logger';
 
 /**
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const reelUrl = body.reelUrl as string;
+    const reelUrl = normalizeReelUrlCanonical(body.reelUrl as string) || (body.reelUrl as string);
     const targetBrandName = body.targetBrandName as string | undefined;
     const productNames = Array.isArray(body.productNames) ? body.productNames : [];
     const additionalTerms = Array.isArray(body.additionalTerms) ? body.additionalTerms : [];
@@ -146,18 +147,42 @@ export async function POST(request: NextRequest) {
       referenceImages: referenceImagePaths.length
     }, 'Starting Google Vision analysis');
     
-    const analysisResults = await googleVisionService.analyzeFrames(
+    let analysisResults = await googleVisionService.analyzeFrames(
       frames,
       {
         targetBrand: targetBrandName,
         productNames,
         additionalTerms,
         referenceImagePaths,
+        frameInterval,
       },
-      3 // Concurrency limit: 3 frames at a time
+      3
     );
 
-    // Step 5: Aggregate results
+    // If reference images were used and no frame matched, retry with denser frames (1 per second)
+    const hasReferenceMatch = analysisResults.some(
+      r => r.analysis.visualMatches?.some((m: any) => m.match)
+    );
+    if (referenceImagePaths.length > 0 && !hasReferenceMatch && !finalVideoPath.startsWith('mock://')) {
+      const denseInterval = 1;
+      logger.info({ previousInterval: frameInterval, newInterval: denseInterval }, 'No reference match; retrying with more frames per second');
+      const denseFrames = await frameExtractor.extractFrames(finalVideoPath, finalVideoId, { interval: denseInterval });
+      if (denseFrames.length > 0) {
+        analysisResults = await googleVisionService.analyzeFrames(
+          denseFrames,
+          {
+            targetBrand: targetBrandName,
+            productNames,
+            additionalTerms,
+            referenceImagePaths,
+            frameInterval: denseInterval,
+          },
+          3
+        );
+      }
+    }
+
+    // Step 6: Aggregate results
     const allLabels = new Map<string, { count: number; totalConfidence: number }>();
     const allTexts: string[] = [];
     const allLogos = new Map<string, { count: number; totalConfidence: number }>();
@@ -243,61 +268,61 @@ export async function POST(request: NextRequest) {
       }))
       .sort((a, b) => b.confidence - a.confidence);
 
-    // Check if target brand, products, or additional terms were detected
-    let targetBrandDetected = false;
-    let targetBrandConfidence = 0;
-    const allTargetTerms = [
-      targetBrandName,
-      ...productNames,
-      ...additionalTerms,
-    ].filter((term): term is string => !!term && term.trim().length > 0);
-    
-    if (allTargetTerms.length > 0) {
-      // Check if any target term was detected
-      for (const term of allTargetTerms) {
-        const termLower = term.toLowerCase();
-        const detectedBrand = brandSummary.find(b => {
-          const brandLower = b.name.toLowerCase();
-          return brandLower === termLower ||
-                 brandLower.includes(termLower) ||
-                 termLower.includes(brandLower);
-        });
-        
-        if (detectedBrand) {
-          targetBrandDetected = true;
-          // Use the highest confidence among all detected terms
-          if (detectedBrand.confidence > targetBrandConfidence) {
-            targetBrandConfidence = detectedBrand.confidence;
-          }
-        }
-      }
-      
-      // Also check in labels, logos, and objects for partial matches
-      if (!targetBrandDetected) {
-        const allDetectedItems = [
-          ...labelSummary.map(l => ({ name: l.name, confidence: l.confidence })),
-          ...logoSummary.map(l => ({ name: l.name, confidence: l.confidence })),
-          ...objectSummary.map(o => ({ name: o.name, confidence: o.confidence })),
-        ];
-        
-        for (const term of allTargetTerms) {
-          const termLower = term.toLowerCase();
-          const match = allDetectedItems.find(item => {
-            const itemLower = item.name.toLowerCase();
-            return itemLower === termLower ||
-                   itemLower.includes(termLower) ||
-                   termLower.includes(itemLower);
-          });
-          
-          if (match && match.confidence > 0.5) {
-            targetBrandDetected = true;
-            if (match.confidence > targetBrandConfidence) {
-              targetBrandConfidence = match.confidence;
-            }
-          }
-        }
+    // Separate detection: brands (targetBrandName), products (productNames), objects (additionalTerms)
+    const brandTerms = (targetBrandName ? [targetBrandName.trim()] : []).filter(Boolean);
+    const productTerms = (productNames || []).map((t: string) => t.trim()).filter(Boolean);
+    const objectTerms = (additionalTerms || []).map((t: string) => t.trim()).filter(Boolean);
+
+    const matchTerm = (term: string, items: Array<{ name: string; confidence: number }>) => {
+      const termLower = term.toLowerCase();
+      return items.find(item => {
+        const itemLower = item.name.toLowerCase();
+        return itemLower === termLower || itemLower.includes(termLower) || termLower.includes(itemLower);
+      });
+    };
+
+    const brandDetected: string[] = [];
+    let brandMaxConfidence = 0;
+    for (const term of brandTerms) {
+      const inBrands = matchTerm(term, brandSummary);
+      const inLogos = matchTerm(term, logoSummary);
+      const inLabels = matchTerm(term, labelSummary);
+      const m = inBrands || inLogos || inLabels;
+      if (m && m.confidence > 0.5) {
+        brandDetected.push(term);
+        if (m.confidence > brandMaxConfidence) brandMaxConfidence = m.confidence;
       }
     }
+
+    const productDetected: string[] = [];
+    let productMaxConfidence = 0;
+    for (const term of productTerms) {
+      const inBrands = matchTerm(term, brandSummary);
+      const inLabels = matchTerm(term, labelSummary);
+      const inLogos = matchTerm(term, logoSummary);
+      const m = inBrands || inLabels || inLogos;
+      if (m && m.confidence > 0.5) {
+        productDetected.push(term);
+        if (m.confidence > productMaxConfidence) productMaxConfidence = m.confidence;
+      }
+    }
+
+    const objectDetected: string[] = [];
+    let objectMaxConfidence = 0;
+    for (const term of objectTerms) {
+      const inObjects = matchTerm(term, objectSummary);
+      const inLabels = matchTerm(term, labelSummary);
+      const m = inObjects || inLabels;
+      if (m && m.confidence > 0.5) {
+        objectDetected.push(term);
+        if (m.confidence > objectMaxConfidence) objectMaxConfidence = m.confidence;
+      }
+    }
+
+    // Legacy single combined flag for backward compatibility
+    const allTargetTerms = [...brandTerms, ...productTerms, ...objectTerms];
+    const targetBrandDetected = brandDetected.length > 0 || productDetected.length > 0 || objectDetected.length > 0;
+    const targetBrandConfidence = Math.max(brandMaxConfidence, productMaxConfidence, objectMaxConfidence);
 
     // Save to database if analysis was successful
     let videoAnalysisId: string | null = null;
@@ -368,6 +393,9 @@ export async function POST(request: NextRequest) {
             message: targetBrandDetected
               ? `Target items (${allTargetTerms.join(', ')}) were detected with ${(targetBrandConfidence * 100).toFixed(1)}% confidence`
               : `Target items (${allTargetTerms.join(', ')}) were not detected in the video frames`,
+            brandDetection: brandTerms.length > 0 ? { detected: brandDetected.length > 0, items: brandTerms, detectedItems: brandDetected, confidence: brandMaxConfidence, message: brandDetected.length > 0 ? `Brand(s) ${brandDetected.join(', ')} detected (${(brandMaxConfidence * 100).toFixed(1)}%)` : `Brand(s) ${brandTerms.join(', ')} not detected` } : null,
+            productDetection: productTerms.length > 0 ? { detected: productDetected.length > 0, items: productTerms, detectedItems: productDetected, confidence: productMaxConfidence, message: productDetected.length > 0 ? `Product(s) ${productDetected.join(', ')} detected (${(productMaxConfidence * 100).toFixed(1)}%)` : `Product(s) ${productTerms.join(', ')} not detected` } : null,
+            objectDetection: objectTerms.length > 0 ? { detected: objectDetected.length > 0, items: objectTerms, detectedItems: objectDetected, confidence: objectMaxConfidence, message: objectDetected.length > 0 ? `Object(s) ${objectDetected.join(', ')} detected (${(objectMaxConfidence * 100).toFixed(1)}%)` : `Object(s) ${objectTerms.join(', ')} not detected` } : null,
           } : {}),
           JSON.stringify({}), // visualSentiment not available for Google Vision
           null // visualSimilaritySummary
@@ -421,6 +449,9 @@ export async function POST(request: NextRequest) {
                 ? `Target items (${allTargetTerms.join(', ')}) were detected with ${(targetBrandConfidence * 100).toFixed(1)}% confidence`
                 : `Target items (${allTargetTerms.join(', ')}) were not detected in the video frames`,
             } : null,
+            brandDetection: brandTerms.length > 0 ? { detected: brandDetected.length > 0, items: brandTerms, detectedItems: brandDetected, confidence: brandMaxConfidence, message: brandDetected.length > 0 ? `Brand(s) ${brandDetected.join(', ')} detected (${(brandMaxConfidence * 100).toFixed(1)}%)` : `Brand(s) ${brandTerms.join(', ')} not detected` } : null,
+            productDetection: productTerms.length > 0 ? { detected: productDetected.length > 0, items: productTerms, detectedItems: productDetected, confidence: productMaxConfidence, message: productDetected.length > 0 ? `Product(s) ${productDetected.join(', ')} detected (${(productMaxConfidence * 100).toFixed(1)}%)` : `Product(s) ${productTerms.join(', ')} not detected` } : null,
+            objectDetection: objectTerms.length > 0 ? { detected: objectDetected.length > 0, items: objectTerms, detectedItems: objectDetected, confidence: objectMaxConfidence, message: objectDetected.length > 0 ? `Object(s) ${objectDetected.join(', ')} detected (${(objectMaxConfidence * 100).toFixed(1)}%)` : `Object(s) ${objectTerms.join(', ')} not detected` } : null,
           },
         },
         videoAnalysisId, // Include database ID in response

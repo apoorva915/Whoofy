@@ -1,6 +1,7 @@
 import axios, { AxiosInstance } from 'axios';
 import { externalApiConfig, isApiConfigured } from '@/config/external-apis';
 import { ExternalApiError, RateLimitError } from '@/utils/errors';
+import { normalizeReelUrlCanonical } from '@/utils/validation';
 import logger from '@/utils/logger';
 
 /**
@@ -385,12 +386,13 @@ class ApifyScraperClient {
    */
   async scrapeReel(reelUrl: string): Promise<ScrapedReel> {
     try {
+      const normalizedReelUrl = normalizeReelUrlCanonical(reelUrl) || reelUrl.trim();
       if (!this.isConfigured()) {
         logger.warn('Apify not configured, returning mock scraped data');
-        return this.getMockReel(reelUrl);
+        return this.getMockReel(normalizedReelUrl);
       }
 
-      logger.info(`Scraping reel using Apify (Reel Scraper + Post Scraper + Instagram Scraper): ${reelUrl}`);
+      logger.info(`Scraping reel using Apify (Reel Scraper + Post Scraper + Instagram Scraper): ${normalizedReelUrl}`);
 
       if (!this.apiToken) {
         throw new Error('Apify API token is not configured');
@@ -405,7 +407,7 @@ class ApifyScraperClient {
         logger.info('Trying Apify Instagram Reel Scraper...');
         const reelActorId = 'apify~instagram-reel-scraper';
         const reelInput = {
-          username: [reelUrl],
+          username: [normalizedReelUrl],
           includeTranscript: true,
           includeDownloadedVideo: false,
           includeSharesCount: true,
@@ -438,7 +440,7 @@ class ApifyScraperClient {
         logger.info('Trying Apify Instagram Post Scraper...');
         const postActorId = 'apify~instagram-post-scraper';
         const postInput = {
-          username: [reelUrl],
+          username: [normalizedReelUrl],
           resultsLimit: 1,
           skipPinnedPosts: false,
         };
@@ -469,7 +471,7 @@ class ApifyScraperClient {
         logger.info('Trying Apify Instagram Scraper...');
         const instagramActorId = 'apify~instagram-scraper';
         const instagramInput = {
-          directUrls: [reelUrl],
+          directUrls: [normalizedReelUrl],
           resultsType: 'posts', // Get post/reel details
           resultsLimit: 1,
           addParentData: false,
@@ -496,13 +498,18 @@ class ApifyScraperClient {
         logger.warn({ error: error.message }, 'Instagram Scraper failed');
       }
 
-      // Try Instagram Comments Scraper for comprehensive comment data
+      // Try Instagram Comments Scraper for comprehensive comment data (needed for reel authenticity verification)
       let commentsScraperData: any[] = [];
       try {
         logger.info(`Trying Apify Instagram Comments Scraper for URL: ${reelUrl}`);
         const commentsActorId = 'apify~instagram-comment-scraper';
+        const COMMENT_LIMIT_PER_POST = 200; // Request enough for authenticity/bot detection; official actor defaults to 15 if not set
         const commentsInput = {
-          directUrls: [reelUrl], // Comments Scraper expects 'directUrls' not 'postUrls'
+          directUrls: [normalizedReelUrl],
+          resultsLimit: COMMENT_LIMIT_PER_POST, // Official apify/instagram-comment-scraper uses this (default 15)
+          post_urls: [normalizedReelUrl], // Some store actors (e.g. dead00) expect post_urls
+          comment_limit: COMMENT_LIMIT_PER_POST,
+          maxCommentsPerPost: COMMENT_LIMIT_PER_POST,
         };
 
         logger.info({ input: commentsInput }, 'Calling Comments Scraper API');
@@ -560,13 +567,13 @@ class ApifyScraperClient {
       // Combine data from all sources
       if (!reelScraperData && !postScraperData && !instagramScraperData) {
         logger.warn('No reel data found from any Apify scraper, returning mock data');
-        return this.getMockReel(reelUrl);
+        return this.getMockReel(normalizedReelUrl);
       }
 
       // Merge data from all sources, prioritizing specialized scrapers
       return this.mapApifyReelData(
         reelScraperData || postScraperData || instagramScraperData, 
-        reelUrl, 
+        normalizedReelUrl, 
         instagramScraperData,
         postScraperData,
         commentsScraperData
@@ -575,11 +582,11 @@ class ApifyScraperClient {
       logger.error({ 
         error: error.message,
         stack: error.stack,
-        reelUrl 
+        reelUrl: normalizedReelUrl 
       }, 'Error scraping reel with Apify');
       
       // Fallback to mock data on error
-      return this.getMockReel(reelUrl);
+      return this.getMockReel(normalizedReelUrl);
     }
   }
 
@@ -629,7 +636,7 @@ class ApifyScraperClient {
       }
     });
     
-    // Convert to array and limit to 200 (Comments Scraper can return many, but we analyze more for better bot detection)
+    // Keep up to 200 unique comments for engagement/authenticity analysis (more comments = better reel verification)
     const uniqueComments = Array.from(commentsMap.values()).slice(0, 200);
     
     logger.info({ 

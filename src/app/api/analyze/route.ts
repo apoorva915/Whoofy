@@ -5,6 +5,7 @@ import { videoDownloader } from '@/services/video/downloader';
 import { frameExtractor } from '@/services/video/frame-extractor';
 import { frameAnalyzer } from '@/services/vision/frame-analyzer';
 import { validateVideoFile } from '@/utils/video-validation';
+import { normalizeReelUrlCanonical } from '@/utils/validation';
 import logger from '@/utils/logger';
 import prisma from '@/config/database';
 import { v4 as uuidv4 } from 'uuid';
@@ -31,7 +32,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const reelUrl = body.reelUrl as string;
+    const reelUrl = normalizeReelUrlCanonical(body.reelUrl as string) || (body.reelUrl as string);
     const targetBrandName = body.targetBrandName || 'Cadbury Dairy Milk';
     const productNames = Array.isArray(body.productNames) ? body.productNames : [];
     const videoId = body.videoId; // Optional: reuse videoId from previous step

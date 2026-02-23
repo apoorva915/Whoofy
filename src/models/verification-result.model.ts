@@ -15,13 +15,9 @@ import { NotFoundError, DatabaseError } from '@/utils/errors';
 export const VerificationResultModel = {
   async create(_data: CreateVerificationResultInput): Promise<VerificationResult> {
     throw new DatabaseError('VerificationResultModel.create is not available in this deployment (no matching Prisma model).');
-  },
-
-  async findById(_id: string): Promise<VerificationResult | null> {
+  },  async findById(_id: string): Promise<VerificationResult | null> {
     return null;
-  },
-
-  async findBySubmissionId(_submissionId: string): Promise<VerificationResult | null> {
+  },  async findBySubmissionId(_submissionId: string): Promise<VerificationResult | null> {
     return null;
   },  async findBySubmissionIdOrThrow(submissionId: string): Promise<VerificationResult> {
     const result = await this.findBySubmissionId(submissionId);

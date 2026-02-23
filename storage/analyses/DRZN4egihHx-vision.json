@@ -1,6 +1,6 @@
 {
   "videoId": "DRZN4egihHx",
-  "generatedAt": "2026-01-31T14:26:25.766Z",
+  "generatedAt": "2026-02-20T19:19:06.579Z",
   "frameCount": 15,
   "payload": {
     "frameAnalyses": [
@@ -10,6 +10,7 @@
           "person"
         ],
         "brands": [],
+        "text": "- U\\ HI a",
         "people": [
           {
             "gender": "female",
@@ -20,7 +21,7 @@
           }
         ],
         "visualSimilarity": {
-          "similarity": 0.2757507562637329,
+          "similarity": 0.4542950689792633,
           "match": false,
           "confidence": "none",
           "referenceImageIndex": 0
@@ -32,6 +33,7 @@
           "person"
         ],
         "brands": [],
+        "text": "7 = re * y i . tC | \\ amma - ete] we",
         "people": [
           {
             "gender": "female",
@@ -42,7 +44,7 @@
           }
         ],
         "visualSimilarity": {
-          "similarity": 0.3042857050895691,
+          "similarity": 0.42753371596336365,
           "match": false,
           "confidence": "none",
           "referenceImageIndex": 0
@@ -54,6 +56,7 @@
           "person"
         ],
         "brands": [],
+        "text": "—_— | = _ a —~ i \\ ( . : io —’ se y “a ~y",
         "people": [
           {
             "gender": "female",
@@ -71,9 +74,9 @@
           }
         ],
         "visualSimilarity": {
-          "similarity": 0.5017565488815308,
-          "match": true,
-          "confidence": "high",
+          "similarity": 0.46226516366004944,
+          "match": false,
+          "confidence": "none",
           "referenceImageIndex": 0
         }
       },
@@ -85,10 +88,11 @@
         ],
         "brands": [
           {
-            "name": "Garnier",
-            "confidence": 0.571
+            "name": "claude",
+            "confidence": 0.334
           }
         ],
+        "text": "6 | AK “Riveg a “4R Neg a) I Sp Rey MING\" 7) r ia ..",
         "people": [
           {
             "gender": "male",
@@ -99,9 +103,9 @@
           }
         ],
         "visualSimilarity": {
-          "similarity": 0.7132866382598877,
+          "similarity": 0.41756442189216614,
           "match": true,
-          "confidence": "high",
+          "confidence": "low",
           "referenceImageIndex": 0
         }
       },
@@ -111,16 +115,8 @@
           "person",
           "bottle"
         ],
-        "brands": [
-          {
-            "name": "Vitamin C Brightening Serum",
-            "confidence": 0.617
-          },
-          {
-            "name": "Brightening",
-            "confidence": 0.557
-          }
-        ],
+        "brands": [],
+        "text": "Jf SARNICR “ af TAMING) B SepSHTENING Me SaRnier 4“ ay AMING SH TENING a TY",
         "people": [
           {
             "gender": "female",
@@ -131,9 +127,9 @@
           }
         ],
         "visualSimilarity": {
-          "similarity": 0.41796812415122986,
-          "match": true,
-          "confidence": "low",
+          "similarity": 0.39377278089523315,
+          "match": false,
+          "confidence": "none",
           "referenceImageIndex": 0
         }
       },
@@ -141,6 +137,7 @@
         "timestamp": 10,
         "objects": [],
         "brands": [],
+        "text": "| Dy",
         "people": [
           {
             "gender": "female",
@@ -151,7 +148,7 @@
           }
         ],
         "visualSimilarity": {
-          "similarity": 0.328642874956131,
+          "similarity": 0.46627652645111084,
           "match": false,
           "confidence": "none",
           "referenceImageIndex": 0
@@ -163,6 +160,7 @@
           "person"
         ],
         "brands": [],
+        "text": "5 “a J iy",
         "people": [
           {
             "gender": "female",
@@ -173,7 +171,7 @@
           }
         ],
         "visualSimilarity": {
-          "similarity": 0.26734432578086853,
+          "similarity": 0.37610238790512085,
           "match": false,
           "confidence": "none",
           "referenceImageIndex": 0
@@ -185,6 +183,7 @@
           "person"
         ],
         "brands": [],
+        "text": "— w > si -_ \\ i",
         "people": [
           {
             "gender": "female",
@@ -195,7 +194,7 @@
           }
         ],
         "visualSimilarity": {
-          "similarity": 0.2777360677719116,
+          "similarity": 0.43603986501693726,
           "match": false,
           "confidence": "none",
           "referenceImageIndex": 0
@@ -207,24 +206,25 @@
           "person"
         ],
         "brands": [],
+        "text": "—s w [é Natl ) A |",
         "people": [
-          {
-            "gender": "male",
-            "genderConfidence": 0.961,
-            "ageBracket": "middle_age",
-            "ageConfidence": 0.36,
-            "faceConfidence": 0.717
-          },
           {
             "gender": "female",
             "genderConfidence": 1,
             "ageBracket": "young",
             "ageConfidence": 0.877,
             "faceConfidence": 0.814
+          },
+          {
+            "gender": "male",
+            "genderConfidence": 0.961,
+            "ageBracket": "middle_age",
+            "ageConfidence": 0.36,
+            "faceConfidence": 0.717
           }
         ],
         "visualSimilarity": {
-          "similarity": 0.2786104679107666,
+          "similarity": 0.41287365555763245,
           "match": false,
           "confidence": "none",
           "referenceImageIndex": 0
@@ -236,6 +236,7 @@
           "person"
         ],
         "brands": [],
+        "text": "_ . ae Y \"",
         "people": [
           {
             "gender": "female",
@@ -246,7 +247,7 @@
           }
         ],
         "visualSimilarity": {
-          "similarity": 0.28199779987335205,
+          "similarity": 0.42568594217300415,
           "match": false,
           "confidence": "none",
           "referenceImageIndex": 0
@@ -258,6 +259,7 @@
           "person"
         ],
         "brands": [],
+        "text": ", an = w i} —_—_ jf F : é a Viz 1 > xX as, | N",
         "people": [
           {
             "gender": "female",
@@ -268,7 +270,7 @@
           }
         ],
         "visualSimilarity": {
-          "similarity": 0.2596551775932312,
+          "similarity": 0.41875579953193665,
           "match": false,
           "confidence": "none",
           "referenceImageIndex": 0
@@ -280,6 +282,7 @@
           "person"
         ],
         "brands": [],
+        "text": "—_o — 8 SG \\",
         "people": [
           {
             "gender": "female",
@@ -290,7 +293,7 @@
           }
         ],
         "visualSimilarity": {
-          "similarity": 0.25729671120643616,
+          "similarity": 0.41141411662101746,
           "match": false,
           "confidence": "none",
           "referenceImageIndex": 0
@@ -302,6 +305,7 @@
           "person"
         ],
         "brands": [],
+        "text": "i. ; 4 \\ f ' p | ——— AA",
         "people": [
           {
             "gender": "female",
@@ -312,7 +316,7 @@
           }
         ],
         "visualSimilarity": {
-          "similarity": 0.28240329027175903,
+          "similarity": 0.452248215675354,
           "match": false,
           "confidence": "none",
           "referenceImageIndex": 0
@@ -324,6 +328,7 @@
           "person"
         ],
         "brands": [],
+        "text": "—_s ‘ee ~y ) oy A St eer y",
         "people": [
           {
             "gender": "female",
@@ -334,7 +339,7 @@
           }
         ],
         "visualSimilarity": {
-          "similarity": 0.2429482489824295,
+          "similarity": 0.41704756021499634,
           "match": false,
           "confidence": "none",
           "referenceImageIndex": 0
@@ -346,6 +351,7 @@
           "person"
         ],
         "brands": [],
+        "text": "| . y 6 ‘@ AC Weg é KOR fh Gy. Ny, Fs i —_——— F q b 4 “ Mee YW’ &y Vo Noe",
         "people": [
           {
             "gender": "female",
@@ -356,9 +362,9 @@
           }
         ],
         "visualSimilarity": {
-          "similarity": 0.6590021252632141,
-          "match": true,
-          "confidence": "high",
+          "similarity": 0.40280458331108093,
+          "match": false,
+          "confidence": "none",
           "referenceImageIndex": 0
         }
       }
@@ -370,43 +376,31 @@
       ],
       "brandsDetected": [
         {
-          "name": "Garnier",
-          "confidence": 0.571,
-          "totalFrames": 1,
-          "totalVisibleSeconds": 2
-        },
-        {
-          "name": "Vitamin C Brightening Serum",
-          "confidence": 0.617,
-          "totalFrames": 1,
-          "totalVisibleSeconds": 2
-        },
-        {
-          "name": "Brightening",
-          "confidence": 0.557,
+          "name": "claude",
+          "confidence": 0.334,
           "totalFrames": 1,
           "totalVisibleSeconds": 2
         }
       ],
       "targetBrandConfirmation": {
         "detected": true,
-        "message": "Yes, it shows Vitamin C Brightening Serum (detected in 3 frames, visible for 6.0s).",
-        "confidence": 0.6200727083206177,
-        "detectedInFrames": 3,
-        "totalVisibleSeconds": 6
+        "message": "Yes, it shows claude (detected in 1 frame).",
+        "confidence": 0.334,
+        "detectedInFrames": 1,
+        "totalVisibleSeconds": 2
       },
       "visualSentiment": {
         "sentiment": "positive",
         "score": 1,
-        "reasoning": "Target brand \"Garnier, Garnieruk\" is prominently shown in 2 frames. Positive visual elements detected (person, food, product) Overall, this reel provides POSITIVE publicity for Garnier, Garnieruk - the brand/product is shown favorably with positive visual elements.",
+        "reasoning": "Target brand \"claude\" is prominently shown in 1 frames. Positive visual elements detected (person, food, product) Overall, this reel provides POSITIVE publicity for claude - the brand/product is shown favorably with positive visual elements.",
         "confidence": 0.95
       },
       "visualSimilaritySummary": {
-        "averageSimilarity": 0.573,
-        "maxSimilarity": 0.713,
-        "matchedFrames": 4,
+        "averageSimilarity": 0.418,
+        "maxSimilarity": 0.418,
+        "matchedFrames": 1,
         "totalFrames": 15,
-        "visibleSeconds": 8,
+        "visibleSeconds": 2,
         "referenceImageCount": 1
       },
       "frameAnalyses": [
@@ -416,6 +410,7 @@
             "person"
           ],
           "brands": [],
+          "text": "- U\\ HI a",
           "people": [
             {
               "gender": "female",
@@ -426,7 +421,7 @@
             }
           ],
           "visualSimilarity": {
-            "similarity": 0.2757507562637329,
+            "similarity": 0.4542950689792633,
             "match": false,
             "confidence": "none",
             "referenceImageIndex": 0
@@ -438,6 +433,7 @@
             "person"
           ],
           "brands": [],
+          "text": "7 = re * y i . tC | \\ amma - ete] we",
           "people": [
             {
               "gender": "female",
@@ -448,7 +444,7 @@
             }
           ],
           "visualSimilarity": {
-            "similarity": 0.3042857050895691,
+            "similarity": 0.42753371596336365,
             "match": false,
             "confidence": "none",
             "referenceImageIndex": 0
@@ -460,6 +456,7 @@
             "person"
           ],
           "brands": [],
+          "text": "—_— | = _ a —~ i \\ ( . : io —’ se y “a ~y",
           "people": [
             {
               "gender": "female",
@@ -477,9 +474,9 @@
             }
           ],
           "visualSimilarity": {
-            "similarity": 0.5017565488815308,
-            "match": true,
-            "confidence": "high",
+            "similarity": 0.46226516366004944,
+            "match": false,
+            "confidence": "none",
             "referenceImageIndex": 0
           }
         },
@@ -491,10 +488,11 @@
           ],
           "brands": [
             {
-              "name": "Garnier",
-              "confidence": 0.571
+              "name": "claude",
+              "confidence": 0.334
             }
           ],
+          "text": "6 | AK “Riveg a “4R Neg a) I Sp Rey MING\" 7) r ia ..",
           "people": [
             {
               "gender": "male",
@@ -505,9 +503,9 @@
             }
           ],
           "visualSimilarity": {
-            "similarity": 0.7132866382598877,
+            "similarity": 0.41756442189216614,
             "match": true,
-            "confidence": "high",
+            "confidence": "low",
             "referenceImageIndex": 0
           }
         },
@@ -517,16 +515,8 @@
             "person",
             "bottle"
           ],
-          "brands": [
-            {
-              "name": "Vitamin C Brightening Serum",
-              "confidence": 0.617
-            },
-            {
-              "name": "Brightening",
-              "confidence": 0.557
-            }
-          ],
+          "brands": [],
+          "text": "Jf SARNICR “ af TAMING) B SepSHTENING Me SaRnier 4“ ay AMING SH TENING a TY",
           "people": [
             {
               "gender": "female",
@@ -537,9 +527,9 @@
             }
           ],
           "visualSimilarity": {
-            "similarity": 0.41796812415122986,
-            "match": true,
-            "confidence": "low",
+            "similarity": 0.39377278089523315,
+            "match": false,
+            "confidence": "none",
             "referenceImageIndex": 0
           }
         },
@@ -547,6 +537,7 @@
           "timestamp": 10,
           "objects": [],
           "brands": [],
+          "text": "| Dy",
           "people": [
             {
               "gender": "female",
@@ -557,7 +548,7 @@
             }
           ],
           "visualSimilarity": {
-            "similarity": 0.328642874956131,
+            "similarity": 0.46627652645111084,
             "match": false,
             "confidence": "none",
             "referenceImageIndex": 0
@@ -569,6 +560,7 @@
             "person"
           ],
           "brands": [],
+          "text": "5 “a J iy",
           "people": [
             {
               "gender": "female",
@@ -579,7 +571,7 @@
             }
           ],
           "visualSimilarity": {
-            "similarity": 0.26734432578086853,
+            "similarity": 0.37610238790512085,
             "match": false,
             "confidence": "none",
             "referenceImageIndex": 0
@@ -591,6 +583,7 @@
             "person"
           ],
           "brands": [],
+          "text": "— w > si -_ \\ i",
           "people": [
             {
               "gender": "female",
@@ -601,7 +594,7 @@
             }
           ],
           "visualSimilarity": {
-            "similarity": 0.2777360677719116,
+            "similarity": 0.43603986501693726,
             "match": false,
             "confidence": "none",
             "referenceImageIndex": 0
@@ -613,24 +606,25 @@
             "person"
           ],
           "brands": [],
+          "text": "—s w [é Natl ) A |",
           "people": [
-            {
-              "gender": "male",
-              "genderConfidence": 0.961,
-              "ageBracket": "middle_age",
-              "ageConfidence": 0.36,
-              "faceConfidence": 0.717
-            },
             {
               "gender": "female",
               "genderConfidence": 1,
               "ageBracket": "young",
               "ageConfidence": 0.877,
               "faceConfidence": 0.814
+            },
+            {
+              "gender": "male",
+              "genderConfidence": 0.961,
+              "ageBracket": "middle_age",
+              "ageConfidence": 0.36,
+              "faceConfidence": 0.717
             }
           ],
           "visualSimilarity": {
-            "similarity": 0.2786104679107666,
+            "similarity": 0.41287365555763245,
             "match": false,
             "confidence": "none",
             "referenceImageIndex": 0
@@ -642,6 +636,7 @@
             "person"
           ],
           "brands": [],
+          "text": "_ . ae Y \"",
           "people": [
             {
               "gender": "female",
@@ -652,7 +647,7 @@
             }
           ],
           "visualSimilarity": {
-            "similarity": 0.28199779987335205,
+            "similarity": 0.42568594217300415,
             "match": false,
             "confidence": "none",
             "referenceImageIndex": 0
@@ -664,6 +659,7 @@
             "person"
           ],
           "brands": [],
+          "text": ", an = w i} —_—_ jf F : é a Viz 1 > xX as, | N",
           "people": [
             {
               "gender": "female",
@@ -674,7 +670,7 @@
             }
           ],
           "visualSimilarity": {
-            "similarity": 0.2596551775932312,
+            "similarity": 0.41875579953193665,
             "match": false,
             "confidence": "none",
             "referenceImageIndex": 0
@@ -686,6 +682,7 @@
             "person"
           ],
           "brands": [],
+          "text": "—_o — 8 SG \\",
           "people": [
             {
               "gender": "female",
@@ -696,7 +693,7 @@
             }
           ],
           "visualSimilarity": {
-            "similarity": 0.25729671120643616,
+            "similarity": 0.41141411662101746,
             "match": false,
             "confidence": "none",
             "referenceImageIndex": 0
@@ -708,6 +705,7 @@
             "person"
           ],
           "brands": [],
+          "text": "i. ; 4 \\ f ' p | ——— AA",
           "people": [
             {
               "gender": "female",
@@ -718,7 +716,7 @@
             }
           ],
           "visualSimilarity": {
-            "similarity": 0.28240329027175903,
+            "similarity": 0.452248215675354,
             "match": false,
             "confidence": "none",
             "referenceImageIndex": 0
@@ -730,6 +728,7 @@
             "person"
           ],
           "brands": [],
+          "text": "—_s ‘ee ~y ) oy A St eer y",
           "people": [
             {
               "gender": "female",
@@ -740,7 +739,7 @@
             }
           ],
           "visualSimilarity": {
-            "similarity": 0.2429482489824295,
+            "similarity": 0.41704756021499634,
             "match": false,
             "confidence": "none",
             "referenceImageIndex": 0
@@ -752,6 +751,7 @@
             "person"
           ],
           "brands": [],
+          "text": "| . y 6 ‘@ AC Weg é KOR fh Gy. Ny, Fs i —_——— F q b 4 “ Mee YW’ &y Vo Noe",
           "people": [
             {
               "gender": "female",
@@ -762,9 +762,9 @@
             }
           ],
           "visualSimilarity": {
-            "similarity": 0.6590021252632141,
-            "match": true,
-            "confidence": "high",
+            "similarity": 0.40280458331108093,
+            "match": false,
+            "confidence": "none",
             "referenceImageIndex": 0
           }
         }

@@ -17,6 +17,15 @@ export interface PostData {
 }
 
 /**
+ * Optional frame-derived insights (OCR text, objects, labels from video/reel frame analysis)
+ */
+export interface FrameInsights {
+  ocrTexts?: string[];
+  objects?: string[];
+  labels?: string[];
+}
+
+/**
  * Niche Analysis Result from Gemini
  */
 export interface NicheAnalysisResult {
@@ -67,9 +76,17 @@ class NicheAnalysisService {
   }
 
   /**
-   * Comprehensive prompt for niche analysis
+   * Comprehensive prompt for niche analysis (bio, posts, comments, frame insights, suggested profiles)
    */
-  private getNicheAnalysisPrompt(bio: string | null, posts: PostData[]): string {
+  private getNicheAnalysisPrompt(
+    bio: string | null,
+    posts: PostData[],
+    options: {
+      commentsSample?: string[];
+      frameInsights?: FrameInsights;
+      suggestedProfiles?: string[];
+    }
+  ): string {
     const postsText = posts.length > 0
       ? posts.map((post, idx) => {
           return `Post ${idx + 1}:
@@ -79,8 +96,33 @@ class NicheAnalysisService {
         }).join('\n\n')
       : '(No posts available)';
 
-    return `You are an expert content creator niche classification system specializing in Instagram creators. Your task is to analyze a creator's bio and their latest posts to determine their primary niche(s).
+    const hasComments = (options.commentsSample?.length ?? 0) > 0;
+    const commentsSection = hasComments
+      ? `\n**TOP COMMENTS ON CREATOR'S CONTENT (use for niche context when captions are empty or generic):**\n${(options.commentsSample ?? [])
+          .slice(0, 40)
+          .map((c, i) => `${i + 1}. "${c}"`)
+          .join('\n')}\n`
+      : '';
 
+    const fi = options.frameInsights;
+    const hasFrameInsights =
+      (fi?.ocrTexts?.length ?? 0) > 0 || (fi?.objects?.length ?? 0) > 0 || (fi?.labels?.length ?? 0) > 0;
+    const frameSection = hasFrameInsights
+      ? `\n**CONTENT FROM VIDEO/REEL FRAMES (extracted text, objects, labels - use for niche when posts lack detail):**\n` +
+        (fi?.ocrTexts?.length
+          ? `- Text in frames: ${fi.ocrTexts.filter(Boolean).slice(0, 20).join(' | ')}\n`
+          : '') +
+        (fi?.objects?.length ? `- Objects detected: ${[...new Set(fi.objects)].slice(0, 30).join(', ')}\n` : '') +
+        (fi?.labels?.length ? `- Labels: ${[...new Set(fi.labels)].slice(0, 20).join(', ')}\n` : '')
+      : '';
+
+    const hasSuggested = (options.suggestedProfiles?.length ?? 0) > 0;
+    const suggestedSection = hasSuggested
+      ? `\n**INSTAGRAM SUGGESTED/RELATED PROFILES (usernames; use as weak signal - similar creators often share niches):**\n${(options.suggestedProfiles ?? []).slice(0, 15).join(', ')}\n`
+      : '';
+
+    return `You are an expert content creator niche classification system specializing in Instagram creators. Your task is to analyze a creator's bio, latest posts, comments on their content, and any frame-derived content to determine their primary niche(s). When captions or posts lack specific content, use comments and frame data (text/objects/labels) to infer niche.
+${suggestedSection}${commentsSection}${frameSection}
 **CREATOR BIO:**
 ${bio || '(No bio provided)'}
 
@@ -97,54 +139,56 @@ ${this.getAvailableNiches()}
    - Identify what the creator claims to be or do
    - Note any explicit niche mentions
 
-2. **Analyze the Latest Posts:**
-   - Review the content themes across all posts
-   - Look for consistent topics, subjects, or content types
-   - Consider the type of content (photos, videos, reels, etc.)
+2. **Analyze the Latest Posts AND supplementary signals:**
+   - Review the content themes across all posts (captions, types, engagement)
+   - **When captions are empty or generic**, use TOP COMMENTS and FRAME-DERIVED DATA (text in frames, objects, labels) to infer what the content is about
+   - Look for consistent topics in comments (e.g. "great recipe", "where to buy") and in frame text/objects (e.g. products, places, activities)
+   - Consider suggested/related profile usernames as a weak signal (similar accounts often share niches)
    - Note engagement patterns (which types of posts get more engagement)
 
 3. **Determine Primary Niche(s):**
-   - Based on BOTH the bio AND the actual content in posts, determine the creator's niche(s)
+   - Base niche on bio, post content, comments, and frame-derived data combined. Do NOT say "latest posts provide no specific content" if you have comments or frame data—use them.
    - A creator can have MULTIPLE niches (e.g., Tech + Education, Fashion + Lifestyle, Beauty + Lifestyle)
-   - **CRITICAL**: You MUST identify at least one clear niche. Do NOT return an empty array or only "Other" unless there is truly no identifiable niche
-   - Prioritize niches that are evident in BOTH bio and posts
-   - If bio mentions a niche (e.g., "@stmoriz Ambassador" = Beauty) AND posts show that content, include it with high confidence
-   - If bio mentions multiple themes (e.g., "Thyroid Cancer Advocate" = Lifestyle + Education) AND posts support them, include all relevant niches
-   - If bio and posts don't align, prioritize what's actually in the posts (actions speak louder than words)
-   - **IMPORTANT**: Always provide clear, specific niche names from the available niches list. Examples: "Beauty", "Lifestyle", "Education", "Entertainment", "Fashion", "Tech", etc.
+   - **CRITICAL**: You MUST identify at least one clear niche. Do NOT return an empty array or only "Other" unless there is truly no identifiable niche from any source
+   - Prioritize niches evident in bio, posts, comments, or frame content
+   - If only comments or frame data give clear themes (e.g. comments mention "skincare", frames show beauty products), use that for niche with medium-high confidence
    - Only use "Other" as a fallback if there is genuinely no identifiable niche from the available options
 
 4. **Confidence Assessment:**
    - Provide a confidence score between 0.0 and 1.0
-   - **CRITICAL**: If bio and posts provide clear evidence of niche(s), confidence should be 0.85-0.95 (high confidence)
-   - Use 0.70-0.85 (medium-high) if there's good alignment but some ambiguity
-   - Use 0.50-0.70 (medium) if there's partial alignment
-   - Only use low confidence (0.0-0.50) if there's very limited or conflicting information
-   - **IMPORTANT**: When multiple niches are clearly evident in both bio and posts, confidence should be 0.85-0.95
+   - **CRITICAL**: If bio, posts, comments, or frame data provide clear evidence of niche(s), confidence should be 0.75-0.95
+   - Use 0.70-0.85 (medium-high) if niche is clear from comments or frame data even when captions are empty
+   - Only use low confidence (0.0-0.50) if there's very limited or conflicting information across all sources
 
 **OUTPUT FORMAT (JSON only, no markdown, no code blocks):**
 {
   "niches": ["Tech", "Education"],
   "confidence": 0.85,
-  "reasoning": "The creator's bio mentions tech reviews and their last 5 posts consistently show tech product reviews and tutorials, indicating a strong Tech and Education niche focus."
+  "reasoning": "The creator's bio mentions tech reviews; comments ask about products and tutorials; frame text and objects show gadgets. Strong Tech and Education niche."
 }
 
 **IMPORTANT:**
 - Return ONLY valid JSON, no additional text before or after
 - The "niches" array should contain one or more niche values from the available niches list
 - Ensure confidence is a number between 0.0 and 1.0
-- Provide clear reasoning explaining why these niches were chosen
+- Provide clear reasoning citing which signals you used (bio, posts, comments, frame data, suggested profiles)
 - If the creator's content doesn't clearly fit any niche, use "Other"`;
   }
 
   /**
-   * Analyze niche using Gemini
+   * Analyze niche using Gemini (bio, latest posts, optional comments, frame insights, suggested profiles)
    */
   async analyzeNiche(
     bio: string | null | undefined,
-    posts: PostData[]
+    posts: PostData[],
+    options?: {
+      commentsSample?: string[];
+      frameInsights?: FrameInsights;
+      suggestedProfiles?: string[];
+    }
   ): Promise<NicheAnalysisResult> {
     const startTime = Date.now();
+    const opts = options ?? {};
 
     // Check if Gemini is configured
     if (!this.isConfigured()) {
@@ -160,20 +204,26 @@ ${this.getAvailableNiches()}
     // Normalize inputs
     const bioText = bio?.trim() || null;
     const postsData = Array.isArray(posts) ? posts.slice(0, 5) : []; // Limit to last 5 posts
+    const hasComments = (opts.commentsSample?.length ?? 0) > 0;
+    const hasFrameInsights =
+      (opts.frameInsights?.ocrTexts?.length ?? 0) > 0 ||
+      (opts.frameInsights?.objects?.length ?? 0) > 0 ||
+      (opts.frameInsights?.labels?.length ?? 0) > 0;
+    const hasSuggested = (opts.suggestedProfiles?.length ?? 0) > 0;
 
-    // If both bio and posts are empty, return Other
-    if (!bioText && postsData.length === 0) {
-      logger.warn('Both bio and posts are empty');
+    // If no signal at all, return Other
+    if (!bioText && postsData.length === 0 && !hasComments && !hasFrameInsights && !hasSuggested) {
+      logger.warn('No bio, posts, comments, frame insights, or suggested profiles for niche analysis');
       return {
         niches: [CreatorNiche.OTHER],
         confidence: 0.0,
-        reasoning: 'No bio or posts available for niche analysis',
+        reasoning: 'No bio, posts, comments, frame data, or suggested profiles available for niche analysis',
         processingTimeMs: Date.now() - startTime,
       };
     }
 
     try {
-      const prompt = this.getNicheAnalysisPrompt(bioText, postsData);
+      const prompt = this.getNicheAnalysisPrompt(bioText, postsData, opts);
 
       logger.debug(
         {

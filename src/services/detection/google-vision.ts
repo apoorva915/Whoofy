@@ -597,79 +597,68 @@ class GoogleVisionService {
     for (const refAnalysis of referenceAnalyses) {
       if (!refAnalysis) continue;
 
-      // Find matching labels (case-insensitive, fuzzy matching)
+      // More tolerant matching when reference is small/far: lower confidence threshold and allow partial matches
+      const minConfidence = 0.4; // Was 0.5; lower so distant/small objects still match
+      const findLabelMatch = (frameLabel: { description: string; confidence: number }, refLabel: { description: string; confidence: number }) => {
+        const a = frameLabel.description.toLowerCase();
+        const b = refLabel.description.toLowerCase();
+        return a === b || a.includes(b) || b.includes(a);
+      };
+      const findObjectMatch = (frameObj: { name: string; confidence: number }, refObj: { name: string; confidence: number }) => {
+        const a = frameObj.name.toLowerCase();
+        const b = refObj.name.toLowerCase();
+        return a === b || a.includes(b) || b.includes(a);
+      };
+
       const matchingLabels: string[] = [];
       frameAnalysis.labels.forEach(frameLabel => {
-        const frameLabelLower = frameLabel.description.toLowerCase();
-        const match = refAnalysis.labels.find(refLabel => {
-          const refLabelLower = refLabel.description.toLowerCase();
-          // Exact match or contains match
-          return frameLabelLower === refLabelLower ||
-                 frameLabelLower.includes(refLabelLower) ||
-                 refLabelLower.includes(frameLabelLower);
-        });
-        if (match && match.confidence > 0.5 && frameLabel.confidence > 0.5) {
+        const match = refAnalysis.labels.find(refLabel => findLabelMatch(frameLabel, refLabel));
+        if (match && match.confidence >= minConfidence && frameLabel.confidence >= minConfidence) {
           matchingLabels.push(frameLabel.description);
         }
       });
 
-      // Find matching objects
       const matchingObjects: string[] = [];
       frameAnalysis.objects.forEach(frameObj => {
-        const frameObjLower = frameObj.name.toLowerCase();
-        const match = refAnalysis.objects.find(refObj => {
-          const refObjLower = refObj.name.toLowerCase();
-          return frameObjLower === refObjLower ||
-                 frameObjLower.includes(refObjLower) ||
-                 refObjLower.includes(frameObjLower);
-        });
-        if (match && match.confidence > 0.5 && frameObj.confidence > 0.5) {
+        const match = refAnalysis.objects.find(refObj => findObjectMatch(frameObj, refObj));
+        if (match && match.confidence >= minConfidence && frameObj.confidence >= minConfidence) {
           matchingObjects.push(frameObj.name);
         }
       });
 
-      // Find matching logos
       const matchingLogos: string[] = [];
       frameAnalysis.logos.forEach(frameLogo => {
-        const frameLogoLower = frameLogo.description.toLowerCase();
-        const match = refAnalysis.logos.find(refLogo => {
-          const refLogoLower = refLogo.description.toLowerCase();
-          return frameLogoLower === refLogoLower ||
-                 frameLogoLower.includes(refLogoLower) ||
-                 refLogoLower.includes(frameLogoLower);
-        });
-        if (match && match.confidence > 0.5 && frameLogo.confidence > 0.5) {
+        const match = refAnalysis.logos.find(refLogo =>
+          (frameLogo.description.toLowerCase() === refLogo.description.toLowerCase()) ||
+          frameLogo.description.toLowerCase().includes(refLogo.description.toLowerCase()) ||
+          refLogo.description.toLowerCase().includes(frameLogo.description.toLowerCase())
+        );
+        if (match && match.confidence >= minConfidence && frameLogo.confidence >= minConfidence) {
           matchingLogos.push(frameLogo.description);
         }
       });
 
-      // Calculate similarity score
-      // Weight: logos (0.4) > objects (0.35) > labels (0.25)
-      const totalPossibleMatches = 
+      // When ref has few entities, treat "at least one strong match" as a match (handles far/small reference)
+      const hasAnyStrongMatch = matchingLogos.length > 0 || matchingObjects.length > 0 || matchingLabels.length > 0;
+      const refEntityCount = refAnalysis.labels.length + refAnalysis.objects.length + refAnalysis.logos.length;
+      const oneMatchEnough = refEntityCount <= 3 && hasAnyStrongMatch;
+
+      // Calculate similarity (deterministic: sort so same inputs give same score)
+      const totalPossibleMatches =
         Math.max(refAnalysis.labels.length, frameAnalysis.labels.length) +
         Math.max(refAnalysis.objects.length, frameAnalysis.objects.length) +
-        Math.max(refAnalysis.logos.length, frameAnalysis.logos.length);
-
+        Math.max(refAnalysis.logos.length, frameAnalysis.logos.length) || 1;
       const totalMatches = matchingLabels.length + matchingObjects.length + matchingLogos.length;
-      
-      let similarity = 0;
-      if (totalPossibleMatches > 0) {
-        const baseSimilarity = totalMatches / totalPossibleMatches;
-        
-        // Boost similarity if logos match (strong indicator)
-        if (matchingLogos.length > 0) {
-          similarity = baseSimilarity * 0.6 + (matchingLogos.length / Math.max(refAnalysis.logos.length, frameAnalysis.logos.length)) * 0.4;
-        } else {
-          similarity = baseSimilarity;
-        }
+      let similarity = totalPossibleMatches > 0 ? totalMatches / totalPossibleMatches : 0;
+      if (matchingLogos.length > 0) {
+        similarity = similarity * 0.6 + (matchingLogos.length / Math.max(refAnalysis.logos.length, frameAnalysis.logos.length, 1)) * 0.4;
       }
+      similarity = Math.round(similarity * 100) / 100; // Stable display: 2 decimal places
 
-      // Determine match and confidence
-      const matchThreshold = 0.3; // Minimum similarity to consider a match
-      const highThreshold = 0.6;
-      const mediumThreshold = 0.4;
-      
-      const isMatch = similarity >= matchThreshold;
+      const matchThreshold = 0.2; // Lowered from 0.3 so slightly different scale/distance still matches
+      const highThreshold = 0.55;
+      const mediumThreshold = 0.35;
+      const isMatch = similarity >= matchThreshold || oneMatchEnough;
       let confidence: 'high' | 'medium' | 'low' | 'none' = 'none';
       
       if (isMatch) {
@@ -684,7 +673,7 @@ class GoogleVisionService {
 
       matches.push({
         referenceImageIndex: refAnalysis.index,
-        similarity: Number(similarity.toFixed(3)),
+        similarity,
         match: isMatch,
         confidence,
         matchingLabels,
@@ -765,11 +754,16 @@ class GoogleVisionService {
       });
 
       const text = await res.text();
+      const trimmed = (text || '').trim();
+      if (trimmed.startsWith('<') || trimmed.startsWith('<!')) {
+        logger.error({ status: res.status, url: `${this.mlServiceUrl}/faces` }, 'ML service returned HTML instead of JSON (check URL or service)');
+        throw new Error('Service returned HTML instead of JSON. Check ML service URL (e.g. ML_SERVICE_URL) or ensure the faces endpoint returns JSON.');
+      }
       let parsed: any;
       try {
-        parsed = text ? JSON.parse(text) : {};
+        parsed = trimmed ? JSON.parse(trimmed) : {};
       } catch {
-        parsed = { error: text || `Non-JSON response from ML service (${res.status})` };
+        parsed = { error: trimmed || `Non-JSON response from ML service (${res.status})` };
       }
 
       if (!res.ok) {
@@ -831,7 +825,10 @@ class GoogleVisionService {
           
           const jsonMatch = cleanOutput.match(/\{[\s\S]*\}/);
           const jsonString = jsonMatch ? jsonMatch[0] : cleanOutput;
-          
+          if (jsonString.trimStart().startsWith('<')) {
+            reject(new Error('Face detection script returned HTML instead of JSON. Check script path or environment.'));
+            return;
+          }
           const result = JSON.parse(jsonString);
           if (result.error) {
             if (result.error.includes('not found') || result.error.includes('No face')) {
@@ -1003,10 +1000,11 @@ class GoogleVisionService {
       productNames?: string[];
       additionalTerms?: string[];
       referenceImagePaths?: string[];
+      frameInterval?: number;
     } = {},
     concurrencyLimit: number = 3
   ): Promise<Array<{ framePath: string; timestamp: number; analysis: FrameAnalysisResult }>> {
-    const { targetBrand, productNames = [], additionalTerms = [], referenceImagePaths = [] } = options;
+    const { targetBrand, productNames = [], additionalTerms = [], referenceImagePaths = [], frameInterval = 2 } = options;
     const results: Array<{ framePath: string; timestamp: number; analysis: FrameAnalysisResult }> = [];
 
     // Process frames in batches to respect rate limits
@@ -1015,8 +1013,7 @@ class GoogleVisionService {
       
       const batchPromises = batch.map(async (framePath, idx) => {
         const frameIndex = i + idx;
-        // Estimate timestamp (assuming 2 second intervals, can be made configurable)
-        const timestamp = frameIndex * 2;
+        const timestamp = frameIndex * frameInterval;
         
         try {
           const analysis = await this.analyzeFrame(framePath, {

@@ -316,6 +316,12 @@ export default function Home() {
               scrapingData={analysisData.scraping}
               persistedData={analysisData.analysis}
               onDataUpdate={(data) => updateAnalysisData('analysis', data)}
+              frameAnalysisData={(() => {
+                const local = analysisData.frameAnalysisLocal?.data;
+                const google = analysisData.frameAnalysisGoogle?.data;
+                const frameAnalyses = local?.frameAnalyses ?? local?.visualSummary?.frameAnalyses ?? google?.frameAnalyses;
+                return frameAnalyses?.length ? { frameAnalyses } : undefined;
+              })()}
             />
           )}
           {activeTab === 'frame-analysis-local' && (

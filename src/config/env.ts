@@ -20,8 +20,12 @@ const EnvSchema = z.object({
   SUPABASE_ANON_KEY: z.string().optional(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
   
-  // Redis (for BullMQ)
-  REDIS_HOST: z.string().default('localhost'),
+  // Redis (for BullMQ). Use "redis" in Docker; locally use "localhost" or leave unset.
+  // In development, "redis" is resolved to "localhost" so Docker-style .env works when running without Docker.
+  REDIS_HOST: z
+    .string()
+    .default('localhost')
+    .transform((val) => (val === 'redis' && process.env.NODE_ENV === 'development' ? 'localhost' : val)),
   REDIS_PORT: z.string().transform(Number).default('6379'),
   REDIS_PASSWORD: z.string().optional(),
   

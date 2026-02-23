@@ -19,17 +19,13 @@ export const CreatorModel = {
 
   async findById(_id: string): Promise<Creator | null> {
     return null;
-  },
-
-  async findByInstagramHandle(_handle: string): Promise<Creator | null> {
+  },  async findByInstagramHandle(_handle: string): Promise<Creator | null> {
     return null;
   },
 
   async findByInstagramId(_instagramId: string): Promise<Creator | null> {
     return null;
-  },
-
-  async findByIdOrThrow(id: string): Promise<Creator> {
+  },  async findByIdOrThrow(id: string): Promise<Creator> {
     const creator = await this.findById(id);
     if (!creator) {
       throw new NotFoundError('Creator', id);
