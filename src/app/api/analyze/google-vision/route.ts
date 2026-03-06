@@ -50,6 +50,8 @@ export async function POST(request: NextRequest) {
     const targetBrandName = body.targetBrandName as string | undefined;
     const productNames = Array.isArray(body.productNames) ? body.productNames : [];
     const additionalTerms = Array.isArray(body.additionalTerms) ? body.additionalTerms : [];
+    const targetGender = (body.targetGender as string)?.trim() || undefined;
+    const targetAge = (body.targetAge as string)?.trim() || undefined;
     const productImages = body.productImages || []; // Base64 encoded images
     const videoId = body.videoId; // Optional: reuse videoId from previous step
     const videoPath = body.videoPath; // Optional: reuse videoPath from previous step
@@ -324,6 +326,53 @@ export async function POST(request: NextRequest) {
     const targetBrandDetected = brandDetected.length > 0 || productDetected.length > 0 || objectDetected.length > 0;
     const targetBrandConfidence = Math.max(brandMaxConfidence, productMaxConfidence, objectMaxConfidence);
 
+    // Demographic match (when target gender/age provided)
+    let demographicMatch: { matched: boolean; targetGender?: string; targetAge?: string; detectedGender?: string; detectedAge?: string; frameCount: number; reasoning: string } | undefined;
+    if (targetGender || targetAge) {
+      const allPeople: { gender: string; ageBracket: string }[] = [];
+      analysisResults.forEach(({ analysis }) => {
+        (analysis.people || []).forEach((p: any) => {
+          allPeople.push({
+            gender: (p.gender || 'unknown').toLowerCase(),
+            ageBracket: (p.ageBracket || 'unknown').replace(/_/g, ' '),
+          });
+        });
+      });
+      const peopleFrames = analysisResults.filter((r) => r.analysis.people && r.analysis.people.length > 0);
+      if (allPeople.length === 0) {
+        demographicMatch = {
+          matched: false,
+          targetGender,
+          targetAge,
+          frameCount: 0,
+          reasoning: 'No people detected in any frame.',
+        };
+      } else {
+        const genderCounts: Record<string, number> = {};
+        const ageCounts: Record<string, number> = {};
+        allPeople.forEach((p) => {
+          genderCounts[p.gender] = (genderCounts[p.gender] || 0) + 1;
+          ageCounts[p.ageBracket] = (ageCounts[p.ageBracket] || 0) + 1;
+        });
+        const topGender = Object.entries(genderCounts).sort((a, b) => b[1] - a[1])[0]?.[0];
+        const topAge = Object.entries(ageCounts).sort((a, b) => b[1] - a[1])[0]?.[0];
+        const tg = targetGender?.toLowerCase().replace(/_/g, ' ');
+        const ta = targetAge?.toLowerCase().replace(/_/g, ' ');
+        const genderMatch = !tg || topGender === tg;
+        const ageMatch = !ta || topAge === ta;
+        const matched = genderMatch && ageMatch;
+        demographicMatch = {
+          matched,
+          targetGender,
+          targetAge,
+          detectedGender: topGender,
+          detectedAge: topAge,
+          frameCount: peopleFrames.length,
+          reasoning: `Detected: ${topGender || '—'} (gender), ${topAge || '—'} (age) in ${peopleFrames.length} frame(s). Target: ${targetGender || '—'} (gender), ${targetAge || '—'} (age). ${matched ? 'Match.' : 'No match.'}`,
+        };
+      }
+    }
+
     // Save to database if analysis was successful
     let videoAnalysisId: string | null = null;
     if (analysisResults.length > 0 && frames.length > 0) {
@@ -442,6 +491,7 @@ export async function POST(request: NextRequest) {
             objects: objectSummary,
             brands: brandSummary,
             allText: allTexts.join(' ').trim(),
+            demographicMatch,
             targetBrandDetection: allTargetTerms.length > 0 ? {
               detected: targetBrandDetected,
               confidence: targetBrandConfidence,

@@ -56,6 +56,13 @@ export interface GeminiLanguageRegionAnalysisResult {
     confidence: number;
     reasoning: string;
   } | null;
+  /** When targetLanguage is provided: whether content matches the target language */
+  targetLanguageMatch?: {
+    matched: boolean;
+    primaryLanguage: string;
+    targetLanguage: string;
+    reasoning: string;
+  };
   processingTimeMs: number;
 }
 
@@ -94,17 +101,34 @@ class GeminiLanguageRegionAnalysisService {
 
   /**
    * Comprehensive prompt for language and region analysis
+   * @param targetLanguage Optional: Target language (ISO 639-1 code, e.g., 'en', 'hi'). When provided, include targetLanguageMatch in output.
    */
   private getLanguageRegionAnalysisPrompt(
     caption: string | null,
     transcript: string | null,
-    comments: Array<{ text: string }>
+    comments: Array<{ text: string }>,
+    targetLanguage?: string | null
   ): string {
     const commentsText = comments.length > 0
       ? comments.map((c, idx) => `${idx + 1}. "${c.text}"`).join('\n')
       : '(No comments provided)';
 
+    const targetLangSection = targetLanguage?.trim()
+      ? `
+
+**TARGET LANGUAGE (user requirement):**
+The user expects content primarily in: ${targetLanguage} (use ISO 639-1 code)
+
+**TARGET LANGUAGE MATCH:**
+After detecting languages, add a "targetLanguageMatch" object to your JSON output:
+- "matched": true if the primary language of caption/transcript matches the target (or is a close variant), false otherwise
+- "primaryLanguage": the detected primary language code
+- "targetLanguage": "${targetLanguage}"
+- "reasoning": 1-2 sentences explaining whether content matches the target language`
+      : '';
+
     return `You are an expert language and geographic region detection system specializing in social media content analysis. Your task is to analyze the language of caption, transcript, and top comments, then determine the geographic region(s) based on the detected languages.
+${targetLangSection}
 
 **CAPTION:**
 ${caption || '(No caption provided)'}
@@ -247,7 +271,13 @@ ${commentsText}
     "country": "India",
     "confidence": 0.85,
     "reasoning": "Tamil is the dominant language (60% of comments), strongly indicating Tamil Nadu as the primary region"
-  }
+  }${targetLanguage?.trim() ? `,
+  "targetLanguageMatch": {
+    "matched": true,
+    "primaryLanguage": "ta",
+    "targetLanguage": "${targetLanguage}",
+    "reasoning": "Content is primarily in Tamil which matches target language"
+  }` : ''}
 }
 
 **IMPORTANT:**
@@ -263,11 +293,13 @@ ${commentsText}
 
   /**
    * Analyze language and region using Gemini
+   * @param targetLanguage Optional: Target language (ISO 639-1, e.g., 'en', 'hi'). When provided, includes targetLanguageMatch in result.
    */
   async analyzeLanguageAndRegion(
     caption: string | null | undefined,
     transcript: string | null | undefined,
-    comments: Array<{ text: string }>
+    comments: Array<{ text: string }>,
+    targetLanguage?: string | null
   ): Promise<GeminiLanguageRegionAnalysisResult> {
     const startTime = Date.now();
 
@@ -324,7 +356,7 @@ ${commentsText}
     }
 
     try {
-      const prompt = this.getLanguageRegionAnalysisPrompt(captionText, transcriptText, topComments);
+      const prompt = this.getLanguageRegionAnalysisPrompt(captionText, transcriptText, topComments, targetLanguage);
 
       logger.debug(
         {
@@ -414,6 +446,12 @@ ${commentsText}
           confidence: number;
           reasoning: string;
         } | null;
+        targetLanguageMatch?: {
+          matched: boolean;
+          primaryLanguage: string;
+          targetLanguage: string;
+          reasoning: string;
+        };
       };
 
       // Normalize language code
@@ -525,6 +563,12 @@ ${commentsText}
           confidence: normalizeConfidence(analysis.primaryRegion.confidence),
           reasoning: analysis.primaryRegion.reasoning || 'No reasoning provided',
         } : null,
+        targetLanguageMatch: analysis.targetLanguageMatch ? {
+          matched: Boolean(analysis.targetLanguageMatch.matched),
+          primaryLanguage: normalizeLanguage(analysis.targetLanguageMatch.primaryLanguage),
+          targetLanguage: normalizeLanguage(analysis.targetLanguageMatch.targetLanguage),
+          reasoning: analysis.targetLanguageMatch.reasoning || '',
+        } : undefined,
         processingTimeMs: Date.now() - startTime,
       };
 

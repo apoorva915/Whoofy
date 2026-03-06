@@ -72,6 +72,16 @@ export interface VisualSummary {
     visibleSeconds?: number;
     referenceImageCount?: number; // Number of reference images used
   };
+  // Demographic match (when target gender/age provided)
+  demographicMatch?: {
+    matched: boolean;
+    targetGender?: string;
+    targetAge?: string;
+    detectedGender?: string;
+    detectedAge?: string;
+    frameCount: number;
+    reasoning: string;
+  };
   frameAnalyses: FrameAnalysis[];
 }
 

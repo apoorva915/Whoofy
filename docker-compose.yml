@@ -16,6 +16,7 @@ services:
       APIFY_API_TOKEN: ${APIFY_API_TOKEN:-}
       GOOGLE_CLOUD_PROJECT_ID: ${GOOGLE_CLOUD_PROJECT_ID:-}
       GOOGLE_CLOUD_VISION_API_KEY: ${GOOGLE_CLOUD_VISION_API_KEY:-}
+      # For Docker: use /app path if mounting google-service-account.json
       GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS:-}
       SHAZAM_API_KEY: ${SHAZAM_API_KEY:-}
       SHAZAM_API_HOST: ${SHAZAM_API_HOST:-}
@@ -28,8 +29,10 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      # Shared storage between web and ML
+      # Shared storage between web and ML (frames, videos, temp files)
       - storage:/app/storage
+      # Optional: mount Google service account for Vision API (uncomment if using)
+      # - ./google-service-account.json:/app/google-service-account.json:ro
     depends_on:
       ml:
         condition: service_healthy
@@ -38,6 +41,10 @@ services:
     build:
       context: .
       dockerfile: ml/Dockerfile
+    environment:
+      # Instaloader (optional - for private profiles; leave empty for public-only)
+      INSTALOADER_USERNAME: ${INSTALOADER_USERNAME:-}
+      INSTALOADER_PASSWORD: ${INSTALOADER_PASSWORD:-}
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health').read(); print('ok')"]
       interval: 10s

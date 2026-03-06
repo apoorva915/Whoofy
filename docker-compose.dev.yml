@@ -1,0 +1,4 @@
+# Development overrides for docker-compose
+# Use: npm run docker:dev  (runs docker-compose with this override)
+# Add dev-specific service overrides below if needed
+services: {}

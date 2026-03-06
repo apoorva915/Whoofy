@@ -109,6 +109,18 @@ export default function DataScrapingTab({ persistedData, onDataUpdate }: DataScr
               <div className="flex flex-wrap gap-2 mb-2">
                 {sources.reel && sources.reel.length > 0 && (
                   <>
+                    {sources.reel.includes('instaloader') && (
+                      <button
+                        onClick={() => setActiveSource(activeSource === 'instaloader' ? null : 'instaloader')}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          activeSource === 'instaloader'
+                            ? 'bg-emerald-600 text-white'
+                            : 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
+                        }`}
+                      >
+                        Instaloader
+                      </button>
+                    )}
                     {sources.reel.includes('apify-reel-scraper') && (
                       <button
                         onClick={() => setActiveSource(activeSource === 'reel' ? null : 'reel')}
@@ -157,6 +169,18 @@ export default function DataScrapingTab({ persistedData, onDataUpdate }: DataScr
                         Apify Comments Scraper
                       </button>
                     )}
+                    {sources.reel.includes('apify-transcript') && (
+                      <button
+                        onClick={() => setActiveSource(activeSource === 'transcript' ? null : 'transcript')}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          activeSource === 'transcript'
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+                        }`}
+                      >
+                        Apify Transcript
+                      </button>
+                    )}
                   </>
                 )}
               </div>
@@ -171,7 +195,9 @@ export default function DataScrapingTab({ persistedData, onDataUpdate }: DataScr
                 <h2 className="text-xl font-semibold">Creator Profile</h2>
                 {sources?.creator && sources.creator.length > 0 && (
                   <button className="px-3 py-1 bg-purple-100 text-purple-800 rounded-lg text-sm font-medium">
-                    Apify Profile Scraper
+                    {sources.creator.includes('instaloader-profile')
+                      ? 'Instaloader Profile'
+                      : 'Apify Profile Scraper'}
                   </button>
                 )}
               </div>

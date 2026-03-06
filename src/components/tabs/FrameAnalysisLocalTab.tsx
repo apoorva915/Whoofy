@@ -21,6 +21,8 @@ export default function FrameAnalysisLocalTab({
   });
   const [targetBrandName, setTargetBrandName] = useState('');
   const [productNames, setProductNames] = useState('');
+  const [targetGender, setTargetGender] = useState('');
+  const [targetAge, setTargetAge] = useState('');
   const [productImages, setProductImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(persistedData || null);
@@ -75,6 +77,8 @@ export default function FrameAnalysisLocalTab({
           reelUrl: urlToUse,
           targetBrandName: targetBrandName || undefined,
           productNames: productNames.split(',').map(p => p.trim()).filter(p => p.length > 0),
+          targetGender: targetGender?.trim() || undefined,
+          targetAge: targetAge?.trim() || undefined,
           productImages: productImages,
         }),
       });
@@ -190,6 +194,41 @@ export default function FrameAnalysisLocalTab({
             />
           </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Target Gender (Optional)
+              </label>
+              <select
+                value={targetGender}
+                onChange={(e) => setTargetGender(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">— Not specified —</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+              </select>
+              <p className="text-xs text-gray-500 mt-1">Demographic match will compare detected people with this target</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Target Age Bracket (Optional)
+              </label>
+              <select
+                value={targetAge}
+                onChange={(e) => setTargetAge(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">— Not specified —</option>
+                <option value="child">Child</option>
+                <option value="young">Young</option>
+                <option value="middle_age">Middle Age</option>
+                <option value="old">Old</option>
+              </select>
+              <p className="text-xs text-gray-500 mt-1">Demographic match will compare detected people with this target</p>
+            </div>
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Product Images (Optional - for CLIP visual similarity)
@@ -231,6 +270,43 @@ export default function FrameAnalysisLocalTab({
           {loading ? 'Analyzing Frames...' : 'Start Video Analysis'}
         </button>
       </div>
+
+      {/* Checks summary - shown when we have results and targets were specified */}
+      {result && visualSummary?.demographicMatch && (targetGender || targetAge) && (
+        <div className="bg-white border rounded-lg shadow-sm p-4 mb-6">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3">Checks</h3>
+          <div className="flex flex-wrap gap-4">
+            {targetGender && (
+              <div className="flex items-center gap-2">
+                <span className={
+                  visualSummary.demographicMatch.detectedGender?.toLowerCase() === targetGender.toLowerCase()
+                    ? 'text-green-600'
+                    : 'text-red-600'
+                }>
+                  {visualSummary.demographicMatch.detectedGender?.toLowerCase() === targetGender.toLowerCase() ? '✓' : '✗'}
+                </span>
+                <span className="text-sm">Gender</span>
+              </div>
+            )}
+            {targetAge && (
+              <div className="flex items-center gap-2">
+                <span className={
+                  (visualSummary.demographicMatch.detectedAge?.replace(/_/g, ' ') || '').toLowerCase() ===
+                  (targetAge?.replace(/_/g, ' ') || '').toLowerCase()
+                    ? 'text-green-600'
+                    : 'text-red-600'
+                }>
+                  {(visualSummary.demographicMatch.detectedAge?.replace(/_/g, ' ') || '').toLowerCase() ===
+                  (targetAge?.replace(/_/g, ' ') || '').toLowerCase()
+                    ? '✓'
+                    : '✗'}
+                </span>
+                <span className="text-sm">Age</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
@@ -378,6 +454,100 @@ export default function FrameAnalysisLocalTab({
               </div>
             </div>
           )}
+
+          {/* Overall Demographics & Reference Match Summary */}
+          {visualSummary?.frameAnalyses && visualSummary.frameAnalyses.length > 0 && (() => {
+            const frameAnalyses = visualSummary.frameAnalyses;
+            const peopleFrames = frameAnalyses.filter((fa: any) => fa.people && fa.people.length > 0);
+            const genderCounts: Record<string, { count: number; totalConf: number }> = {};
+            const ageCounts: Record<string, { count: number; totalConf: number }> = {};
+            let refMatchSum = 0;
+            let refMatchCount = 0;
+            let refMatchMax = 0;
+
+            peopleFrames.forEach((fa: any) => {
+              const p = fa.people[0];
+              const g = (p.gender || 'unknown').toLowerCase();
+              const a = (p.ageBracket || 'unknown').replace(/_/g, ' ');
+              if (!genderCounts[g]) genderCounts[g] = { count: 0, totalConf: 0 };
+              genderCounts[g].count++;
+              genderCounts[g].totalConf += p.genderConfidence || 0;
+              if (!ageCounts[a]) ageCounts[a] = { count: 0, totalConf: 0 };
+              ageCounts[a].count++;
+              ageCounts[a].totalConf += p.ageConfidence || 0;
+            });
+
+            frameAnalyses.forEach((fa: any) => {
+              const vs = fa.visualSimilarity;
+              if (vs && vs.similarity !== undefined) {
+                refMatchSum += vs.similarity;
+                refMatchCount++;
+                refMatchMax = Math.max(refMatchMax, vs.similarity);
+              }
+            });
+
+            const topGender = Object.entries(genderCounts).sort((a, b) => b[1].count - a[1].count)[0];
+            const topAge = Object.entries(ageCounts).sort((a, b) => b[1].count - a[1].count)[0];
+            const avgRefMatch = refMatchCount > 0 ? refMatchSum / refMatchCount : 0;
+
+            return (
+              <div className="bg-white rounded-lg shadow p-6 mb-6">
+                <h2 className="text-xl font-semibold mb-4">Overall Summary (All Frames)</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {topGender && (
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                      <span className="text-xs text-gray-500 uppercase">Overall Gender</span>
+                      <div className="text-lg font-semibold text-gray-900 capitalize mt-1">
+                        {topGender[0]} — {topGender[1].count} frame{topGender[1].count !== 1 ? 's' : ''}
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        Avg confidence: {Math.round((topGender[1].totalConf / topGender[1].count) * 100)}%
+                      </div>
+                    </div>
+                  )}
+                  {topAge && (
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                      <span className="text-xs text-gray-500 uppercase">Overall Age Bracket</span>
+                      <div className="text-lg font-semibold text-gray-900 capitalize mt-1">
+                        {topAge[0]} — {topAge[1].count} frame{topAge[1].count !== 1 ? 's' : ''}
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        Avg confidence: {Math.round((topAge[1].totalConf / topAge[1].count) * 100)}%
+                      </div>
+                    </div>
+                  )}
+                  {refMatchCount > 0 && (
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                      <span className="text-xs text-gray-500 uppercase">Reference Image Match</span>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">
+                        Avg: {Math.round(avgRefMatch * 100)}% · Max: {Math.round(refMatchMax * 100)}%
+                      </div>
+                    </div>
+                  )}
+                  {visualSummary?.demographicMatch && (
+                    <div className={`md:col-span-3 rounded-lg p-4 border-2 ${
+                      visualSummary.demographicMatch.matched ? 'bg-green-50 border-green-500' : 'bg-amber-50 border-amber-500'
+                    }`}>
+                      <span className="text-xs text-gray-500 uppercase">Target Demographic Match</span>
+                      <div className="flex items-center gap-3 mt-2">
+                        <span className={`px-3 py-1 rounded-full font-bold text-sm ${
+                          visualSummary.demographicMatch.matched ? 'bg-green-600 text-white' : 'bg-amber-600 text-white'
+                        }`}>
+                          {visualSummary.demographicMatch.matched ? 'MATCHED' : 'NOT MATCHED'}
+                        </span>
+                        <span className="text-sm text-gray-700">
+                          Target: {visualSummary.demographicMatch.targetGender || '—'} (gender), {visualSummary.demographicMatch.targetAge?.replace(/_/g, ' ') || '—'} (age) · Detected: {visualSummary.demographicMatch.detectedGender || '—'}, {visualSummary.demographicMatch.detectedAge || '—'}
+                        </span>
+                      </div>
+                      {visualSummary.demographicMatch.reasoning && (
+                        <p className="text-sm text-gray-600 mt-1">{visualSummary.demographicMatch.reasoning}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Frame-by-Frame Analysis */}
           {visualSummary?.frameAnalyses && visualSummary.frameAnalyses.length > 0 && (

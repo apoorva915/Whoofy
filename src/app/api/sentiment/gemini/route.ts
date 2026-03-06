@@ -31,12 +31,14 @@ export async function POST(request: NextRequest) {
     const caption = body.caption || null;
     const transcript = body.transcript || null;
     const reelUrl = body.reelUrl || null; // Optional: for database storage
+    const targetRequirement = body.targetRequirement || null; // Optional: e.g., "unbox the product" - sentiment evaluated against this
 
     logger.info(
       {
         captionLength: caption?.length || 0,
         transcriptLength: transcript?.length || 0,
         reelUrl,
+        hasTargetRequirement: !!targetRequirement,
       },
       'Gemini sentiment analysis request received'
     );
@@ -44,7 +46,8 @@ export async function POST(request: NextRequest) {
     // Perform sentiment analysis using Gemini
     const sentimentAnalysis = await geminiSentimentAnalysis.analyzeSentiment(
       caption,
-      transcript
+      transcript,
+      targetRequirement
     );
 
     // Save to database if reelUrl is provided

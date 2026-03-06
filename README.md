@@ -39,10 +39,12 @@ Edit `.env` and set at least:
 | Variable | Description |
 |----------|-------------|
 | `DATABASE_URL` | PostgreSQL connection string (Supabase or local). If using compose Postgres: `postgresql://postgres:postgres@db:5432/postgres` |
-| `APIFY_API_TOKEN` | Your [Apify](https://console.apify.com/) API token (Instagram scraping) |
+| `APIFY_API_TOKEN` | Your [Apify](https://console.apify.com/) API token (Instagram scraping fallback) |
 | `GEMINI_API_KEY_NEW` | Your [Google AI Studio](https://makersuite.google.com/app/apikey) Gemini API key *(Docker maps this to `GEMINI_API_KEY` inside the container)* |
 
-Optional: `GOOGLE_CLOUD_PROJECT_ID`, `GOOGLE_CLOUD_VISION_API_KEY` (Frame Analysis – Google Vision), `SHAZAM_API_KEY`, `SHAZAM_API_HOST`, `API_BASE_URL`, `FRAME_ANALYSIS_CONCURRENCY`.
+**Note:** `ML_SERVICE_URL` is set automatically to `http://ml:8000` in Docker. The ML service includes **Instaloader** (primary Instagram scraper) and **YOLO/OCR/CLIP** (frame analysis). Apify is used as fallback when Instaloader cannot fetch data.
+
+Optional: `INSTALOADER_USERNAME`, `INSTALOADER_PASSWORD` (for private profiles), `GOOGLE_CLOUD_PROJECT_ID`, `GOOGLE_CLOUD_VISION_API_KEY` (Frame Analysis – Google Vision), `SHAZAM_API_KEY`, `SHAZAM_API_HOST`, `API_BASE_URL`, `FRAME_ANALYSIS_CONCURRENCY`.
 
 If you use the built-in **Postgres** service (`db`), set:
 
@@ -59,6 +61,7 @@ From the project root:
 
 ```bash
 docker-compose up --build
+# or: npm run docker:up
 ```
 
 This starts:
@@ -66,11 +69,11 @@ This starts:
 | Service | Purpose | Access |
 |---------|---------|--------|
 | **web** | Next.js app (UI + API) | http://localhost:3000 |
-| **ml** | Python YOLO/OCR/CLIP (Frame Analysis – Local) | internal:8000 |
+| **ml** | Python ML service: Instaloader (Instagram), YOLO/OCR/CLIP (Frame Analysis – Local) | internal:8000 |
 | **redis** | Redis for BullMQ queue stats | localhost:6379 |
 | **db** | PostgreSQL (optional; omit if using Supabase) | localhost:5432 |
 
-Open **http://localhost:3000** and use the tabs: Data Scraping, Data Analysis, Frame Analysis, Engagement Analysis.
+Open **http://localhost:3000** and use the tabs: Data Scraping, Data Analysis, Frame Analysis, Engagement Analysis. All recent features (target sentiment/language, demographic match, Instaloader scraping) work in Docker.
 
 ### 3. Database migrations (one-time)
 
@@ -267,7 +270,7 @@ Used for **local** frame analysis (object detection, OCR, CLIP). Google Vision f
 
 - **Frontend:** Next.js (React), single page with tabs: Data Scraping, Data Analysis, Frame Analysis (Local / Google Vision), Engagement Analysis.
 - **API routes:** `/api/profile`, `/api/verify`, `/api/analyze`, `/api/sentiment/gemini`, `/api/verify/engagement`, `/api/view-tracking`, `/api/view-tracking/process-due`, etc.
-- **External:** **Apify** (Instagram profile + reel metadata); **Google Gemini** (sentiment, niche, language/region); **Google Cloud Vision** (frame analysis, optional); **Shazam** (optional).
+- **External:** **Instaloader** (ML service, primary Instagram scraper); **Apify** (fallback); **Google Gemini** (sentiment, niche, language/region); **Google Cloud Vision** (frame analysis, optional); **Shazam** (optional).
 - **Database:** PostgreSQL (Supabase or local); `public` + `aimodule` schemas.
 - **View tracking:** DB-driven; scheduler or cron calls process-due; Redis not required for snapshots.
 
@@ -282,6 +285,7 @@ Used for **local** frame analysis (object detection, OCR, CLIP). Google Vision f
 - **Redis connection errors** — View tracking does not require Redis; for queue stats, start Redis and set `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD` in `.env`. Test: `redis-cli ping` → `PONG`.
 - **Prisma client out of date** — `npm run db:generate`, then restart the dev server.
 - **Port 3000 in use** — Set `PORT` in `.env` or run `npm run dev -- -p 3001`.
+- **Docker: ML service unreachable** — Ensure `ML_SERVICE_URL` is not overridden in `.env` when using Docker (compose sets it to `http://ml:8000`). Run `docker-compose up --build` and wait for the ML healthcheck to pass before the web container starts.
 
 ---
 

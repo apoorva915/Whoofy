@@ -17,6 +17,7 @@ export async function POST(request: NextRequest) {
     const transcript = body.transcript || null;
     const comments = Array.isArray(body.comments) ? body.comments : [];
     const reelUrl = body.reelUrl || null; // Optional: for database storage
+    const targetLanguage = body.targetLanguage || null; // Optional: e.g., 'en', 'hi' - evaluate against this
 
     logger.info(
       {
@@ -24,6 +25,7 @@ export async function POST(request: NextRequest) {
         transcriptLength: transcript?.length || 0,
         commentsCount: comments.length,
         reelUrl,
+        hasTargetLanguage: !!targetLanguage,
       },
       'Gemini language and region analysis request received'
     );
@@ -32,7 +34,8 @@ export async function POST(request: NextRequest) {
     const analysis = await geminiLanguageRegionAnalysis.analyzeLanguageAndRegion(
       caption,
       transcript,
-      comments
+      comments,
+      targetLanguage
     );
 
     // Save to database if reelUrl is provided
@@ -88,6 +91,7 @@ export async function POST(request: NextRequest) {
         },
         regions: analysis.regions,
         primaryRegion: analysis.primaryRegion,
+        targetLanguageMatch: analysis.targetLanguageMatch,
         processingTimeMs: analysis.processingTimeMs,
         languageRegionAnalysisId, // Include database ID in response
       },

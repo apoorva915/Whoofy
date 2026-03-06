@@ -14,6 +14,7 @@ export { shazamApi, type ShazamTrack, type ShazamResult } from './shazam-api';
 import type { InstagramProfile, InstagramReelMetadata } from './instagram-api';
 import type { ScrapedProfile, ScrapedReel } from './apify-scraper';
 import type { ShazamResult } from './shazam-api';
+import { instaloaderMl } from './instaloader-ml';
 
 // Import services (lazy to avoid circular dependencies and prevent Instagram API initialization)
 import { apifyScraper } from './apify-scraper';
@@ -26,17 +27,42 @@ import logger from '@/utils/logger';
  */
 export class ExternalApiService {
   /**
-   * Get Instagram profile data (uses Apify scraper only)
+   * Get Instagram profile data
+   * Tries Instaloader (via ML service) first, then falls back to Apify scraper.
    */
   async getInstagramProfile(username: string): Promise<InstagramProfile> {
-    // Use Apify scraper
+    // Primary: Instaloader via ML service
+    if (instaloaderMl.isConfigured()) {
+      try {
+        const profile = await instaloaderMl.fetchProfile(username);
+        return {
+          id: profile.profile_id || `instaloader-${profile.username}`,
+          username: profile.username,
+          accountType: profile.is_verified ? 'CREATOR' : 'PERSONAL',
+          followersCount: profile.followers_count,
+          followingCount: profile.following_count,
+          mediaCount: profile.posts_count,
+          profilePictureUrl: profile.profile_picture_url,
+          bio: profile.biography,
+          website: profile.external_url,
+          isVerified: profile.is_verified,
+        };
+      } catch (error: any) {
+        logger.warn(
+          { error: error.message, username },
+          'Instaloader ML profile fetch failed, falling back to Apify scraper',
+        );
+      }
+    }
+
+    // Fallback: Apify scraper
     if (apifyScraper.isConfigured()) {
       try {
         const scraped = await apifyScraper.scrapeProfile(username);
         return {
-          id: `scraped-${username}`,
+          id: scraped.profileId || `scraped-${username}`,
           username: scraped.username,
-          accountType: 'CREATOR',
+          accountType: scraped.isBusinessAccount ? 'BUSINESS' : 'CREATOR',
           followersCount: scraped.followersCount,
           followingCount: scraped.followingCount,
           mediaCount: scraped.postsCount,
@@ -46,20 +72,46 @@ export class ExternalApiService {
           isVerified: scraped.isVerified,
         };
       } catch (error: any) {
-        logger.error({ error: error.message }, 'Apify scraper failed');
+        logger.error({ error: error.message, username }, 'Apify scraper failed for profile');
         throw error;
       }
     }
-    
-    // If Apify not configured, throw error
-    throw new Error('Apify scraper is not configured. Please set APIFY_API_TOKEN environment variable.');
+
+    throw new Error(
+      'Neither Instaloader ML service (ML_SERVICE_URL) nor Apify scraper (APIFY_API_TOKEN) are configured for Instagram profiles.',
+    );
   }
 
   /**
-   * Get Instagram reel metadata (uses Apify scraper only)
+   * Get Instagram reel metadata
+   * Tries Instaloader (via ML service) first, then falls back to Apify scraper.
    */
   async getInstagramReel(reelUrl: string): Promise<InstagramReelMetadata> {
-    // Use Apify scraper
+    // Primary: Instaloader via ML service
+    if (instaloaderMl.isConfigured()) {
+      try {
+        const reel = await instaloaderMl.fetchReel(reelUrl);
+        return {
+          id: reel.id,
+          caption: reel.caption,
+          likeCount: reel.like_count,
+          commentCount: reel.comment_count,
+          playCount: reel.play_count,
+          timestamp: new Date(reel.timestamp),
+          mediaType: 'REELS',
+          videoUrl: reel.video_url,
+          thumbnailUrl: reel.thumbnail_url,
+          permalink: reel.url || `https://www.instagram.com/reel/${reel.shortcode}/`,
+        };
+      } catch (error: any) {
+        logger.warn(
+          { error: error.message, reelUrl },
+          'Instaloader ML reel fetch failed, falling back to Apify scraper',
+        );
+      }
+    }
+
+    // Fallback: Apify scraper
     if (apifyScraper.isConfigured()) {
       try {
         const scraped = await apifyScraper.scrapeReel(reelUrl);
@@ -76,13 +128,14 @@ export class ExternalApiService {
           permalink: `https://www.instagram.com/reel/${scraped.shortcode}/`,
         };
       } catch (error: any) {
-        logger.error({ error: error.message }, 'Apify scraper failed');
+        logger.error({ error: error.message, reelUrl }, 'Apify scraper failed for reel');
         throw error;
       }
     }
-    
-    // If Apify not configured, throw error
-    throw new Error('Apify scraper is not configured. Please set APIFY_API_TOKEN environment variable.');
+
+    throw new Error(
+      'Neither Instaloader ML service (ML_SERVICE_URL) nor Apify scraper (APIFY_API_TOKEN) are configured for Instagram reels.',
+    );
   }
 
   /**

@@ -1,13 +1,15 @@
 import fs from 'fs-extra';
 import path from 'path';
 import logger from '@/utils/logger';
-import { FrameAnalysis, VisualSummary, VisionAnalysisResult } from '@/types/vision';
+import { FrameAnalysis, PersonDemographics, VisualSummary, VisionAnalysisResult } from '@/types/vision';
 import { visionModel } from '@/lib/ai/vision-model';
 
 interface AnalyzeOptions {
   frameInterval?: number;
   targetBrandName?: string;
   productNames?: string[]; // Optional array of product names to detect
+  targetGender?: string; // e.g., 'male', 'female'
+  targetAge?: string; // e.g., 'young', 'child', 'middle_age', 'old'
   videoDuration?: number;
   videoId?: string;
 }
@@ -28,6 +30,8 @@ class FrameAnalyzer {
       frameInterval = 1,
       targetBrandName = 'Cadbury Dairy Milk',
       productNames = [],
+      targetGender,
+      targetAge,
       videoDuration,
       videoId,
     } = options;
@@ -100,7 +104,9 @@ class FrameAnalyzer {
       frameInterval,
       videoDuration,
       targetBrandName,
-      productNames
+      productNames,
+      targetGender,
+      targetAge
     );
 
     // Log visual similarity summary if available
@@ -156,7 +162,9 @@ class FrameAnalyzer {
     frameInterval: number,
     videoDuration: number | undefined,
     targetBrandName: string,
-    productNames: string[] = []
+    productNames: string[] = [],
+    targetGender?: string,
+    targetAge?: string
   ): VisualSummary {
     const objectSet = new Set<string>();
     const brandMap = new Map<
@@ -224,13 +232,68 @@ class FrameAnalyzer {
       videoDuration
     );
 
+    // Demographic Match: Compare detected people with target gender/age
+    const demographicMatch = (targetGender?.trim() || targetAge?.trim())
+      ? this.buildDemographicMatch(analyses, targetGender?.trim(), targetAge?.trim())
+      : undefined;
+
     return {
       uniqueObjects: Array.from(objectSet),
       brandsDetected,
       targetBrandConfirmation,
       visualSentiment,
       visualSimilaritySummary,
+      demographicMatch,
       frameAnalyses: analyses,
+    };
+  }
+
+  private buildDemographicMatch(
+    analyses: FrameAnalysis[],
+    targetGender?: string,
+    targetAge?: string
+  ): VisualSummary['demographicMatch'] {
+    const allPeople: PersonDemographics[] = [];
+    analyses.forEach((a) => {
+      if (a.people) allPeople.push(...a.people);
+    });
+    const peopleFrames = analyses.filter((a) => a.people && a.people.length > 0);
+    if (allPeople.length === 0) {
+      return {
+        matched: false,
+        targetGender,
+        targetAge,
+        frameCount: 0,
+        reasoning: 'No people detected in any frame.',
+      };
+    }
+    const genderCounts: Record<string, number> = {};
+    const ageCounts: Record<string, number> = {};
+    allPeople.forEach((p) => {
+      const g = (p.gender || 'unknown').toLowerCase();
+      const age = (p.ageBracket || 'unknown').replace(/_/g, ' ');
+      genderCounts[g] = (genderCounts[g] || 0) + 1;
+      ageCounts[age] = (ageCounts[age] || 0) + 1;
+    });
+    const topGender = Object.entries(genderCounts).sort((a, b) => b[1] - a[1])[0]?.[0];
+    const topAge = Object.entries(ageCounts).sort((a, b) => b[1] - a[1])[0]?.[0];
+    const tg = targetGender?.toLowerCase().replace(/_/g, ' ');
+    const ta = targetAge?.toLowerCase().replace(/_/g, ' ');
+    const genderMatch = !tg || topGender === tg;
+    const ageMatch = !ta || topAge === ta;
+    const matched = genderMatch && ageMatch;
+    let reasoning = `Detected: ${topGender || '—'} (gender), ${topAge || '—'} (age) in ${peopleFrames.length} frame(s).`;
+    if (targetGender || targetAge) {
+      reasoning += ` Target: ${targetGender || '—'} (gender), ${targetAge || '—'} (age). ${matched ? 'Match.' : 'No match.'}`;
+    }
+    return {
+      matched,
+      targetGender: targetGender || undefined,
+      targetAge: targetAge || undefined,
+      detectedGender: topGender,
+      detectedAge: topAge,
+      frameCount: peopleFrames.length,
+      reasoning,
     };
   }
 

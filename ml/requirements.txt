@@ -19,3 +19,6 @@ torchvision==0.16.2+cpu
 ftfy>=6.0.0
 git+https://github.com/openai/CLIP.git
 
+# Instagram scraping
+instaloader==4.15
+

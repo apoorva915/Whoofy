@@ -35,6 +35,8 @@ export async function POST(request: NextRequest) {
     const reelUrl = normalizeReelUrlCanonical(body.reelUrl as string) || (body.reelUrl as string);
     const targetBrandName = body.targetBrandName || 'Cadbury Dairy Milk';
     const productNames = Array.isArray(body.productNames) ? body.productNames : [];
+    const targetGender = body.targetGender as string | undefined;
+    const targetAge = body.targetAge as string | undefined;
     const videoId = body.videoId; // Optional: reuse videoId from previous step
     const videoPath = body.videoPath; // Optional: reuse videoPath from previous step
 
@@ -157,6 +159,8 @@ export async function POST(request: NextRequest) {
         frameInterval,
         targetBrandName,
         productNames,
+        targetGender,
+        targetAge,
         videoDuration: duration,
         videoId: finalVideoId,
       });

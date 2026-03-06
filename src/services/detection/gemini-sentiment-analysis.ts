@@ -69,9 +69,24 @@ class GeminiSentimentAnalysisService {
 
   /**
    * Comprehensive prompt for sentiment analysis
+   * @param targetRequirement Optional: What the user expects from the content (e.g., "unbox the product", "show product application"). Sentiment is evaluated against this - if requirement is not fulfilled, sentiment should reflect that.
    */
-  private getSentimentAnalysisPrompt(caption: string | null, transcript: string | null): string {
+  private getSentimentAnalysisPrompt(
+    caption: string | null,
+    transcript: string | null,
+    targetRequirement?: string | null
+  ): string {
+    const requirementSection = targetRequirement?.trim()
+      ? `
+
+**TARGET REQUIREMENT / INTENTION (CRITICAL):**
+The user expects this content to: "${targetRequirement}"
+
+**IMPORTANT**: Evaluate sentiment IN LIGHT OF this requirement. If the content does NOT fulfill the target requirement (e.g., user wanted product unboxing but the creator only showed the product without unboxing), the sentiment MUST reflect that - classify as "negative" or "neutral" even if the content otherwise seems positive. Positive sentiment should only apply when the content BOTH fulfills the requirement AND presents it favorably.`
+      : '';
+
     return `You are an expert sentiment analysis system specializing in social media content, particularly Instagram reels and posts. Your task is to analyze the sentiment of both the caption and transcript separately, and determine if the content provides positive publicity.
+${requirementSection}
 
 **CAPTION:**
 ${caption || '(No caption provided)'}
@@ -110,12 +125,14 @@ ${transcript || '(No transcript provided)'}
 
 3. **Positive Publicity Assessment:**
    - Determine if this content provides POSITIVE PUBLICITY overall
+   - **If a TARGET REQUIREMENT was provided**: First check if the content fulfills that requirement. If it does NOT fulfill the requirement, answer "false" for isPositivePublicity and explain why the requirement was not met.
    - Consider:
      * Does it promote a brand/product favorably?
      * Is the overall message encouraging and positive?
      * Would this content make viewers more likely to purchase or engage with the brand?
      * Are there any negative aspects that outweigh the positive?
-   - Answer with "true" if it's positive publicity, "false" if it's negative or neutral publicity
+     * If target requirement was given: Does the content actually fulfill it (e.g., unboxing if that was required)?
+   - Answer with "true" if it's positive publicity AND (if target requirement given) fulfills the requirement, "false" otherwise
    - Provide overall reasoning (3-4 sentences) explaining why this is or isn't positive publicity
 
 **OUTPUT FORMAT (JSON only, no markdown, no code blocks):**
@@ -151,10 +168,12 @@ ${transcript || '(No transcript provided)'}
 
   /**
    * Analyze sentiment using Gemini
+   * @param targetRequirement Optional: What the user expects from the content (e.g., "unbox the product"). Sentiment is evaluated against this - if requirement is not fulfilled, sentiment reflects that.
    */
   async analyzeSentiment(
     caption: string | null | undefined,
-    transcript: string | null | undefined
+    transcript: string | null | undefined,
+    targetRequirement?: string | null
   ): Promise<GeminiSentimentAnalysisResult> {
     const startTime = Date.now();
 
@@ -207,7 +226,7 @@ ${transcript || '(No transcript provided)'}
     }
 
     try {
-      const prompt = this.getSentimentAnalysisPrompt(captionText, transcriptText);
+      const prompt = this.getSentimentAnalysisPrompt(captionText, transcriptText, targetRequirement);
 
       logger.debug(
         {

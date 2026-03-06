@@ -39,6 +39,8 @@ export default function DataAnalysisTab({
   const [loading, setLoading] = useState<boolean>(false);
   const [results, setResults] = useState<AnalysisResults>(persistedData || {});
   const [error, setError] = useState<string | null>(null);
+  const [targetRequirement, setTargetRequirement] = useState<string>('');
+  const [targetLanguage, setTargetLanguage] = useState<string>('');
 
   /* ---------------- Sync persisted data ---------------- */
 
@@ -81,6 +83,7 @@ export default function DataAnalysisTab({
             caption: metadata?.caption,
             transcript: metadata?.transcript,
             comments: metadata?.comments || [],
+            targetRequirement: targetRequirement?.trim() || undefined,
           }),
         });
       } else if (type === 'niche') {
@@ -131,6 +134,7 @@ export default function DataAnalysisTab({
             caption: metadata?.caption,
             transcript: metadata?.transcript,
             comments: metadata?.comments || [],
+            targetLanguage: targetLanguage?.trim() || undefined,
           }),
         });
       }
@@ -289,6 +293,7 @@ export default function DataAnalysisTab({
     const primaryRegion = regionData.primaryRegion || {};
     const regions: any[] = regionData.regions || [];
     const comments = regionData.comments || {};
+    const targetLanguageMatch = regionData.targetLanguageMatch;
 
     return (
       <div className="bg-white border rounded-lg shadow-sm mb-8">
@@ -304,6 +309,26 @@ export default function DataAnalysisTab({
         </div>
 
         <div className="px-6 py-4 space-y-4">
+          {targetLanguageMatch && (
+            <div className={`rounded-lg p-4 border-2 ${
+              targetLanguageMatch.matched ? 'bg-green-50 border-green-500' : 'bg-amber-50 border-amber-500'
+            }`}>
+              <h3 className="font-semibold mb-2">Target Language Match</h3>
+              <div className="flex items-center gap-3 mb-2">
+                <span className={`px-3 py-1 rounded-full font-bold text-sm ${
+                  targetLanguageMatch.matched ? 'bg-green-600 text-white' : 'bg-amber-600 text-white'
+                }`}>
+                  {targetLanguageMatch.matched ? 'MATCHED' : 'NOT MATCHED'}
+                </span>
+                <span className="text-sm text-gray-700">
+                  Target: {targetLanguageMatch.targetLanguage?.toUpperCase() || '—'} · Primary: {targetLanguageMatch.primaryLanguage?.toUpperCase() || '—'}
+                </span>
+              </div>
+              {targetLanguageMatch.reasoning && (
+                <p className="text-sm text-gray-700">{targetLanguageMatch.reasoning}</p>
+              )}
+            </div>
+          )}
           {/* Language examples */}
           {comments?.languageDistribution && comments.languageDistribution.length > 0 && (
             <div>
@@ -355,6 +380,48 @@ export default function DataAnalysisTab({
         </div>
       )}
 
+      {/* Target inputs for sentiment and region analysis */}
+      {scrapingData && (
+        <div className="bg-white border rounded-lg shadow-sm p-6 mb-6 space-y-4">
+          <h2 className="text-lg font-semibold">Analysis Targets (Optional)</h2>
+          <p className="text-sm text-gray-600">
+            Specify what you expect from the content. Analysis will evaluate against these targets.
+          </p>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Target Requirement / Intention (for Sentiment)
+              </label>
+              <input
+                type="text"
+                value={targetRequirement}
+                onChange={(e) => setTargetRequirement(e.target.value)}
+                placeholder="e.g., unbox the product, show product application"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Sentiment is evaluated against this. If requirement is not fulfilled, sentiment reflects that.
+              </p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Target Language (for Region Analysis)
+              </label>
+              <input
+                type="text"
+                value={targetLanguage}
+                onChange={(e) => setTargetLanguage(e.target.value)}
+                placeholder="e.g., en, hi, ta (ISO 639-1)"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Region analysis will report whether content matches this target language.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
         <button
           onClick={() => runAnalysis('sentiment')}
@@ -380,6 +447,31 @@ export default function DataAnalysisTab({
           Run Region Analysis
         </button>
       </div>
+
+      {/* Checks summary - shown when we have relevant results */}
+      {(sentimentData && targetRequirement.trim()) || (regionData?.targetLanguageMatch && targetLanguage.trim()) ? (
+        <div className="bg-white border rounded-lg shadow-sm p-4 mb-6">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3">Checks</h3>
+          <div className="flex flex-wrap gap-4">
+            {sentimentData && targetRequirement.trim() && (
+              <div className="flex items-center gap-2">
+                <span className={sentimentData.isPositivePublicity ? 'text-green-600' : 'text-red-600'}>
+                  {sentimentData.isPositivePublicity ? '✓' : '✗'}
+                </span>
+                <span className="text-sm">Sentiment requirement</span>
+              </div>
+            )}
+            {regionData?.targetLanguageMatch && targetLanguage.trim() && (
+              <div className="flex items-center gap-2">
+                <span className={regionData.targetLanguageMatch.matched ? 'text-green-600' : 'text-red-600'}>
+                  {regionData.targetLanguageMatch.matched ? '✓' : '✗'}
+                </span>
+                <span className="text-sm">Target language</span>
+              </div>
+            )}
+          </div>
+        </div>
+      ) : null}
 
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
