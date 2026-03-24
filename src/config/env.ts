@@ -54,6 +54,12 @@ const EnvSchema = z.object({
   // When set, the app will call this service instead of spawning local Python.
   ML_SERVICE_URL: z.string().url().optional(),
 
+  // Optional: hosted Instaloader REST API (POST /download/post). Used by the web app if ML returns no comments.
+  INSTALOADER_API_BASE_URL: z.preprocess(
+    (v) => (v === '' || v === undefined || v === null ? undefined : v),
+    z.string().url().optional()
+  ),
+
   // AI Services - Google Gemini
   GEMINI_API_KEY: z.string().optional(),
   

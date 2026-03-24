@@ -14,6 +14,7 @@ services:
       # Use a separate env var name so host-level GEMINI_API_KEY can't override it
       GEMINI_API_KEY: ${GEMINI_API_KEY_NEW:-}
       APIFY_API_TOKEN: ${APIFY_API_TOKEN:-}
+      INSTALOADER_API_BASE_URL: ${INSTALOADER_API_BASE_URL:-}
       GOOGLE_CLOUD_PROJECT_ID: ${GOOGLE_CLOUD_PROJECT_ID:-}
       GOOGLE_CLOUD_VISION_API_KEY: ${GOOGLE_CLOUD_VISION_API_KEY:-}
       # For Docker: use /app path if mounting google-service-account.json
@@ -45,6 +46,8 @@ services:
       # Instaloader (optional - for private profiles; leave empty for public-only)
       INSTALOADER_USERNAME: ${INSTALOADER_USERNAME:-}
       INSTALOADER_PASSWORD: ${INSTALOADER_PASSWORD:-}
+      # Hosted Instaloader REST API base (no trailing slash) — primary source for comments (POST /download/post)
+      INSTALOADER_API_BASE_URL: ${INSTALOADER_API_BASE_URL:-}
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health').read(); print('ok')"]
       interval: 10s

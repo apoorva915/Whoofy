@@ -1,4 +1,8 @@
+import json
+import logging
 import os
+import urllib.error
+import urllib.request
 from datetime import datetime
 from typing import Any, Optional, List
 
@@ -119,6 +123,170 @@ class InstagramProfileResponse(BaseModel):
 
 
 app = FastAPI(title="Whoofy ML Service", version="1.0.0")
+
+logger = logging.getLogger("whoofy.ml")
+
+COMMENT_LIMIT = 200
+INSTALOADER_REST_TIMEOUT_SEC = 120
+
+
+def _normalize_instaloader_api_base_url(base_url: str) -> str:
+    """API root only, not /docs (Swagger). Strip trailing /docs if pasted from browser."""
+    u = base_url.strip().rstrip("/")
+    if u.lower().endswith("/docs"):
+        u = u[:-5].rstrip("/")
+    return u
+
+
+def _parse_comment_timestamp(node: dict) -> datetime:
+    raw = node.get("created_at") or node.get("created_at_utc") or node.get("createdAt")
+    if isinstance(raw, (int, float)):
+        try:
+            return datetime.utcfromtimestamp(float(raw))
+        except (OverflowError, OSError, ValueError):
+            pass
+    if isinstance(raw, str) and raw.strip():
+        s = raw.strip().replace("Z", "+00:00")
+        try:
+            return datetime.fromisoformat(s)
+        except ValueError:
+            pass
+    return datetime.utcnow()
+
+
+def _owner_username_from_node(node: dict) -> str:
+    owner = node.get("owner")
+    if isinstance(owner, dict):
+        u = owner.get("username") or owner.get("user_name")
+        if u:
+            return str(u)
+    u = node.get("owner_username") or node.get("username")
+    if u:
+        return str(u)
+    return "unknown"
+
+
+def _likes_from_node(node: dict) -> Optional[int]:
+    if node.get("likes_count") is not None:
+        try:
+            return int(node["likes_count"])
+        except (TypeError, ValueError):
+            pass
+    elb = node.get("edge_liked_by")
+    if isinstance(elb, dict) and elb.get("count") is not None:
+        try:
+            return int(elb["count"])
+        except (TypeError, ValueError):
+            pass
+    return None
+
+
+def _node_to_instagram_comment(node: dict) -> Optional[InstagramComment]:
+    if not isinstance(node, dict):
+        return None
+    text = node.get("text")
+    if text is None and node.get("node") is not None:
+        inner = node.get("node")
+        if isinstance(inner, dict):
+            return _node_to_instagram_comment(inner)
+    text = str(text or "")
+    cid = node.get("id")
+    cid_str = str(cid) if cid is not None else None
+    return InstagramComment(
+        id=cid_str,
+        text=text,
+        owner_username=_owner_username_from_node(node),
+        timestamp=_parse_comment_timestamp(node),
+        likes_count=_likes_from_node(node),
+    )
+
+
+def _iter_comment_dicts_from_latest_payload(latest: Any) -> List[dict]:
+    """Normalize latestComments from Instaloader REST /download/post (GraphQL-style or flat list)."""
+    if latest is None:
+        return []
+    out: List[dict] = []
+    if isinstance(latest, list):
+        for item in latest:
+            if isinstance(item, dict):
+                out.append(item)
+        return out
+    if isinstance(latest, dict):
+        edges = latest.get("edges")
+        if isinstance(edges, list):
+            for edge in edges:
+                if isinstance(edge, dict) and isinstance(edge.get("node"), dict):
+                    out.append(edge["node"])
+            if out:
+                return out
+        comments = latest.get("comments")
+        if isinstance(comments, list):
+            for c in comments:
+                if isinstance(c, dict):
+                    out.append(c)
+            if out:
+                return out
+        # Single wrapper object sometimes used by APIs
+        for key in ("data", "nodes", "items"):
+            v = latest.get(key)
+            if isinstance(v, list) and v and isinstance(v[0], dict):
+                return [x for x in v if isinstance(x, dict)]
+    return out
+
+
+def _comments_from_instaloader_rest_payload(body: dict) -> List[InstagramComment]:
+    latest = body.get("latestComments")
+    raw_nodes = _iter_comment_dicts_from_latest_payload(latest)
+    if not raw_nodes:
+        raw_nodes = _iter_comment_dicts_from_latest_payload(body.get("comments"))
+    result: List[InstagramComment] = []
+    for node in raw_nodes[:COMMENT_LIMIT]:
+        c = _node_to_instagram_comment(node)
+        if c:
+            result.append(c)
+    return result
+
+
+def _fetch_comments_from_instaloader_rest_api(shortcode: str, base_url: str) -> List[InstagramComment]:
+    """
+    Primary comment source: hosted Instaloader REST API (POST /download/post).
+    See https://instaloader.github.io/ — same backend as CLI; REST often works when direct GraphQL is blocked.
+    """
+    root = _normalize_instaloader_api_base_url(base_url)
+    url = f"{root}/download/post"
+    payload = json.dumps({"shortcode": shortcode, "target_dir": "./downloads"}).encode("utf-8")
+    req = urllib.request.Request(
+        url,
+        data=payload,
+        method="POST",
+        headers={
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        },
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=INSTALOADER_REST_TIMEOUT_SEC) as resp:
+            raw = resp.read().decode("utf-8")
+    except urllib.error.HTTPError as e:
+        err_body = e.read().decode("utf-8", errors="replace") if e.fp else ""
+        logger.warning(
+            "Instaloader REST API HTTP error for shortcode=%s: %s %s",
+            shortcode,
+            e.code,
+            err_body[:500],
+        )
+        return []
+    except (urllib.error.URLError, TimeoutError, OSError) as e:
+        logger.warning("Instaloader REST API request failed for shortcode=%s: %s", shortcode, e)
+        return []
+
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError:
+        logger.warning("Instaloader REST API returned non-JSON for shortcode=%s", shortcode)
+        return []
+
+    return _comments_from_instaloader_rest_payload(data)
 
 
 def _extract_shortcode_from_url(reel_url: str) -> str:
@@ -282,25 +450,36 @@ def instagram_reel(req: InstagramReelRequest) -> InstagramReelResponse:
     hashtags = [h[1:] for h in re.findall(r"#\w+", caption)]
     mentions = [m[1:] for m in re.findall(r"@\w+", caption)]
 
-    # Basic comments (top-level only, limited for performance)
+    # Comments: (1) Instaloader REST API if INSTALOADER_API_BASE_URL is set — primary when direct scraping fails;
+    # (2) local instaloader Post.get_comments(); Apify fallback is in the Node app.
     comments: list[InstagramComment] = []
-    try:
-        # Limit to first 200 comments to keep response size reasonable
-        for idx, c in enumerate(post.get_comments()):
-            if idx >= 200:
-                break
-            comments.append(
-                InstagramComment(
-                    id=str(getattr(c, "id", "")) or None,
-                    text=str(getattr(c, "text", "") or ""),
-                    owner_username=str(getattr(c, "owner", None).username if getattr(c, "owner", None) else "") or "unknown",
-                    timestamp=getattr(c, "created_at_utc", datetime.utcnow()),
-                    likes_count=getattr(c, "likes_count", None),
-                )
+    rest_base = (os.getenv("INSTALOADER_API_BASE_URL") or "").strip()
+    if rest_base:
+        comments = _fetch_comments_from_instaloader_rest_api(shortcode, rest_base)
+        if comments:
+            logger.info(
+                "Using %d comments from Instaloader REST API for shortcode=%s",
+                len(comments),
+                shortcode,
             )
-    except Exception:
-        # Comment fetching is optional; ignore failures
-        comments = []
+    if not comments:
+        try:
+            for idx, c in enumerate(post.get_comments()):
+                if idx >= COMMENT_LIMIT:
+                    break
+                comments.append(
+                    InstagramComment(
+                        id=str(getattr(c, "id", "")) or None,
+                        text=str(getattr(c, "text", "") or ""),
+                        owner_username=str(getattr(c, "owner", None).username if getattr(c, "owner", None) else "")
+                        or "unknown",
+                        timestamp=getattr(c, "created_at_utc", datetime.utcnow()),
+                        likes_count=getattr(c, "likes_count", None),
+                    )
+                )
+        except Exception as e:
+            logger.debug("Local instaloader get_comments failed for shortcode=%s: %s", shortcode, e)
+            comments = []
 
     owner_username: Optional[str] = None
     owner_full_name: Optional[str] = None

@@ -17,7 +17,6 @@ export default function DataScrapingTab({ persistedData, onDataUpdate }: DataScr
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(persistedData || null);
   const [error, setError] = useState<string | null>(null);
-  const [activeSource, setActiveSource] = useState<string | null>(null);
 
   // Sync with persisted data when it changes
   useEffect(() => {
@@ -102,92 +101,6 @@ export default function DataScrapingTab({ persistedData, onDataUpdate }: DataScr
 
       {result && (
         <div className="space-y-6">
-          {/* Data Sources Section */}
-          {sources && (
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold mb-4">Data Sources (Combined Results)</h2>
-              <div className="flex flex-wrap gap-2 mb-2">
-                {sources.reel && sources.reel.length > 0 && (
-                  <>
-                    {sources.reel.includes('instaloader') && (
-                      <button
-                        onClick={() => setActiveSource(activeSource === 'instaloader' ? null : 'instaloader')}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                          activeSource === 'instaloader'
-                            ? 'bg-emerald-600 text-white'
-                            : 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
-                        }`}
-                      >
-                        Instaloader
-                      </button>
-                    )}
-                    {sources.reel.includes('apify-reel-scraper') && (
-                      <button
-                        onClick={() => setActiveSource(activeSource === 'reel' ? null : 'reel')}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                          activeSource === 'reel'
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-blue-100 text-blue-800 hover:bg-blue-200'
-                        }`}
-                      >
-                        Apify Reel Scraper
-                      </button>
-                    )}
-                    {sources.reel.includes('apify-post-scraper') && (
-                      <button
-                        onClick={() => setActiveSource(activeSource === 'post' ? null : 'post')}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                          activeSource === 'post'
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-blue-100 text-blue-800 hover:bg-blue-200'
-                        }`}
-                      >
-                        Apify Post Scraper
-                      </button>
-                    )}
-                    {sources.reel.includes('apify-instagram-scraper') && (
-                      <button
-                        onClick={() => setActiveSource(activeSource === 'instagram' ? null : 'instagram')}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                          activeSource === 'instagram'
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-blue-100 text-blue-800 hover:bg-blue-200'
-                        }`}
-                      >
-                        Apify Instagram Scraper
-                      </button>
-                    )}
-                    {sources.reel.includes('apify-comments-scraper') && (
-                      <button
-                        onClick={() => setActiveSource(activeSource === 'comments' ? null : 'comments')}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                          activeSource === 'comments'
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-blue-100 text-blue-800 hover:bg-blue-200'
-                        }`}
-                      >
-                        Apify Comments Scraper
-                      </button>
-                    )}
-                    {sources.reel.includes('apify-transcript') && (
-                      <button
-                        onClick={() => setActiveSource(activeSource === 'transcript' ? null : 'transcript')}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                          activeSource === 'transcript'
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-blue-100 text-blue-800 hover:bg-blue-200'
-                        }`}
-                      >
-                        Apify Transcript
-                      </button>
-                    )}
-                  </>
-                )}
-              </div>
-              <p className="text-sm text-gray-600">(Data merged from multiple sources)</p>
-            </div>
-          )}
-
           {/* Creator Profile Section */}
           {creator && (
             <div className="bg-white rounded-lg shadow p-6">

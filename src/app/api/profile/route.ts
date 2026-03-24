@@ -116,8 +116,7 @@ export async function POST(request: NextRequest) {
         };
         sourcesReel.push('instaloader');
 
-        // Supplement with Apify for transcript and comments when Instaloader's data is incomplete
-        // (Instaloader does not provide transcript; comments may be empty without login)
+        // Supplement with Apify for transcript and comments when Instaloader ML + REST still lack comments
         if (apifyScraper.isConfigured()) {
           try {
             const apifySupplement = await apifyScraper.scrapeReel(reelUrl);
