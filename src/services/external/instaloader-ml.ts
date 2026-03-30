@@ -109,6 +109,121 @@ function parseCommentNodes(nodes: unknown[]): InstaloaderComment[] {
   return out;
 }
 
+function extractShortcodeFromReelUrl(reelUrl: string): string | null {
+  try {
+    const u = new URL(
+      reelUrl.startsWith('http://') || reelUrl.startsWith('https://') ? reelUrl : `https://${reelUrl}`
+    );
+    const parts = u.pathname.split('/').filter(Boolean);
+    if (parts.length >= 2 && (parts[0] === 'reel' || parts[0] === 'p')) return parts[1];
+    return parts.length ? parts[parts.length - 1] : null;
+  } catch {
+    return null;
+  }
+}
+
+function mapDownloadPostJsonToReel(
+  reelUrl: string,
+  fallbackShortcode: string,
+  data: Record<string, unknown>
+): InstaloaderReel {
+  const captionRaw = data.caption != null ? String(data.caption) : '';
+  const caption = captionRaw || null;
+  const hashtags = captionRaw ? Array.from(captionRaw.matchAll(/#\w+/g), (m) => m[0].slice(1)) : [];
+  const mentions = captionRaw ? Array.from(captionRaw.matchAll(/@\w+/g), (m) => m[0].slice(1)) : [];
+
+  let owner_username: string | null = null;
+  let owner_full_name: string | null = null;
+  const o = data.owner;
+  if (o && typeof o === 'object') {
+    const od = o as Record<string, unknown>;
+    if (od.username != null) owner_username = String(od.username);
+    if (od.full_name != null) owner_full_name = String(od.full_name);
+    if (od.fullName != null) owner_full_name = String(od.fullName);
+  }
+  if (!owner_username && data.ownerUsername != null) owner_username = String(data.ownerUsername);
+  if (!owner_full_name && data.ownerFullName != null) owner_full_name = String(data.ownerFullName);
+
+  const mediaId = data.mediaId != null ? String(data.mediaId) : fallbackShortcode;
+  const sc = data.shortCode != null ? String(data.shortCode) : fallbackShortcode;
+
+  const like_count = Number(data.likeCount ?? data.like_count ?? 0) || 0;
+  let commentNodes = latestCommentsToNodes(data.latestComments);
+  if (!commentNodes.length) commentNodes = latestCommentsToNodes(data.comments);
+  const comments = parseCommentNodes(commentNodes);
+  const ccRaw = data.commentCount ?? data.comment_count;
+  const comment_count =
+    ccRaw != null && !Number.isNaN(Number(ccRaw)) ? Number(ccRaw) : comments.length;
+
+  let play_count: number | null = null;
+  const pr = data.playCount ?? data.viewCount ?? data.play_count ?? data.view_count;
+  if (pr != null) {
+    const n = Number(pr);
+    if (!Number.isNaN(n)) play_count = n;
+  }
+
+  const mediaType = String(data.mediaType ?? data.media_type ?? '').toLowerCase();
+  const productType = String(data.productType ?? data.product_type ?? '').toLowerCase();
+  const mediaUrl = data.mediaUrl ?? data.media_url;
+  let video_url: string | null =
+    data.videoDownloadUrl != null || data.video_download_url != null
+      ? String(data.videoDownloadUrl ?? data.video_download_url)
+      : null;
+  if (!video_url && typeof mediaUrl === 'string' && (mediaType.includes('video') || productType === 'clips')) {
+    video_url = mediaUrl;
+  }
+
+  const thumb = data.thumbnailUrl ?? data.thumbnail_url;
+  const thumbnail_url = thumb != null ? String(thumb) : null;
+
+  const created = data.createdAt ?? data.created_at;
+  let timestamp: string;
+  if (typeof created === 'number') {
+    timestamp = new Date(created > 1e12 ? created : created * 1000).toISOString();
+  } else if (typeof created === 'string' && created.trim()) {
+    const d = new Date(created);
+    timestamp = Number.isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString();
+  } else {
+    timestamp = new Date().toISOString();
+  }
+
+  return {
+    id: mediaId,
+    shortcode: sc,
+    url: reelUrl,
+    caption,
+    like_count,
+    comment_count,
+    play_count,
+    timestamp,
+    video_url,
+    thumbnail_url,
+    owner_username,
+    owner_full_name,
+    hashtags,
+    mentions,
+    comments,
+  };
+}
+
+async function fetchInstaloaderDownloadPost(
+  shortcode: string,
+  baseUrl: string
+): Promise<Record<string, unknown> | null> {
+  const root = normalizeInstaloaderApiBaseUrl(baseUrl);
+  const url = `${root}/download/post`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', accept: 'application/json' },
+    body: JSON.stringify({ shortcode, target_dir: './downloads' }),
+  });
+  if (!res.ok) {
+    logger.warn({ url, status: res.status }, 'Instaloader REST /download/post failed');
+    return null;
+  }
+  return (await res.json()) as Record<string, unknown>;
+}
+
 function latestCommentsToNodes(latest: unknown): unknown[] {
   if (latest == null) return [];
   if (Array.isArray(latest)) return latest;
@@ -129,18 +244,8 @@ function latestCommentsToNodes(latest: unknown): unknown[] {
 }
 
 async function fetchCommentsFromInstaloaderRest(shortcode: string, baseUrl: string): Promise<InstaloaderComment[]> {
-  const root = normalizeInstaloaderApiBaseUrl(baseUrl);
-  const url = `${root}/download/post`;
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', accept: 'application/json' },
-    body: JSON.stringify({ shortcode, target_dir: './downloads' }),
-  });
-  if (!res.ok) {
-    logger.warn({ url, status: res.status }, 'Instaloader REST /download/post failed');
-    return [];
-  }
-  const data = (await res.json()) as Record<string, unknown>;
+  const data = await fetchInstaloaderDownloadPost(shortcode, baseUrl);
+  if (!data) return [];
   let nodes = latestCommentsToNodes(data.latestComments);
   if (!nodes.length) nodes = latestCommentsToNodes(data.comments);
   return parseCommentNodes(nodes);
@@ -193,20 +298,40 @@ class InstaloaderMlClient {
 
   async fetchReel(reelUrl: string): Promise<InstaloaderReel> {
     logger.info({ reelUrl }, 'Calling ML Instaloader reel endpoint');
-    const reel = await this.postJson<InstaloaderReel>('/instagram/reel', { reel_url: reelUrl });
-    if (reel.comments?.length) return reel;
     const restBase = env.INSTALOADER_API_BASE_URL?.trim();
-    if (!restBase || !reel.shortcode) return reel;
+    const shortcode = extractShortcodeFromReelUrl(reelUrl);
+
     try {
-      const fromRest = await fetchCommentsFromInstaloaderRest(reel.shortcode, restBase);
-      if (fromRest.length) {
-        logger.info({ count: fromRest.length, shortcode: reel.shortcode }, 'Comments from Instaloader REST API (Node fallback)');
-        return { ...reel, comments: fromRest };
+      const reel = await this.postJson<InstaloaderReel>('/instagram/reel', { reel_url: reelUrl });
+      if (reel.comments?.length) return reel;
+      if (!restBase || !reel.shortcode) return reel;
+      try {
+        const fromRest = await fetchCommentsFromInstaloaderRest(reel.shortcode, restBase);
+        if (fromRest.length) {
+          logger.info(
+            { count: fromRest.length, shortcode: reel.shortcode },
+            'Comments from Instaloader REST API (Node fallback)'
+          );
+          return { ...reel, comments: fromRest };
+        }
+      } catch (e) {
+        logger.warn({ e, shortcode: reel.shortcode }, 'Instaloader REST comment fallback failed');
       }
-    } catch (e) {
-      logger.warn({ e, shortcode: reel.shortcode }, 'Instaloader REST comment fallback failed');
+      return reel;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      const graphqlLikelyFailed =
+        /401|Unauthorized|wait a few minutes|Instaloader failed|failed to fetch reel|502/i.test(msg);
+      if (!restBase || !graphqlLikelyFailed || !shortcode) throw err;
+      const data = await fetchInstaloaderDownloadPost(shortcode, restBase);
+      if (!data) throw err;
+      const reel = mapDownloadPostJsonToReel(reelUrl, shortcode, data);
+      logger.info(
+        { shortcode },
+        'Full reel from Instaloader REST API (ML GraphQL rate-limited or unavailable)'
+      );
+      return reel;
     }
-    return reel;
   }
 
   async fetchProfile(username: string): Promise<InstaloaderProfile> {

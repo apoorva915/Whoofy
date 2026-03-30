@@ -1,6 +1,6 @@
 {
   "videoId": "DRZN4egihHx",
-  "generatedAt": "2026-03-06T05:00:33.673Z",
+  "generatedAt": "2026-03-27T13:33:15.173Z",
   "frameCount": 15,
   "payload": {
     "frameAnalyses": [
@@ -19,13 +19,7 @@
             "ageConfidence": 0.998,
             "faceConfidence": 0.79
           }
-        ],
-        "visualSimilarity": {
-          "similarity": 0.2757508158683777,
-          "match": false,
-          "confidence": "none",
-          "referenceImageIndex": 0
-        }
+        ]
       },
       {
         "timestamp": 2,
@@ -42,13 +36,7 @@
             "ageConfidence": 0.995,
             "faceConfidence": 0.9
           }
-        ],
-        "visualSimilarity": {
-          "similarity": 0.3042854964733124,
-          "match": false,
-          "confidence": "none",
-          "referenceImageIndex": 0
-        }
+        ]
       },
       {
         "timestamp": 4,
@@ -72,26 +60,15 @@
             "ageConfidence": 0.874,
             "faceConfidence": 0.891
           }
-        ],
-        "visualSimilarity": {
-          "similarity": 0.5017566084861755,
-          "match": true,
-          "confidence": "high",
-          "referenceImageIndex": 0
-        }
+        ]
       },
       {
         "timestamp": 6,
         "objects": [
-          "bottle",
-          "person"
+          "person",
+          "bottle"
         ],
-        "brands": [
-          {
-            "name": "garnier",
-            "confidence": 0.571
-          }
-        ],
+        "brands": [],
         "text": "6 | AK “Riveg a “4R Neg a) I Sp Rey MING\" 7) r ia ..",
         "people": [
           {
@@ -101,30 +78,15 @@
             "ageConfidence": 0.904,
             "faceConfidence": 0.71
           }
-        ],
-        "visualSimilarity": {
-          "similarity": 0.7132870554924011,
-          "match": true,
-          "confidence": "high",
-          "referenceImageIndex": 0
-        }
+        ]
       },
       {
         "timestamp": 8,
         "objects": [
-          "bottle",
-          "person"
+          "person",
+          "bottle"
         ],
-        "brands": [
-          {
-            "name": "vitamin c brightening serum",
-            "confidence": 0.617
-          },
-          {
-            "name": "brightening",
-            "confidence": 0.557
-          }
-        ],
+        "brands": [],
         "text": "Jf SARNICR “ af TAMING) B SepSHTENING Me SaRnier 4“ ay AMING SH TENING a TY",
         "people": [
           {
@@ -134,13 +96,7 @@
             "ageConfidence": 0.977,
             "faceConfidence": 0.9
           }
-        ],
-        "visualSimilarity": {
-          "similarity": 0.41796818375587463,
-          "match": true,
-          "confidence": "low",
-          "referenceImageIndex": 0
-        }
+        ]
       },
       {
         "timestamp": 10,
@@ -155,13 +111,7 @@
             "ageConfidence": 0.949,
             "faceConfidence": 0.73
           }
-        ],
-        "visualSimilarity": {
-          "similarity": 0.32864275574684143,
-          "match": false,
-          "confidence": "none",
-          "referenceImageIndex": 0
-        }
+        ]
       },
       {
         "timestamp": 12,
@@ -178,13 +128,7 @@
             "ageConfidence": 0.995,
             "faceConfidence": 0.9
           }
-        ],
-        "visualSimilarity": {
-          "similarity": 0.26734402775764465,
-          "match": false,
-          "confidence": "none",
-          "referenceImageIndex": 0
-        }
+        ]
       },
       {
         "timestamp": 14,
@@ -201,13 +145,7 @@
             "ageConfidence": 0.896,
             "faceConfidence": 0.821
           }
-        ],
-        "visualSimilarity": {
-          "similarity": 0.27773573994636536,
-          "match": false,
-          "confidence": "none",
-          "referenceImageIndex": 0
-        }
+        ]
       },
       {
         "timestamp": 16,
@@ -231,13 +169,7 @@
             "ageConfidence": 0.877,
             "faceConfidence": 0.814
           }
-        ],
-        "visualSimilarity": {
-          "similarity": 0.27861031889915466,
-          "match": false,
-          "confidence": "none",
-          "referenceImageIndex": 0
-        }
+        ]
       },
       {
         "timestamp": 18,
@@ -254,13 +186,7 @@
             "ageConfidence": 0.987,
             "faceConfidence": 0.9
           }
-        ],
-        "visualSimilarity": {
-          "similarity": 0.2819978892803192,
-          "match": false,
-          "confidence": "none",
-          "referenceImageIndex": 0
-        }
+        ]
       },
       {
         "timestamp": 20,
@@ -277,13 +203,7 @@
             "ageConfidence": 0.578,
             "faceConfidence": 0.9
           }
-        ],
-        "visualSimilarity": {
-          "similarity": 0.2596549987792969,
-          "match": false,
-          "confidence": "none",
-          "referenceImageIndex": 0
-        }
+        ]
       },
       {
         "timestamp": 22,
@@ -300,13 +220,7 @@
             "ageConfidence": 0.996,
             "faceConfidence": 0.9
           }
-        ],
-        "visualSimilarity": {
-          "similarity": 0.25729668140411377,
-          "match": false,
-          "confidence": "none",
-          "referenceImageIndex": 0
-        }
+        ]
       },
       {
         "timestamp": 24,
@@ -323,13 +237,7 @@
             "ageConfidence": 0.506,
             "faceConfidence": 0.766
           }
-        ],
-        "visualSimilarity": {
-          "similarity": 0.2824033200740814,
-          "match": false,
-          "confidence": "none",
-          "referenceImageIndex": 0
-        }
+        ]
       },
       {
         "timestamp": 26,
@@ -346,13 +254,7 @@
             "ageConfidence": 0.96,
             "faceConfidence": 0.763
           }
-        ],
-        "visualSimilarity": {
-          "similarity": 0.2429479956626892,
-          "match": false,
-          "confidence": "none",
-          "referenceImageIndex": 0
-        }
+        ]
       },
       {
         "timestamp": 28,
@@ -369,13 +271,7 @@
             "ageConfidence": 0.881,
             "faceConfidence": 0.847
           }
-        ],
-        "visualSimilarity": {
-          "similarity": 0.6590022444725037,
-          "match": true,
-          "confidence": "high",
-          "referenceImageIndex": 0
-        }
+        ]
       }
     ],
     "visualSummary": {
@@ -383,55 +279,19 @@
         "person",
         "bottle"
       ],
-      "brandsDetected": [
-        {
-          "name": "garnier",
-          "confidence": 0.571,
-          "totalFrames": 1,
-          "totalVisibleSeconds": 2
-        },
-        {
-          "name": "vitamin c brightening serum",
-          "confidence": 0.617,
-          "totalFrames": 1,
-          "totalVisibleSeconds": 2
-        },
-        {
-          "name": "brightening",
-          "confidence": 0.557,
-          "totalFrames": 1,
-          "totalVisibleSeconds": 2
-        }
-      ],
+      "brandsDetected": [],
       "targetBrandConfirmation": {
-        "detected": true,
-        "message": "Yes, it shows vitamin c brightening serum (detected in 3 frames, visible for 6.0s).",
-        "confidence": 0.6200727877934774,
-        "detectedInFrames": 3,
-        "totalVisibleSeconds": 6
+        "detected": false,
+        "message": "No, garnier was not detected in the video frames.",
+        "confidence": 0,
+        "detectedInFrames": 0,
+        "totalVisibleSeconds": 0
       },
       "visualSentiment": {
         "sentiment": "positive",
         "score": 1,
-        "reasoning": "Target brand \"garnier, garnieruk\" is prominently shown in 2 frames. Positive visual elements detected (person, food, product) Overall, this reel provides POSITIVE publicity for garnier, garnieruk - the brand/product is shown favorably with positive visual elements.",
+        "reasoning": "Target brand \"garnier\" is not clearly visible in frames. Positive visual elements detected (person, food, product) Overall, this reel provides POSITIVE publicity for garnier - the brand/product is shown favorably with positive visual elements.",
         "confidence": 0.95
-      },
-      "visualSimilaritySummary": {
-        "averageSimilarity": 0.573,
-        "maxSimilarity": 0.713,
-        "matchedFrames": 4,
-        "totalFrames": 15,
-        "visibleSeconds": 8,
-        "referenceImageCount": 1
-      },
-      "demographicMatch": {
-        "matched": true,
-        "targetGender": "female",
-        "targetAge": "young",
-        "detectedGender": "female",
-        "detectedAge": "young",
-        "frameCount": 15,
-        "reasoning": "Detected: female (gender), young (age) in 15 frame(s). Target: female (gender), young (age). Match."
       },
       "frameAnalyses": [
         {
@@ -449,13 +309,7 @@
               "ageConfidence": 0.998,
               "faceConfidence": 0.79
             }
-          ],
-          "visualSimilarity": {
-            "similarity": 0.2757508158683777,
-            "match": false,
-            "confidence": "none",
-            "referenceImageIndex": 0
-          }
+          ]
         },
         {
           "timestamp": 2,
@@ -472,13 +326,7 @@
               "ageConfidence": 0.995,
               "faceConfidence": 0.9
             }
-          ],
-          "visualSimilarity": {
-            "similarity": 0.3042854964733124,
-            "match": false,
-            "confidence": "none",
-            "referenceImageIndex": 0
-          }
+          ]
         },
         {
           "timestamp": 4,
@@ -502,26 +350,15 @@
               "ageConfidence": 0.874,
               "faceConfidence": 0.891
             }
-          ],
-          "visualSimilarity": {
-            "similarity": 0.5017566084861755,
-            "match": true,
-            "confidence": "high",
-            "referenceImageIndex": 0
-          }
+          ]
         },
         {
           "timestamp": 6,
           "objects": [
-            "bottle",
-            "person"
+            "person",
+            "bottle"
           ],
-          "brands": [
-            {
-              "name": "garnier",
-              "confidence": 0.571
-            }
-          ],
+          "brands": [],
           "text": "6 | AK “Riveg a “4R Neg a) I Sp Rey MING\" 7) r ia ..",
           "people": [
             {
@@ -531,30 +368,15 @@
               "ageConfidence": 0.904,
               "faceConfidence": 0.71
             }
-          ],
-          "visualSimilarity": {
-            "similarity": 0.7132870554924011,
-            "match": true,
-            "confidence": "high",
-            "referenceImageIndex": 0
-          }
+          ]
         },
         {
           "timestamp": 8,
           "objects": [
-            "bottle",
-            "person"
+            "person",
+            "bottle"
           ],
-          "brands": [
-            {
-              "name": "vitamin c brightening serum",
-              "confidence": 0.617
-            },
-            {
-              "name": "brightening",
-              "confidence": 0.557
-            }
-          ],
+          "brands": [],
           "text": "Jf SARNICR “ af TAMING) B SepSHTENING Me SaRnier 4“ ay AMING SH TENING a TY",
           "people": [
             {
@@ -564,13 +386,7 @@
               "ageConfidence": 0.977,
               "faceConfidence": 0.9
             }
-          ],
-          "visualSimilarity": {
-            "similarity": 0.41796818375587463,
-            "match": true,
-            "confidence": "low",
-            "referenceImageIndex": 0
-          }
+          ]
         },
         {
           "timestamp": 10,
@@ -585,13 +401,7 @@
               "ageConfidence": 0.949,
               "faceConfidence": 0.73
             }
-          ],
-          "visualSimilarity": {
-            "similarity": 0.32864275574684143,
-            "match": false,
-            "confidence": "none",
-            "referenceImageIndex": 0
-          }
+          ]
         },
         {
           "timestamp": 12,
@@ -608,13 +418,7 @@
               "ageConfidence": 0.995,
               "faceConfidence": 0.9
             }
-          ],
-          "visualSimilarity": {
-            "similarity": 0.26734402775764465,
-            "match": false,
-            "confidence": "none",
-            "referenceImageIndex": 0
-          }
+          ]
         },
         {
           "timestamp": 14,
@@ -631,13 +435,7 @@
               "ageConfidence": 0.896,
               "faceConfidence": 0.821
             }
-          ],
-          "visualSimilarity": {
-            "similarity": 0.27773573994636536,
-            "match": false,
-            "confidence": "none",
-            "referenceImageIndex": 0
-          }
+          ]
         },
         {
           "timestamp": 16,
@@ -661,13 +459,7 @@
               "ageConfidence": 0.877,
               "faceConfidence": 0.814
             }
-          ],
-          "visualSimilarity": {
-            "similarity": 0.27861031889915466,
-            "match": false,
-            "confidence": "none",
-            "referenceImageIndex": 0
-          }
+          ]
         },
         {
           "timestamp": 18,
@@ -684,13 +476,7 @@
               "ageConfidence": 0.987,
               "faceConfidence": 0.9
             }
-          ],
-          "visualSimilarity": {
-            "similarity": 0.2819978892803192,
-            "match": false,
-            "confidence": "none",
-            "referenceImageIndex": 0
-          }
+          ]
         },
         {
           "timestamp": 20,
@@ -707,13 +493,7 @@
               "ageConfidence": 0.578,
               "faceConfidence": 0.9
             }
-          ],
-          "visualSimilarity": {
-            "similarity": 0.2596549987792969,
-            "match": false,
-            "confidence": "none",
-            "referenceImageIndex": 0
-          }
+          ]
         },
         {
           "timestamp": 22,
@@ -730,13 +510,7 @@
               "ageConfidence": 0.996,
               "faceConfidence": 0.9
             }
-          ],
-          "visualSimilarity": {
-            "similarity": 0.25729668140411377,
-            "match": false,
-            "confidence": "none",
-            "referenceImageIndex": 0
-          }
+          ]
         },
         {
           "timestamp": 24,
@@ -753,13 +527,7 @@
               "ageConfidence": 0.506,
               "faceConfidence": 0.766
             }
-          ],
-          "visualSimilarity": {
-            "similarity": 0.2824033200740814,
-            "match": false,
-            "confidence": "none",
-            "referenceImageIndex": 0
-          }
+          ]
         },
         {
           "timestamp": 26,
@@ -776,13 +544,7 @@
               "ageConfidence": 0.96,
               "faceConfidence": 0.763
             }
-          ],
-          "visualSimilarity": {
-            "similarity": 0.2429479956626892,
-            "match": false,
-            "confidence": "none",
-            "referenceImageIndex": 0
-          }
+          ]
         },
         {
           "timestamp": 28,
@@ -799,13 +561,7 @@
               "ageConfidence": 0.881,
               "faceConfidence": 0.847
             }
-          ],
-          "visualSimilarity": {
-            "similarity": 0.6590022444725037,
-            "match": true,
-            "confidence": "high",
-            "referenceImageIndex": 0
-          }
+          ]
         }
       ]
     }

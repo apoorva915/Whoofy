@@ -1,10 +1,11 @@
 import json
 import logging
 import os
+import re
 import urllib.error
 import urllib.request
 from datetime import datetime
-from typing import Any, Optional, List
+from typing import Any, Optional, List, Tuple
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
@@ -234,24 +235,8 @@ def _iter_comment_dicts_from_latest_payload(latest: Any) -> List[dict]:
     return out
 
 
-def _comments_from_instaloader_rest_payload(body: dict) -> List[InstagramComment]:
-    latest = body.get("latestComments")
-    raw_nodes = _iter_comment_dicts_from_latest_payload(latest)
-    if not raw_nodes:
-        raw_nodes = _iter_comment_dicts_from_latest_payload(body.get("comments"))
-    result: List[InstagramComment] = []
-    for node in raw_nodes[:COMMENT_LIMIT]:
-        c = _node_to_instagram_comment(node)
-        if c:
-            result.append(c)
-    return result
-
-
-def _fetch_comments_from_instaloader_rest_api(shortcode: str, base_url: str) -> List[InstagramComment]:
-    """
-    Primary comment source: hosted Instaloader REST API (POST /download/post).
-    See https://instaloader.github.io/ — same backend as CLI; REST often works when direct GraphQL is blocked.
-    """
+def _fetch_download_post_json(shortcode: str, base_url: str) -> Optional[dict]:
+    """POST /download/post; return parsed JSON or None on failure."""
     root = _normalize_instaloader_api_base_url(base_url)
     url = f"{root}/download/post"
     payload = json.dumps({"shortcode": shortcode, "target_dir": "./downloads"}).encode("utf-8")
@@ -275,17 +260,136 @@ def _fetch_comments_from_instaloader_rest_api(shortcode: str, base_url: str) -> 
             e.code,
             err_body[:500],
         )
-        return []
+        return None
     except (urllib.error.URLError, TimeoutError, OSError) as e:
         logger.warning("Instaloader REST API request failed for shortcode=%s: %s", shortcode, e)
-        return []
+        return None
 
     try:
-        data = json.loads(raw)
+        return json.loads(raw)
     except json.JSONDecodeError:
         logger.warning("Instaloader REST API returned non-JSON for shortcode=%s", shortcode)
-        return []
+        return None
 
+
+def _parse_instagram_rest_datetime(val: Any) -> datetime:
+    if val is None:
+        return datetime.utcnow()
+    if isinstance(val, (int, float)):
+        x = float(val)
+        if x > 1e12:
+            x /= 1000.0
+        try:
+            return datetime.utcfromtimestamp(x)
+        except (OverflowError, OSError, ValueError):
+            return datetime.utcnow()
+    if isinstance(val, str) and val.strip():
+        s = val.strip().replace("Z", "+00:00")
+        try:
+            return datetime.fromisoformat(s)
+        except ValueError:
+            pass
+    return datetime.utcnow()
+
+
+def _owner_from_rest_post_body(body: dict) -> Tuple[Optional[str], Optional[str]]:
+    o = body.get("owner")
+    if isinstance(o, dict):
+        u = o.get("username") or o.get("user_name")
+        fn = o.get("full_name") or o.get("fullName")
+        return (str(u) if u else None, str(fn) if fn else None)
+    for ukey, fkey in (
+        ("ownerUsername", "ownerFullName"),
+        ("owner_username", "owner_full_name"),
+    ):
+        if body.get(ukey):
+            fn = body.get(fkey)
+            return (str(body[ukey]), str(fn) if fn else None)
+    return (None, None)
+
+
+def _reel_response_from_rest_payload(body: dict, reel_url: str, shortcode: str) -> InstagramReelResponse:
+    """Build ML reel response from Instaloader REST /download/post JSON (when GraphQL is rate-limited)."""
+    caption = (body.get("caption") or "") or ""
+    hashtags = [h[1:] for h in re.findall(r"#\w+", caption)]
+    mentions = [m[1:] for m in re.findall(r"@\w+", caption)]
+    hs = body.get("hashtags")
+    if isinstance(hs, str) and hs.strip() and not hashtags:
+        hashtags = [x.strip().lstrip("#") for x in re.split(r"[\s,]+", hs) if x.strip()]
+    ms = body.get("mentions")
+    if isinstance(ms, str) and ms.strip() and not mentions:
+        mentions = [x.strip().lstrip("@") for x in re.split(r"[\s,]+", ms) if x.strip()]
+
+    comments = _comments_from_instaloader_rest_payload(body)
+    owner_username, owner_full_name = _owner_from_rest_post_body(body)
+
+    media_id = body.get("mediaId") or body.get("media_id") or shortcode
+    sc = body.get("shortCode") or body.get("shortcode") or shortcode
+
+    like_count = int(body.get("likeCount") or body.get("like_count") or 0)
+    cc_raw = body.get("commentCount") if body.get("commentCount") is not None else body.get("comment_count")
+    comment_count = int(cc_raw) if cc_raw is not None else len(comments)
+
+    play_raw = body.get("playCount") if body.get("playCount") is not None else body.get("viewCount")
+    if play_raw is None:
+        play_raw = body.get("play_count") or body.get("view_count")
+    play_count: Optional[int] = None
+    if play_raw is not None:
+        try:
+            play_count = int(play_raw)
+        except (TypeError, ValueError):
+            pass
+
+    media_type = str(body.get("mediaType") or body.get("media_type") or "").lower()
+    product_type = str(body.get("productType") or body.get("product_type") or "").lower()
+    media_url = body.get("mediaUrl") or body.get("media_url")
+    video_url = body.get("videoDownloadUrl") or body.get("video_download_url")
+    if not video_url and media_url and ("video" in media_type or product_type in ("clips", "feed", "igtv")):
+        video_url = media_url
+    thumbnail_url = body.get("thumbnailUrl") or body.get("thumbnail_url")
+
+    ts = _parse_instagram_rest_datetime(body.get("createdAt") or body.get("created_at"))
+
+    return InstagramReelResponse(
+        id=str(media_id),
+        shortcode=str(sc),
+        url=reel_url,
+        caption=caption or None,
+        like_count=like_count,
+        comment_count=comment_count,
+        play_count=play_count,
+        timestamp=ts,
+        video_url=video_url,
+        thumbnail_url=thumbnail_url,
+        owner_username=owner_username,
+        owner_full_name=owner_full_name,
+        hashtags=hashtags,
+        mentions=mentions,
+        comments=comments,
+    )
+
+
+def _comments_from_instaloader_rest_payload(body: dict) -> List[InstagramComment]:
+    latest = body.get("latestComments")
+    raw_nodes = _iter_comment_dicts_from_latest_payload(latest)
+    if not raw_nodes:
+        raw_nodes = _iter_comment_dicts_from_latest_payload(body.get("comments"))
+    result: List[InstagramComment] = []
+    for node in raw_nodes[:COMMENT_LIMIT]:
+        c = _node_to_instagram_comment(node)
+        if c:
+            result.append(c)
+    return result
+
+
+def _fetch_comments_from_instaloader_rest_api(shortcode: str, base_url: str) -> List[InstagramComment]:
+    """
+    Primary comment source: hosted Instaloader REST API (POST /download/post).
+    See https://instaloader.github.io/ — same backend as CLI; REST often works when direct GraphQL is blocked.
+    """
+    data = _fetch_download_post_json(shortcode, base_url)
+    if not data:
+        return []
     return _comments_from_instaloader_rest_payload(data)
 
 
@@ -431,29 +535,45 @@ def instagram_reel(req: InstagramReelRequest) -> InstagramReelResponse:
     """
     Fetch reel metadata using Instaloader.
     This is used as the primary Instagram scraping backend (with Apify as fallback in the Node app).
+
+    When direct GraphQL is rate-limited (401 / "wait a few minutes"), we fall back to the hosted
+    Instaloader REST API (INSTALOADER_API_BASE_URL + POST /download/post) so the server IP is not
+    the only path to Instagram.
     """
     try:
         shortcode = _extract_shortcode_from_url(req.reel_url)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+    rest_base = (os.getenv("INSTALOADER_API_BASE_URL") or "").strip()
+
     try:
         post = instaloader.Post.from_shortcode(_instaloader.context, shortcode)
     except Exception as e:
+        logger.warning(
+            "Instaloader GraphQL failed for shortcode=%s (often rate limit): %s",
+            shortcode,
+            e,
+        )
+        if rest_base:
+            rest_data = _fetch_download_post_json(shortcode, rest_base)
+            if rest_data:
+                logger.info(
+                    "Using Instaloader REST /download/post for full reel metadata (shortcode=%s)",
+                    shortcode,
+                )
+                return _reel_response_from_rest_payload(rest_data, req.reel_url, shortcode)
         raise HTTPException(status_code=502, detail=f"Instaloader failed to fetch reel: {e}")
 
     caption = post.caption or ""
 
     # Extract hashtags and mentions from caption
-    import re
-
     hashtags = [h[1:] for h in re.findall(r"#\w+", caption)]
     mentions = [m[1:] for m in re.findall(r"@\w+", caption)]
 
-    # Comments: (1) Instaloader REST API if INSTALOADER_API_BASE_URL is set — primary when direct scraping fails;
+    # Comments: (1) Instaloader REST API if INSTALOADER_API_BASE_URL is set — avoids hammering GraphQL;
     # (2) local instaloader Post.get_comments(); Apify fallback is in the Node app.
     comments: list[InstagramComment] = []
-    rest_base = (os.getenv("INSTALOADER_API_BASE_URL") or "").strip()
     if rest_base:
         comments = _fetch_comments_from_instaloader_rest_api(shortcode, rest_base)
         if comments:
